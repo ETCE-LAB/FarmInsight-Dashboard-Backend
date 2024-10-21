@@ -11,6 +11,8 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
+import environ
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -21,6 +23,18 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-j_qnae2dq2!wltq1%ca7gku^ol8o7^t9-1xg5)gjw*1kcl)!d8'
+
+# Initialize environment variables
+env = environ.Env()
+
+# Development-specific environment variables
+environ.Env.read_env(os.path.join(BASE_DIR, '.env.dev'))
+
+INFLUXDB_CLIENT_SETTINGS = {
+    'url': env('INFLUXDB_URL'),
+    'token': env('INFLUXDB_INIT_TOKEN'),
+    'org': env('DOCKER_INFLUXDB_INIT_ORG')
+}
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -83,6 +97,23 @@ DATABASES = {
     }
 }
 
+# For logging in the console
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+        },
+    },
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
