@@ -51,7 +51,7 @@ CSRF_TRUSTED_ORIGINS = env("CSRF_TRUSTED_ORIGINS").split(",")
 CORS_ALLOWED_ORIGINS = env("CORS_ALLOWED_ORIGINS").split(",")
 
 # Camera snapshot storage config
-MEDIA_URL = '/images/'
+MEDIA_URL = '/'
 MEDIA_ROOT = BASE_DIR
 SITE_URL = "http://localhost:8000"
 
