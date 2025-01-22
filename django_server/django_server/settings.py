@@ -48,7 +48,7 @@ CSRF_TRUSTED_ORIGINS = [
 ]
 
 # Camera snapshot storage config
-MEDIA_URL = '/images/'
+MEDIA_URL = '/'
 MEDIA_ROOT = BASE_DIR
 SITE_URL = "http://localhost:8000"
 
