@@ -1,20 +1,22 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<h2>Login</h2>
-<form method="post">
+<h2 style="text-align: center; font-family: Arial, sans-serif; color: #4A4A4A;">Login</h2>
+<form method="post" style="max-width: 400px; margin: 0 auto; padding: 20px; background-color: #f9f9f9; border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
     {% csrf_token %}
     {{ form.as_p }}
-    <button type="submit">Login</button>
+    <button type="submit" style="width: 100%; padding: 10px; background-color: #199ff4; color: white; border: none; border-radius: 5px; font-size: 16px; cursor: pointer;">Login</button>
 </form>
 
-<p>Don't have an account? <a id="signup-link" href="#">Sign up here</a></p>
+<p style="text-align: center; font-family: Arial, sans-serif; color: #199ff4; margin-top: 20px;">
+    Don't have an account? <a id="signup-link" href="#" style="color: #199ff4; text-decoration: none;">Sign up here</a>
+</p>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    var signupLink = document.getElementById('signup-link');
-    var currentParams = new URLSearchParams(window.location.search);
-    signupLink.href = "{% url 'signup_view' %}?" + currentParams.toString();
-});
+    document.addEventListener('DOMContentLoaded', function() {
+        var signupLink = document.getElementById('signup-link');
+        var currentParams = new URLSearchParams(window.location.search);
+        signupLink.href = "{% url 'signup_view' %}?" + currentParams.toString();
+    });
 </script>
 {% endblock %}
