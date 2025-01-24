@@ -53,7 +53,7 @@ CORS_ALLOWED_ORIGINS = env("CORS_ALLOWED_ORIGINS").split(",")
 # Camera snapshot storage config
 MEDIA_URL = '/'
 MEDIA_ROOT = BASE_DIR
-SITE_URL = "http://localhost:8000"
+SITE_URL = "http://farminsight-backend.etce.isse.tu-clausthal.de"
 
 # Application definition
 
