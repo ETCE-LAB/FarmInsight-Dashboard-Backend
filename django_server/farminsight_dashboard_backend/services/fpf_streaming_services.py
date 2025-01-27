@@ -13,7 +13,7 @@ async def http_stream(livestream_url: str):
 
     try:
         frame_interval = 1 / 5  # 5 FPS = 1 frame every 0.2 seconds (200 ms)
-        last_frame_time = asyncio.get_event_loop().time()  # Initial time to track when the last frame was sent
+        last_frame_time = 0  # Initial time to track when the last frame was sent
 
         while True:
             # Get the current time at the start of each loop iteration
@@ -56,9 +56,11 @@ async def rtsp_stream(livestream_url:str):
         yield b"Error: Unable to open RTSP stream."
         return
     try:
-        frame_interval = 1 / 1  # Target frame interval for 30 FPS
+        frame_interval = 1 / 5  # 5 FPS = 1 frame every 0.2 seconds (200 ms)
+        last_frame_time = 0  # Initial time to track when the last frame was sent
         while True:
-            start_time = asyncio.get_event_loop().time()
+            # Get the current time at the start of each loop iteration
+            current_time = asyncio.get_event_loop().time()
             ret, frame = cap.read()
             if not ret:
                 break
@@ -69,10 +71,8 @@ async def rtsp_stream(livestream_url:str):
                     b'Content-Type: image/jpeg\r\n\r\n' + jpeg.tobytes() + b'\r\n'
             )
 
-            # Adjust sleep time based on processing time
-            elapsed_time = asyncio.get_event_loop().time() - start_time
-            sleep_time = max(0, frame_interval - elapsed_time)
-            await asyncio.sleep(sleep_time)
+            # Update the last frame time after successfully sending the frame
+            last_frame_time = current_time
 
     finally:
         cap.release()
