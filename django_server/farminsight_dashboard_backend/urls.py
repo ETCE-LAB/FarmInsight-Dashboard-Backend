@@ -28,6 +28,8 @@ from farminsight_dashboard_backend.views import (
     get_harvests,
     login_view,
     signup_view,
+    change_password_view,
+    logout_view,
 )
 
 urlpatterns = [
@@ -61,5 +63,7 @@ urlpatterns = [
     path('harvests/list/<str:growing_cycle_id>', get_harvests, name='get_harvests'),
     path('login/', login_view, name='login_view'),
     path('signup/', signup_view, name='signup_view'),
+    path('logout', logout_view, name='logout_view'),
+    path('change-password', change_password_view, name='change_password_view'),
 ]
 

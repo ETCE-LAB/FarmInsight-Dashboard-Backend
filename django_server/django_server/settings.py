@@ -204,7 +204,7 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 LOGIN_URL = '/api/login/'
-
+FRONTEND_URL = env('FRONTEND_URL', default='https://farminsight.etce.isse.tu-clausthal.de/')
 OAUTH2_PROVIDER = {
     'OIDC_ENABLED': True,
     'OIDC_ISS_ENDPOINT': env('OIDC_ISS_ENDPOINT'),
