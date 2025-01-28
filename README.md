@@ -53,16 +53,11 @@ accessible through the web application.
 
 ## Overview
 
-This repository contains the central backend code for FarmInsight.
-The Dashboard backend communicates with an InfluxDB to store and load all sensor data.
-Images are stored in a directory, the metadata is stored in the SQLite DB.
-Images and sensor measurements to the clients via REST, and for live updates, via websockets.
-Livestreams are retrieved from an endpoint and are routed through to the client.
+This repository contains the central backend code for FarmInsight and manages all configurations as well as representing a gateway from the clients to all FPF devices.
+The backend communicates with an InfluxDB to store and retrieve sensor data, while images are stored in a directory with their metadata saved in an SQLite database.
+Data is delivered to clients via REST APIs and, for live updates, via websockets. Livestreams are routed from an endpoint to clients in real time.
 
-Based on an internal scheduler, the backend will request the images on the configured interval from the configured 
-endpoint. Once the image is received, it will be stored in the directory.
-
-
+Using an internal scheduler, the backend periodically requests images from configured endpoints at specified intervals. Once received, the images are stored and made accessible to the client.
 
 ### Built with
 
@@ -74,26 +69,27 @@ endpoint. Once the image is received, it will be stored in the directory.
 ## Features
 
 ### Organizations
-One organization can have one to many members with two different user levels (Admin and Member).
-Additionally, an organization can have many FPF.
+Organizations can have multiple members with two user roles: Admin and Member.
+Each organization can manage multiple Food Production Facilities (FPFs).
 
 ### Sensors
 
-In order to create or edit a sensor, the user must be a member of the organization and the FPF must exist and be reachable by the Dashboard-Backend.
+Members of an organization can create or edit sensors if the FPF exists and is accessible by the Dashboard Backend.
+Sensor configurations are partially stored in the SQLite database, while hardware details are forwarded to and managed by the FPF Backend.
+Sensor measurements are sent from the FPF Backend to the Dashboard Backend at configured intervals via REST APIs.
+All sensor data is stored in InfluxDB, organized by FPF into buckets for efficient access.
 
-The backend will store some of the sensor configuration in the SQLite db. The hardware details for the sensor are getting forwarded and stored at the FPF-Backend.
-
-The FPF-Backend sends the sensor measurements in the given interval to the dashboard backend via a REST operation.
-Sensor measurements are stored in an influxDB to store and load all sensor data. The data is organized by the fpf which builds a bucket.
 
 ### Cameras
-The user can configure a camera to save on a give interval images and to view a livestream.
-In order to create or edit a camera, the user must be a member of the organization and the FPF must exist and be reachable by the Dashboard-Backend.
+Users can configure cameras to:
+- Capture images at specified intervals.
+- Stream live video via supported protocols, including HTTP and RTSP.
 
-Supported livestream protocols are HTTP and RTSP.
+Camera setup and editing require the user to be a member of the organization, and the FPF must be accessible by the Dashboard Backend.
 
 ### User Authentication
-The backend provides the standard django user authentication. User can register and login through the frontend.
+The backend uses standard Django user authentication.
+Users can register and log in through the frontend.
 
 ## Development Setup
 
