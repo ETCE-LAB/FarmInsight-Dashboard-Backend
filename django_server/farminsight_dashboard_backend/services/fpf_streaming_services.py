@@ -65,6 +65,11 @@ async def rtsp_stream(livestream_url:str):
             if not ret:
                 break
 
+            # Skip this frame if not enough time has passed (less than 200ms since the last frame)
+            if current_time - last_frame_time < frame_interval:
+                await asyncio.sleep(0.05)
+                continue  # Simply skip this frame and go to the next one
+
             _, jpeg = cv2.imencode('.jpg', frame)
             yield (
                     b'--frame\r\n'
