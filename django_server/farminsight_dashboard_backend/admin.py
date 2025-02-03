@@ -1,8 +1,7 @@
 from django.contrib import admin
+from django.apps import apps
 
-from farminsight_dashboard_backend.models import Userprofile, Membership, Organization
+app = apps.get_app_config('farminsight_dashboard_backend')
 
-# Register your models here.
-admin.site.register(Userprofile)
-admin.site.register(Membership)
-admin.site.register(Organization)
+for model_name, model in app.models.items():
+    admin.site.register(model)
