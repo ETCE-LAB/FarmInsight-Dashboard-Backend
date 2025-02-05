@@ -68,6 +68,23 @@ class CustomOAuth2Validator(OAuth2Validator):
             return None
 
         if "active" in content and content["active"] is True:
+            '''
+            
+            RELEVANT CONSIDERATIONS FOR RE-ENABLING THIS:            
+            
+            When we started out the Userprofile model was way more limited since we didn't have to store any additional 
+            information like a password hash. Changing the class used to represent the user in django was not very straight forward so instead
+            we changed the model to support the whole spectrum used by the default django login system that we're currently using.
+            
+            I think switching back the cleanest way will be to keep using the current model and keep all the existing entries.
+            The way to do this would be to add an "externalId" field to the userprofile model and use that one to place the
+            id from the external service (content["id"]) and have a mode where checking for a userprofile entry with the 
+            same email and use that one instead of creating a new entry.
+            
+            Also when setting the fields of a newly external userprofile it would also be best to keep using email as the username
+            during the auto creation, keeping the integrity of the database entries in tact for either mode of operation (or even using both simultaneously)
+            
+            '''
             if "id" in content:
                 user, _ = UserModel.objects.get_or_create(**{UserModel.USERNAME_FIELD: content["id"], UserModel.EMAIL_FIELD: content["email"]})
             else:

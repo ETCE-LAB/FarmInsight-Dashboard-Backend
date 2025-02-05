@@ -10,20 +10,5 @@ class SystemRole(ListableEnum):
 
 
 class Userprofile(AbstractUser):
-    #id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=256)
-    #email = models.EmailField()
     systemRole = models.CharField(max_length=256, default=SystemRole.User.value)
-'''
-    EMAIL_FIELD = "email"
-    USERNAME_FIELD = "id"
-    REQUIRED_FIELDS = ["email"]
-
-    @property
-    def is_anonymous(self):
-        return False
-
-    @property
-    def is_authenticated(self):
-        return True
-'''
