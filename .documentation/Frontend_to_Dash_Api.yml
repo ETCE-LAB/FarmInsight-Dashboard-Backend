@@ -1,0 +1,1651 @@
+
+
+openapi: 3.0.3
+info:
+  title: Swagger Farminsight Backend - Frontend Communication - OpenAPI 3.0
+  description: |-
+    Description TODO
+  termsOfService: TOS
+  contact:
+    email: apiteam@swagger.io
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  version: 1.0.11
+externalDocs:
+  description: Find out more about Swagger
+  url: http://swagger.io
+servers:
+  - url: https://anants-pi-cluster.de/api
+tags:
+  - name: userprofile
+    description: Operations about userprofile management
+  - name: membership
+    description: Operations about Membership management
+  - name: organization
+    description: Operations about Organization management
+  - name: fpf
+    description: Operations about FPF management
+  - name: camera
+    description: Operations about Camera management
+  - name: sensor
+    description: Operations about Sensor management
+  - name: cycle
+    description: Operations about Growing Cycle management
+  - name: harvest
+    description: Operations about Harvest management
+  - name: data
+    description: FPF, Sensor and Camera data retrieveal
+  - name: auth
+    description: Authentification endpoints
+paths:
+  /fpfs:
+    post:
+      tags:
+        - fpf
+      summary: Add a new FPF to the organization
+      description: Add a new FPF to the organization
+      operationId: addFPF
+      requestBody:
+        description: Create a new FPF in the organization
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                organizationId:
+                  description: ID of Organization that the FPF belongs to
+                  type: string
+                  format: uuid
+                name:
+                  type: string
+                isPublic:
+                  type: boolean
+                sensorServiceIp:
+                  type: string
+                  format: ipv4
+                address:
+                  type: string
+        required: true
+      responses:
+        '201':
+          description: Object created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  name:
+                    type: string
+                  isPublic:
+                    type: boolean
+                  sensorServiceIp:
+                    type: string
+                    format: ipv4
+                  address:
+                    type: string
+                  organization:
+                    description: ID of Organization that the FPF belongs to
+                    type: string
+                    format: uuid
+        '403':
+          description: Forbidden
+        '422':
+          description: Validation exception
+  /fpfs/{fpfId}:
+    get:
+      tags:
+        - fpf
+      summary: Find FPF by ID
+      description: Returns a single FPF
+      operationId: getFPFById
+      parameters:
+        - name: fpfId
+          in: path
+          description: ID of FPF to return
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  name:
+                    type: string
+                  isPublic:
+                    type: boolean
+                  sensorServiceIp:
+                    type: string
+                    format: ipv4
+                  address:
+                    type: string
+                  Sensors:
+                    type: array
+                    items:
+                      type: object
+                      allOf:
+                        - $ref: '#/components/schemas/Sensor'
+                        - type: object
+                          properties:
+                            lastMeasurement:
+                              $ref: '#/components/schemas/Measurement'
+                  Cameras:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Camera'
+                  GrowingCycles:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/GrowingCycle'
+        '400':
+          description: Invalid ID supplied
+        '403':
+          description: Forbidden
+        '404':
+          description: FPF not found
+    put:
+      tags:
+        - fpf
+      summary: Update an existing FPF
+      description: Update an existing FPF
+      operationId: updateFPF
+      parameters:
+        - name: fpfId
+          in: path
+          description: ID of FPF to update
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: Update an existent FPF
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                isPublic:
+                  type: boolean
+                sensorServiceIp:
+                  type: string
+                  format: ipv4
+                address:
+                  type: string
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  name:
+                    type: string
+                  isPublic:
+                    type: boolean
+                  sensorServiceIp:
+                    type: string
+                    format: ipv4
+                  address:
+                    type: string
+        '403':
+          description: Forbidden
+        '404':
+          description: FPF not found
+        '422':
+          description: Validation exception
+    delete:
+      tags:
+        - fpf
+      summary: Deletes FPF
+      description: delete FPF
+      operationId: deleteFPF
+      parameters:
+        - name: fpfId
+          in: path
+          description: FPF id to delete
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: successful operation
+        '404':
+          description: FPF not found
+        '403':
+          description: Forbidden
+  /fpfs/visible:
+    get:
+      tags:
+        - fpf
+      summary: Lists visible FPFs
+      description: Returns List of all FPFs visible to the user includes non public ones that user is member of
+      operationId: getFPFAll
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      format: uuid
+                    name:
+                      type: string
+                    organization:
+                      $ref: '#/components/schemas/OrganizationTK'
+                    lastImageUrl:
+                      type: string
+                    sensors:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          name:
+                            type: string
+  /fpfs/own:
+    get:
+      tags:
+        - fpf
+      summary: Lists FPFs that user is member of
+      description: Resturns List of all FPFs that the user has a Membership of
+      operationId: getFPFMemberOf
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      format: uuid
+                    name:
+                      type: string
+                    organization:
+                      $ref: '#/components/schemas/OrganizationTK'
+  /organizations:
+    post:
+      tags:
+        - organization
+      summary: Add a new Organization
+      description: Add a new Organization
+      operationId: addOrganization
+      requestBody:
+        description: Create a new Organization
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                isPublic:
+                  type: boolean
+      responses:
+        '201':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  name:
+                    type: string
+                  isPublic:
+                    type: boolean
+        '403':
+          description: Forbidden
+        '422':
+          description: Validation exception
+  /organizations/{organizationId}:
+    get:
+      tags:
+        - organization
+      summary: Find Organization by ID or by name
+      description: Returns a single Organization
+      operationId: getOrganizationByIdent
+      parameters:
+        - name: organizationId
+          in: path
+          description: ID of Organization to return
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
+        '403':
+          description: Forbidden
+        '404':
+          description: Organization not found
+    put:
+      tags:
+        - organization
+      summary: Update an existing Organization
+      description: Update an existing Organization
+      operationId: updateOrganization
+      parameters:
+        - name: organizationId
+          in: path
+          description: ID of Organization to update
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: Update an existent Organization
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                isPublic:
+                  type: boolean
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  name:
+                    type: string
+                  isPublic:
+                    type: boolean
+        '403':
+          description: Forbidden
+        '404':
+          description: Organization not found
+        '422':
+          description: Validation exception
+    delete:
+      tags:
+        - organization
+      summary: Deletes Organization
+      description: delete Organization
+      operationId: deleteOrganization
+      parameters:
+        - name: organizationId
+          in: path
+          description: Organization id to delete
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: successful operation
+        '403':
+          description: Forbidden
+  /organizations/visible:
+    get:
+      tags:
+        - organization
+      summary: Lists all Organizations
+      description: Returns List of all organizations visible to the user
+      operationId: getOrganizationAll
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      format: uuid
+                    name:
+                      type: string
+  /organizations/own:
+    get:
+      tags:
+        - organization
+      summary: Lists organizations that user is member of or owns
+      description: Resturns List of all organizations that the user has a Membership of
+      operationId: getOrganizationMemberOf
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      format: uuid
+                    name:
+                      type: string
+                    membership:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        role:
+                          type: string
+                          enum:
+                            - admin
+                            - member
+  /cameras:
+    post:
+      tags:
+        - camera
+      summary: Add a new Camera to the FPF
+      description: Add a new Camera to the FPF
+      operationId: addCamera
+      requestBody:
+        description: Create a new Camera in the FPF
+        content:
+          application/json:
+            schema:
+              allOf:
+                - type: object
+                  properties:
+                    fpfId:
+                      description: ID of FPF that the Camera belongs to
+                      type: string
+                      format: uuid
+                - $ref: '#/components/schemas/Camera'
+                - type: object
+                  properties:
+                    id:
+                      readOnly: true
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Camera'
+        '403':
+          description: Forbidden
+        '422':
+          description: Validation exception
+  /cameras/{cameraId}:
+    get:
+      tags:
+        - camera
+      summary: Find Camera by ID
+      description: Returns a single Camera
+      operationId: getCameraById
+      parameters:
+        - name: cameraId
+          in: path
+          description: ID of Camera to return
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Camera'
+        '403':
+          description: Forbidden
+        '404':
+          description: Camera not found
+    put:
+      tags:
+        - camera
+      summary: Update an existing Camera
+      description: Update an existing Camera by Id
+      operationId: updateCamera
+      parameters:
+        - name: cameraId
+          in: path
+          description: Camera id to update
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: Update an existing Camera
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/Camera'
+                - type: object
+                  properties:
+                    id:
+                      readOnly: true
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Camera'
+        '403':
+          description: Forbidden
+        '404':
+          description: Camera not found
+        '422':
+          description: Validation exception
+    delete:
+      tags:
+        - camera
+      summary: Deletes Camera
+      description: delete Camera
+      operationId: deleteCamera
+      parameters:
+        - name: cameraId
+          in: path
+          description: Camera id to delete
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '403':
+          description: Forbidden
+        '404':
+          description: Camera not found
+  /sensors:
+    post:
+      tags:
+        - sensor
+      summary: Add a new Sensor to the FPF
+      description: Add a new Sensor to the FPF
+      operationId: addSensor
+      requestBody:
+        description: Create a new Sensor in the FPF
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                fpfId:
+                  description: ID of FPF that the Sensor belongs to
+                  type: string
+                  format: uuid
+              allOf:
+                - $ref: '#/components/schemas/Sensor'
+                - type: object
+                  properties:
+                    id:
+                      readOnly: true
+                    hardwareConfiguration:
+                      $ref: '#/components/schemas/SensorConnection'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Sensor'
+                  - type: object
+                    properties:
+                      hardwareConfiguration:
+                        $ref: '#/components/schemas/SensorConnection'
+        '403':
+          description: Forbidden
+        '422':
+          description: Validation exception
+  /sensors/{sensorId}:
+    get:
+      tags:
+        - sensor
+      summary: Find Sensor by ID
+      description: Returns a single Sensor
+      operationId: getSensorById
+      parameters:
+        - name: sensorId
+          in: path
+          description: ID of Sensor to return
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Sensor'
+                  - type: object
+                    properties:
+                      hardwareConfiguration:
+                        $ref: '#/components/schemas/SensorConnection'
+        '403':
+          description: Forbidden
+        '404':
+          description: Sensor not found
+    put:
+      tags:
+        - sensor
+      summary: Update an existing Sensor
+      description: Update an existing Sensor by Id
+      operationId: updateSensor
+      parameters:
+        - name: sensorId
+          in: path
+          description: ID of Sensor to update
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: Update an existing Sensor
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/Sensor'
+                - type: object
+                  properties:
+                    id:
+                      readOnly: true
+                    hardwareConfiguration:
+                      $ref: '#/components/schemas/SensorConnection'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Sensor'
+                  - type: object
+                    properties:
+                      hardwareConfiguration:
+                        $ref: '#/components/schemas/SensorConnection'
+        '400':
+          description: Invalid ID supplied
+        '404':
+          description: Sensor not found
+        '422':
+          description: Validation exception
+  /sensors/types/available/{fpfId}:
+    get:
+      tags:
+        - sensor
+      summary: Available Sensor connection types of the FPF
+      description: Get all available Sensor connection types of the FPF
+      operationId: getSensorConnections
+      parameters:
+        - name: fpfId
+          in: path
+          description: ID of FPF's sensor connections to return
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SensorDescription'
+        '403':
+          description: Forbidden
+        '422':
+          description: Validation exception
+  /growing-cycles:
+    post:
+      tags:
+        - cycle
+      summary: Add a new GrowingCycle to the FPF
+      description: Add a new GrowingCycle to the FPF
+      operationId: addGrowingCycle
+      requestBody:
+        description: Create a new GrowingCycle in the FPF
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/GrowingCycle'
+                - type: object
+                  properties:
+                    id:
+                      readOnly: true
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GrowingCycle'
+        '403':
+          description: Forbidden
+        '422':
+          description: Validation exception
+  /growing-cycles/{growingCycleId}:
+    put:
+      tags:
+        - cycle
+      summary: Update an existing GrowingCycle
+      description: Update an existing GrowingCycle by Id
+      operationId: updateGrowingCycle
+      parameters:
+        - name: growingCycleId
+          in: path
+          description: GrowingCycle id to update
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: Update an existing GrowingCycle
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/GrowingCycle'
+                - type: object
+                  properties:
+                    id:
+                      readOnly: true
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GrowingCycle'
+        '403':
+          description: Forbidden
+        '404':
+          description: GrowingCycle not found
+        '422':
+          description: Validation exception
+    delete:
+      tags:
+        - cycle
+      summary: Deletes GrowingCycle
+      description: delete GrowingCycle
+      operationId: deleteGrowingCycle
+      parameters:
+        - name: growingCycleId
+          in: path
+          description: GrowingCycle id to delete
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '403':
+          description: Forbidden
+        '404':
+          description: GrowingCycle not found
+  /growing-cycles/list/{fpfId}:
+    get:
+      tags:
+        - cycle
+      summary: Find GrowingCycles by FPFId
+      description: Returns a list of GrowingCycles
+      operationId: getGrowingCyclesByFPFId
+      parameters:
+        - name: fpfId
+          in: path
+          description: ID of FPF the growing-cycles belong to
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GrowingCycle'
+        '403':
+          description: Forbidden
+        '404':
+          description: GrowingCycle not found
+  /harvests:
+    post:
+      tags:
+        - harvest
+      summary: Add a new Harvest to the GrowingCycle
+      description: Add a new Harvest to the GrowingCycle
+      operationId: addHarvest
+      requestBody:
+        description: Create a new Harvest in the GrowingCycle
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/Harvest'
+                - type: object
+                  properties:
+                    id:
+                      readOnly: true
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Harvest'
+        '403':
+          description: Forbidden
+        '422':
+          description: Validation exception
+  /harvests/{harvestId}:
+    put:
+      tags:
+        - harvest
+      summary: Update an existing Harvest
+      description: Update an existing Harvest by Id
+      operationId: updateHarvest
+      parameters:
+        - name: harvestId
+          in: path
+          description: Harvest id to update
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: Update an existing Harvest
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/Harvest'
+                - type: object
+                  properties:
+                    id:
+                      readOnly: true
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Harvest'
+        '403':
+          description: Forbidden
+        '404':
+          description: Harvest not found
+        '422':
+          description: Validation exception
+    delete:
+      tags:
+        - harvest
+      summary: Deletes Harvest
+      description: delete Harvest
+      operationId: deleteHarvest
+      parameters:
+        - name: harvestId
+          in: path
+          description: HarvestId to delete
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '403':
+          description: Forbidden
+        '404':
+          description: Harvest not found
+  /harvests/list/{growingCycleId}:
+    get:
+      tags:
+        - harvest
+      summary: Find Harvests by GrowingCycleId
+      description: Returns a list of Harvsts 
+      operationId: getHarvestsByGrowingCycleId
+      parameters:
+        - name: growingCycleId
+          in: path
+          description: GrowingCycleId to return harvests for
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Harvest'
+        '403':
+          description: Forbidden
+        '404':
+          description: GrowingCycle not found
+  /userprofiles:
+    get:
+      tags:
+        - userprofile
+      summary: Find Userprofile by user
+      description: Returns a single Userprofile if no Userprofile exists yet creates one
+      operationId: getUserprofile
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Userprofile'
+        '403':
+          description: Forbidden
+  /userprofiles/{searchString}:
+    get:
+      tags:
+        - userprofile
+      summary: Returns list of Userprofiles by search string
+      description: Returns list of Userprofiles matching the search string in name or email
+      operationId: getUserprofileWithSearch
+      parameters:
+        - name: searchString
+          in: path
+          description: search string in name or email
+          required: true
+          schema:
+            type: string
+        - name: exclude_organization_id
+          in: query
+          description: Datetime at which the measurement range begins, default 1 week
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Userprofile'
+        '403':
+          description: Forbidden
+  /userprofiles/{userprofileId}:
+    put:
+      tags:
+        - userprofile
+      summary: Update an existing Userprofile
+      description: Update an existing Userprofile by Id
+      operationId: updateUserprofile
+      parameters:
+        - name: userprofileId
+          in: path
+          description: Userprofile id to update
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: Update an existing Userprofile
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/Userprofile'
+                - type: object
+                  properties:
+                    id:
+                      readOnly: true
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Userprofile'
+        '400':
+          description: Invalid ID supplied
+        '403':
+          description: Forbidden
+        '422':
+          description: Validation exception
+    delete:
+      tags:
+        - userprofile
+      summary: Deletes Userprofile
+      description: Delete Userprofile if request is made by the owner of the Userprofile or Systemadmin
+      operationId: deleteUserprofile
+      parameters:
+        - name: userprofileId
+          in: path
+          description: Userprofile id to delete
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: successful operation
+        '403':
+          description: Forbidden
+  /memberships:
+    post:
+      tags:
+        - membership
+      summary: Add a new Membership to the Organization
+      description: Add a new Membership to the Organization
+      operationId: addMembership
+      requestBody:
+        description: Create a new Membership in the Organization
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                organizationId:
+                  description: ID of Organization that the Membership belongs to
+                  type: string
+                  format: uuid
+                useprofileId:
+                  description: ID of User that the Membership belongs to
+                  type: string
+                  format: uuid
+                membershipRole:
+                  type: string
+                  enum:
+                    - admin
+                    - member
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  createdAt:
+                    type: string
+                    format: date-time
+                    description: the date-time notation as defined by RFC 3339, section 5.6
+                    example: 2017-07-21T17:32:28Z
+                  membershipRole:
+                    type: string
+                    enum:
+                      - admin
+                      - member
+        '403':
+          description: Forbidden
+        '422':
+          description: Validation exception
+  /memberships/{membershipId}:
+    put:
+      tags:
+        - membership
+      summary: Update an existing Membership
+      description: Update an existing Membership by Id
+      operationId: updateMembership
+      parameters:
+        - name: membershipId
+          in: path
+          description: Membership id to delete
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: Update an existing Membership
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                membershipRole:
+                  type: string
+                  enum:
+                    - admin
+                    - member
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  membershipRole:
+                    type: string
+                    enum:
+                      - admin
+                      - member
+        '403':
+          description: Forbidden
+        '422':
+          description: Validation exception
+    delete:
+      tags:
+        - membership
+      summary: Deletes Membership
+      description: delete Membership
+      operationId: deleteMembership
+      parameters:
+        - name: membershipId
+          in: path
+          description: Membership id to delete
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: successful operation
+        '403':
+          description: Forbidden
+  /fpfs/{fpfId}/data:
+    get:
+      tags:
+        - data
+      summary: FPF Data
+      description: Returns all Measurements and images from the FPF in the requested range
+      operationId: getFPFDataInRange
+      parameters:
+        - name: fpfId
+          in: path
+          description: ID of FPF to return
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: from
+          in: query
+          description: Datetime at which the measurement range begins, default 1 week
+          schema:
+            type: string
+            format: date-time
+        - name: to
+          in: query
+          description: Datetime at which the measurement range ends, default now
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FPFData'
+        '404':
+          description: FPF not found
+  /fpfs/{fpfId}/ws:
+    get:
+      tags:
+        - data
+      summary: FPF Data websocket
+      description: Mockup for Websocket of FPF data.
+      operationId: getFPFDataInRangeWs
+      parameters:
+        - name: fpfId
+          in: path
+          description: ID of FPF to return
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FPFData'
+  /sensors/{sensorId}/measurements:
+    get:
+      tags:
+        - data
+      summary: Sensor Data
+      description: Returns all Measurements from the Sensor in the requested range
+      operationId: getSensorDataInRange
+      parameters:
+        - name: sensorId
+          in: path
+          description: ID of Sensor to return
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: from
+          in: query
+          description: Datetime at which the measurement range begins, default 1 week
+          schema:
+            type: string
+            format: date-time
+        - name: to
+          in: query
+          description: Datetime at which the measurement range ends, default now
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Measurement'
+  /cameras/{cameraId}/images:
+    get:
+      tags:
+        - data
+      summary: Camera Data
+      description: Returns all Measurements and images from the Camera in the requested range
+      operationId: getCameraDataInRange
+      parameters:
+        - name: cameraId
+          in: path
+          description: ID of Camera to return
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: from
+          in: query
+          description: Datetime at which the measurement range begins, default 1 week
+          schema:
+            type: string
+            format: date-time
+        - name: to
+          in: query
+          description: Datetime at which the measurement range ends, default now
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Image'
+  /websocket-token:
+    get:
+      tags:
+        - auth
+      summary: Websocket auth token
+      description: Returns single use auth token for websocket connect
+      operationId: getWebsocketToken
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+components:
+  schemas:
+    Userprofile:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        systemRole:
+          type: string
+          enum:
+            - Admin
+            - User
+    UserprofileTK:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+    Organization:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        isPublic:
+          type: boolean
+        memberships:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+              membershipRole:
+                type: string
+                enum:
+                  - admin
+                  - member
+              createdAt:
+                type: string
+                format: date-time
+                description: the date-time notation as defined by RFC 3339, section 5.6
+                example: 2017-07-21T17:32:28Z
+              userprofile:
+                $ref: '#/components/schemas/UserprofileTK'
+        FPFs:
+          type: array
+          items:
+            $ref: '#/components/schemas/FPFTK'
+    OrganizationTK:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+    FPFTK:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+    Camera:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        location:
+          type: string
+        modelNr:
+          type: string
+        resolution:
+          type: string
+        isActive:
+          type: boolean
+        intervalSeconds:
+          type: integer
+        livestreamUrl:
+          type: string
+        snapshotUrl:
+          type: string
+    Sensor:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        location:
+          type: string
+        unit:
+          type: string
+          enum:
+            - °C
+            - °F
+            - kg
+        modelNr:
+          type: string
+        isActive:
+          type: boolean
+        intervalSeconds:
+          type: integer
+    GrowingCycle:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        fpfId:
+          type: string
+          format: uuid
+        startDate:
+          type: string
+          format: date-time
+        endDate:
+          type: string
+          format: date-time
+        plants:
+          type: string
+        note:
+          type: string
+        harvests:
+          type: array
+          items:
+            $ref: '#/components/schemas/Harvest'
+    Harvest:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        growingCycleId:
+          type: string
+          format: uuid
+        date:
+          type: string
+          format: date-time
+        amountInKg:
+          type: number
+        note:
+          type: string
+    FPFData:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        isPublic:
+          type: boolean
+        sensorServiceIp:
+          type: string
+          format: ipv4
+        address:
+          type: string
+        Sensors:
+          type: array
+          items:
+            $ref: '#/components/schemas/SensorData'
+        Cameras:
+          type: array
+          items:
+            $ref: '#/components/schemas/CameraData'
+        GrowingCycles:
+          type: array
+          items:
+            $ref: '#/components/schemas/GrowingCycle'
+    SensorData:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        location:
+          type: string
+        unit:
+          type: string
+          enum:
+            - °C
+            - °F
+            - kg
+        modelNr:
+          type: string
+        isActive:
+          type: boolean
+        intervalSeconds:
+          type: integer
+        measurements:
+          type: array
+          items:
+            $ref: '#/components/schemas/Measurement'
+    Measurement:
+      type: object
+      properties:
+        measuredAt:
+          type: string
+          format: date-time
+          description: the date-time notation as defined by RFC 3339, section 5.6
+          example: 2017-07-21T17:32:28Z
+        value:
+          type: number
+          format: double
+    CameraData:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        location:
+          type: string
+        modelNr:
+          type: string
+        resolution:
+          type: string
+        isActive:
+          type: boolean
+        intervalSeconds:
+          type: integer
+        images:
+          type: array
+          items:
+            $ref: '#/components/schemas/Image'
+    SensorConnection:
+      type: object
+      properties:
+        sensorClassId:
+          type: string
+        additionalInformation:
+          type: object
+    Image:
+      type: object
+      properties:
+        measuredAt:
+          type: string
+          format: date-time
+          description: the date-time notation as defined by RFC 3339, section 5.6
+          example: 2017-07-21T17:32:28Z
+        url:
+          type: string
+          format: url
+    SensorDescription:
+      type: object
+      properties:
+        sensorClassId: 
+          type: string
+        name: 
+          type: string
+        connection: 
+          type: string
+        parameter: 
+          type: string
+        tags: 
+          type: object
+        fields: 
+          type: array
+          items:
+            $ref: '#/components/schemas/FieldDescription'
+    FieldDescription:
+      type: object
+      properties:
+        name: 
+          type: string
+        type:
+          type: string
+        rules: 
+          type: array
+          items:
+            type: object
+  requestBodies:
+    Organization:
+      description: Organization object that needs to be added
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Organization'
