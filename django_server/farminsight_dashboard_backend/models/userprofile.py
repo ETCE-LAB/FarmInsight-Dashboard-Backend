@@ -1,4 +1,3 @@
-import uuid
 from farminsight_dashboard_backend.utils import ListableEnum
 
 from django.db import models
@@ -12,3 +11,6 @@ class SystemRole(ListableEnum):
 class Userprofile(AbstractUser):
     name = models.CharField(max_length=256)
     systemRole = models.CharField(max_length=256, default=SystemRole.User.value)
+
+    def __str__(self):
+        return f"{self.email} {self.name} - {self.systemRole}"

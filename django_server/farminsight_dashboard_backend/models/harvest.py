@@ -10,3 +10,6 @@ class Harvest(models.Model):
     amountInKg = models.FloatField(default=0)
     note = models.CharField(max_length=256, blank=True)
     growingCycle = models.ForeignKey(GrowingCycle, related_name='harvests', on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"{self.growingCycle.FPF.name}: {self.growingCycle.plants} {self.date} {self.amountInKg}kg"
