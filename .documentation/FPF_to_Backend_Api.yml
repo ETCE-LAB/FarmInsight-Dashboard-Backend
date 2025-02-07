@@ -1,0 +1,155 @@
+openapi: 3.0.3
+info:
+  title: Swagger Farminsight Backend - FPF Communication - OpenAPI 3.0
+  description: |-
+    Description TODO
+  termsOfService: TOS
+  contact:
+    email: apiteam@swagger.io
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  version: 1.0.11
+externalDocs:
+  description: Find out more about Swagger
+  url: http://swagger.io
+servers:
+  - url: https://anants-pi-cluster.de/api
+tags:
+  - name: data
+    description: Data and Image upload Endpoints
+  - name: auth
+paths:
+  /fpfs/{fpfId}/api-key:
+    get:
+      tags:
+        - auth
+      summary: Requests that the FPF gets send a new API-Key
+      operationId: getFPFApiKey
+      parameters:
+        - name: fpfId
+          in: path
+          description: ID of FPF that the API-Key should get sent to
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Successful operation
+        '404':
+          description: FPF not found
+  /measurements:
+    post:
+      tags:
+        - data
+      summary: Upload sensor measurements
+      description: Uploads measurements of a multiple Sensors
+      operationId: postSensorMeasurements
+      requestBody:
+        description: Array of Measurements
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: object
+                properties:
+                  sensorId:
+                    type: string
+                    format: uuid
+                  values:
+                    type: array
+                    items: 
+                      $ref: '#/components/schemas/Measurement'
+      responses:
+        '200':
+          description: Successful operation
+        '404':
+          description: Sensor not found
+        '422':
+          description: Validation exception
+  /measurements/{sensorId}:
+    post:
+      tags:
+        - data
+      summary: Upload sensor measurements
+      description: Uploads measurements of a single Sensor
+      operationId: postMeasurements
+      parameters:
+        - name: sensorId
+          in: path
+          description: ID of Sensor that the Measurements belong to
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: Array of Measurements
+        content:
+          application/json:
+            schema:
+              type: array
+              items: 
+                $ref: '#/components/schemas/Measurement'
+      responses:
+        '200':
+          description: Successful operation
+        '404':
+          description: Sensor not found
+        '422':
+          description: Validation exception
+  /images/{cameraId}:
+    post:
+      tags:
+        - data
+      summary: Upload Camera image
+      description: Uploads one image of a single Camera
+      operationId: postImage
+      parameters:
+        - name: cameraId
+          in: path
+          description: ID of Camera that the image belong to
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: Image
+        content:
+          application/json:
+            schema:
+                $ref: '#/components/schemas/Image'
+      responses:
+        '200':
+          description: Successful operation
+        '404':
+          description: Sensor not found
+        '422':
+          description: Validation exception
+components:
+  schemas:
+    Image:
+      type: object
+      properties:
+        measuredAt:
+          type: string
+          format: date-time
+          description: the date-time notation as defined by RFC 3339, section 5.6
+          example: 2017-07-21T17:32:28Z
+        image:
+          type: array
+          items:
+            type: string
+            format: byte
+    Measurement:
+      type: object
+      properties:
+        measuredAt:
+          type: string
+          format: date-time
+          description: the date-time notation as defined by RFC 3339, section 5.6
+          example: 2017-07-21T17:32:28Z
+        value:
+          type: number
+          format: double
