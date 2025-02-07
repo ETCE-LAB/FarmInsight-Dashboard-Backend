@@ -19,3 +19,6 @@ class FPF(models.Model):
         constraints = [
             models.UniqueConstraint(fields=['organization', 'name'], name='unique_name_per_organization')
         ]
+
+    def __str__(self):
+        return f"{self.organization.name}: {self.name}"

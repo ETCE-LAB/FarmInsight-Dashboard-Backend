@@ -203,13 +203,30 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+'''
+These are required while the django backend itself is handling login, they wont be used when using an external identity service
+'''
+FRONTEND_URL = env('FRONTEND_URL', default='http://localhost:3000/')
 LOGIN_URL = '/api/login/'
-FRONTEND_URL = env('FRONTEND_URL', default='https://farminsight.etce.isse.tu-clausthal.de/')
+
+'''
+OIDC_ENABLED, OIDC_ISS_ENDPOINT, OIDC_RSA_PRIVATE_KEY are required for using the django login.
+RESOURCE_SERVER_INTROSPECTION_URL, RESOURCE_SERVER_INTROSPECTION_CREDENTIALS, OAUTH2_VALIDATOR_CLASS
+are required to use an external identity service.
+
+It may be possible to support both at the same time, but not sure what would be required for this.
+
+See the notes in custom_oauth_validator.py for concerns about switching back and how to minimize impact and possibly
+keep the old userprofile records intact on migration. 
+'''
 OAUTH2_PROVIDER = {
     'OIDC_ENABLED': True,
-    'OIDC_ISS_ENDPOINT': env('OIDC_ISS_ENDPOINT'),
+    'OIDC_ISS_ENDPOINT': env('OIDC_ISS_ENDPOINT', default='http://localhost:8000'),
     'OIDC_RSA_PRIVATE_KEY': open(os.path.join(BASE_DIR, 'rsa', 'oidc.key')).read(),
     'SCOPES': {"openid": ''},
+    #'RESOURCE_SERVER_INTROSPECTION_URL': 'https://development-isse-identityserver.azurewebsites.net/connect/introspect',
+    #'RESOURCE_SERVER_INTROSPECTION_CREDENTIALS': ('interactive', ''),
+    #'OAUTH2_VALIDATOR_CLASS': 'farminsight_dashboard_backend.custom_oauth_validator.CustomOAuth2Validator',
 }
 
 REST_FRAMEWORK = {
