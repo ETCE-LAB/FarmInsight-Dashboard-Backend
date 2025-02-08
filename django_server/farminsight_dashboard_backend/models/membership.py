@@ -17,3 +17,6 @@ class Membership(models.Model):
     createdAt = models.DateTimeField(default=timezone.now)
     userprofile = models.ForeignKey(Userprofile, on_delete=models.CASCADE)
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"{self.organization.name}: {self.userprofile.email} -- {self.membershipRole}"

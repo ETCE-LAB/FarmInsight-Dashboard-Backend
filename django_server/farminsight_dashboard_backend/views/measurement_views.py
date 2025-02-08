@@ -1,3 +1,5 @@
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 from rest_framework import views, status
 from rest_framework.response import Response
 from farminsight_dashboard_backend.services import store_measurements_in_influx, valid_api_key_for_sensor
@@ -24,4 +26,9 @@ class MeasurementView(views.APIView):
             return Response(status=status.HTTP_403_FORBIDDEN)
 
         store_measurements_in_influx(sensor_id, request.data)
+        layer = get_channel_layer()
+        if layer is not None:
+            async_to_sync(layer.group_send)(
+                f'sensor_updates_{sensor_id}', {"type": "sensor.measurement", "measurement": request.data}
+            )
         return Response({"message": "Data written successfully"}, status=status.HTTP_201_CREATED)

@@ -78,10 +78,7 @@ class SensorView(APIView):
         except Exception as e:
             raise Exception(f"Unable to create sensor at FPF. {e}")
 
-        # Safe the sensor in local db
-        create_sensor(sensor)
-
-        return Response(status=status.HTTP_200_OK)
+        return Response(create_sensor(sensor), status=status.HTTP_200_OK)
 
     def put(self, request, sensor_id):
         """
@@ -106,7 +103,7 @@ class SensorView(APIView):
             "sensorClassId": data.get('hardwareConfiguration', {}).get('sensorClassId', ''),
             "additionalInformation": data.get('hardwareConfiguration', {}).get('additionalInformation', {})
         }
-        print(update_fpf_payload)
+
         send_request_to_fpf(fpf_id, 'put', f'/api/sensors/{sensor_id}', update_fpf_payload)
 
         # Update sensor locally

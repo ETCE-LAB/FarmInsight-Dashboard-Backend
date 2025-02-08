@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Login</h2>
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Login</button>
+</form>
+
+<p>Don't have an account? <a id="signup-link" href="#">Sign up here</a></p>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var signupLink = document.getElementById('signup-link');
+        var currentParams = new URLSearchParams(window.location.search);
+        signupLink.href = "{% url 'signup_view' %}?" + currentParams.toString();
+    });
+</script>
+{% endblock %}

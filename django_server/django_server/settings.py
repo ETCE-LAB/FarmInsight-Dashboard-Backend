@@ -47,9 +47,15 @@ CSRF_TRUSTED_ORIGINS = [
     'http://localhost:3000',
 ]
 
+# Camera snapshot storage config
+MEDIA_URL = '/'
+MEDIA_ROOT = BASE_DIR
+SITE_URL = "http://localhost:8000"
+
 # Application definition
 
 INSTALLED_APPS = [
+    'daphne',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -81,7 +87,7 @@ ROOT_URLCONF = 'django_server.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates']
+        'DIRS': [BASE_DIR / 'farminsight_dashboard_backend' / 'templates']
         ,
         'APP_DIRS': True,
         'OPTIONS': {
@@ -95,8 +101,17 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'django_server.wsgi.application'
+ASGI_APPLICATION = "django_server.asgi.application"
 
+CHANNEL_LAYERS = {
+    "default": {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer'
+        # "BACKEND": "channels_redis.core.RedisChannelLayer",
+        # "CONFIG": {
+        #    "hosts": [("127.0.0.1", 6379)],
+        #},
+    },
+}
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
@@ -186,11 +201,30 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+'''
+These are required while the django backend itself is handling login, they wont be used when using an external identity service
+'''
+FRONTEND_URL = env('FRONTEND_URL', default='http://localhost:3000/')
+LOGIN_URL = '/api/login/'
+
+'''
+OIDC_ENABLED, OIDC_ISS_ENDPOINT, OIDC_RSA_PRIVATE_KEY are required for using the django login.
+RESOURCE_SERVER_INTROSPECTION_URL, RESOURCE_SERVER_INTROSPECTION_CREDENTIALS, OAUTH2_VALIDATOR_CLASS
+are required to use an external identity service.
+
+It may be possible to support both at the same time, but not sure what would be required for this.
+
+See the notes in custom_oauth_validator.py for concerns about switching back and how to minimize impact and possibly
+keep the old userprofile records intact on migration. 
+'''
 OAUTH2_PROVIDER = {
+    'OIDC_ENABLED': True,
+    'OIDC_ISS_ENDPOINT': env('OIDC_ISS_ENDPOINT', default='http://localhost:8000'),
+    'OIDC_RSA_PRIVATE_KEY': open(os.path.join(BASE_DIR, 'oidc.key')).read(),
     'SCOPES': {"openid": ''},
-    'RESOURCE_SERVER_INTROSPECTION_URL': 'https://development-isse-identityserver.azurewebsites.net/connect/introspect',
-    'RESOURCE_SERVER_INTROSPECTION_CREDENTIALS': ('interactive', ''),
-    'OAUTH2_VALIDATOR_CLASS': 'farminsight_dashboard_backend.custom_oauth_validator.CustomOAuth2Validator',
+    #'RESOURCE_SERVER_INTROSPECTION_URL': 'https://development-isse-identityserver.azurewebsites.net/connect/introspect',
+    #'RESOURCE_SERVER_INTROSPECTION_CREDENTIALS': ('interactive', ''),
+    #'OAUTH2_VALIDATOR_CLASS': 'farminsight_dashboard_backend.custom_oauth_validator.CustomOAuth2Validator',
 }
 
 REST_FRAMEWORK = {
@@ -199,3 +233,6 @@ REST_FRAMEWORK = {
     ),
     'EXCEPTION_HANDLER': 'farminsight_dashboard_backend.exceptions.exceptions.custom_exception_handler'
 }
+
+# 0 or negative for indefinite duration
+API_KEY_VALIDATION_DURATION_DAYS = int(env('API_KEY_VALIDATION_DURATION_DAYS', default='30'))

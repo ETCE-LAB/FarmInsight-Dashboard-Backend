@@ -6,13 +6,20 @@ class DateRangeSerializer(serializers.Serializer):
     """
     from_date = serializers.DateTimeField(
         input_formats=['%Y-%m-%dT%H:%M:%SZ', '%Y-%m-%d'],
-        required=True
+        required=True,
+        error_messages = {
+            'required': "The 'from' query parameter is required.",
+            'invalid': "Invalid date format for 'from'. Expected YYYY-MM-DD or ISO 8601."
+        }
     )
 
     to_date = serializers.DateTimeField(
         input_formats=['%Y-%m-%dT%H:%M:%SZ', '%Y-%m-%d'],
         required=False,
         default=None,
+        error_messages={
+            'invalid': "Invalid date format for 'to'. Expected YYYY-MM-DD or ISO 8601."
+        }
     )
 
     def validate(self, data):
@@ -25,11 +32,11 @@ class DateRangeSerializer(serializers.Serializer):
         to_date = data.get('to_date')
 
         if from_date is None:
-            raise serializers.ValidationError({"from_date": "The 'from' query parameter is required."})
+            raise serializers.ValidationError({"from": "The 'from' query parameter is required."})
 
 
         if to_date and to_date < from_date:
-            raise serializers.ValidationError({"to_date": "'to' date must be later than 'from' date."})
+            raise serializers.ValidationError({"to": "'to' date must be later than 'from' date."})
 
         return data
 

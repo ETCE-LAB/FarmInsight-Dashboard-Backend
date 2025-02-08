@@ -1,11 +1,14 @@
-from farminsight_dashboard_backend.exceptions import NotFoundException
-from farminsight_dashboard_backend.models import FPF, Userprofile
-from farminsight_dashboard_backend.serializers import FPFSerializer
-from farminsight_dashboard_backend.utils import generate_random_api_key
-from .membership_services import get_memberships
 import datetime
+
+from django.conf import settings
 from django.utils import timezone
 
+from farminsight_dashboard_backend.exceptions import NotFoundException
+from farminsight_dashboard_backend.models import FPF, Userprofile, Membership, SystemRole, MembershipRole
+from farminsight_dashboard_backend.serializers import FPFSerializer, FPFPreviewSerializer, FPFFunctionalSerializer
+from farminsight_dashboard_backend.utils import generate_random_api_key
+from .membership_services import get_memberships
+from django.core.exceptions import PermissionDenied
 
 def create_fpf(data) -> FPFSerializer:
     """
@@ -36,6 +39,32 @@ def create_fpf(data) -> FPFSerializer:
 
     return serializer
 
+def update_fpf(fpf_id, data, user):
+    """
+    Only an Admin or an SysAdmin can update the FPF
+    :param fpf_id:
+    :param data:
+    :param user:
+    :return:
+    """
+    try:
+        membership = Membership.objects.get(userprofile_id=user.id)
+    except Membership.DoesNotExist:
+        raise NotFoundException(f'Membership {user.id} not found.')
+
+    memberships = get_memberships(user) \
+        .filter(organization_id=membership.organization.id, membershipRole=MembershipRole.Admin.value) \
+        .all()
+
+    if len(memberships) > 0 or user.systemRole == SystemRole.SystemAdmin.value:
+
+        fpf = FPF.objects.get(id=fpf_id)
+        serializer = FPFFunctionalSerializer(fpf, data=data)
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+            return serializer
+    raise PermissionDenied()
+
 
 def get_fpf_by_id(fpf_id: str):
     fpf = FPF.objects.filter(id=fpf_id).prefetch_related('sensors', 'cameras', 'growingCycles').first()
@@ -63,7 +92,21 @@ def update_fpf_api_key(fpf_id):
     send_request_to_fpf(fpf_id, 'post', '/api/api-keys', {"apiKey": key})
     fpf = FPF.objects.get(id=fpf_id)
     fpf.apiKey = key
-    fpf.apiKeyValidUntil = timezone.now() + datetime.timedelta(days=30)
+    if settings.API_KEY_VALIDATION_DURATION_DAYS > 0:
+        fpf.apiKeyValidUntil = timezone.now() + datetime.timedelta(days=settings.API_KEY_VALIDATION_DURATION_DAYS)
     fpf.save()
     return
+
+def get_visible_fpf_preview(user: Userprofile=None) -> FPFPreviewSerializer:
+    fpfs = set()
+    if user:
+        memberships = get_memberships(user)
+        fpfs |= set(
+            fpf for membership in memberships for fpf in membership.organization.fpf_set.all()
+        )
+    public_fpfs = FPF.objects.filter(isPublic=True).all()
+    fpfs |= set([fpf for fpf in public_fpfs])
+
+    serializer = FPFPreviewSerializer(fpfs, many=True)
+    return serializer
 
