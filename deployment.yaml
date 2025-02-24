@@ -58,7 +58,7 @@ spec:
             name: "cifs-secret"
           options:
             networkPath: "//digit-25-203.digit.tu-clausthal.de/Cluster_Storage/Applications/Farminsight/Backend/Database"
-            mountOptions: "dir_mode=0755,file_mode=0755,vers=2.0"
+            mountOptions: "dir_mode=0755,file_mode=0755,vers=2.0,nobrl"
       - name: farminsight-backend-image-pv
         flexVolume:
           driver: "fstab/cifs"
