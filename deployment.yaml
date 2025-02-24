@@ -51,8 +51,20 @@ spec:
             - key: oidc.key
               path: oidc.key
       - name: farminsight-backend-sqlite-pv
-        persistentVolumeClaim:
-          claimName: farminsight-backend-sqlite-pvc
+        flexVolume:
+          driver: "fstab/cifs"
+          fsType: "cifs"
+          secretRef:
+            name: "cifs-secret"
+          options:
+            networkPath: "//digit-25-203.digit.tu-clausthal.de/Cluster_Storage/Applications/Farminsight/Backend/Database"
+            mountOptions: "dir_mode=0755,file_mode=0755,vers=2.0"
       - name: farminsight-backend-image-pv
-        persistentVolumeClaim:
-          claimName: farminsight-backend-image-pvc
+        flexVolume:
+          driver: "fstab/cifs"
+          fsType: "cifs"
+          secretRef:
+            name: "cifs-secret"
+          options:
+            networkPath: "//digit-25-203.digit.tu-clausthal.de/Cluster_Storage/Applications/Farminsight/Backend/Pictures"
+            mountOptions: "dir_mode=0755,file_mode=0755,vers=2.0"
