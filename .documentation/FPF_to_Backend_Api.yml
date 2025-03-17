@@ -127,6 +127,37 @@ paths:
           description: Sensor not found
         '422':
           description: Validation exception
+/log_message:
+    post:
+      summary: Write a log message to the dashboard db
+      description: Write a log message to the dashboard db
+      operationId: addLogMessage
+      requestBody:
+        description: Create a new Log message sensorId and fpfId are optional, createdAt is in ISO 8601 format
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                sensorId:
+                  type: string
+                  format: uuid
+                fpfId:
+                  type: string
+                  format: uuid
+                message:
+                  type: string
+                level:
+                  type: string
+                createdAt:
+                  type: string
+                  format: date-time
+        required: true
+      responses:
+        '201':
+          description: Object created
+        '403':
+          description: Forbidden
 components:
   schemas:
     Image:
