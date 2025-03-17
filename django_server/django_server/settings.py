@@ -50,7 +50,7 @@ CSRF_TRUSTED_ORIGINS = [
 # Camera snapshot storage config
 MEDIA_URL = '/'
 MEDIA_ROOT = BASE_DIR
-SITE_URL = "http://localhost:8000"
+SITE_URL = env("SITE_URL", default="http://localhost:8000")
 
 # Application definition
 
@@ -142,7 +142,7 @@ LOGGING = {
             'level': 'DEBUG',  # Set to INFO or WARNING in production
             'class': 'logging.StreamHandler',
             'formatter': 'simple',
-        }
+        },
     },
     'loggers': {
         'django': {

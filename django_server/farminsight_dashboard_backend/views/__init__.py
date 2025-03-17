@@ -9,3 +9,4 @@ from .sensor_views import SensorView, get_fpf_sensor_types
 from .auth_views import get_websocket_token, login_view, signup_view, logout_view, change_password_view
 from .camera_views import CameraView, post_camera, get_camera_livestream
 from .harvest_views import post_harvest, HarvestEditViews, get_harvests
+from .log_views import post_log_message

@@ -1,5 +1,5 @@
-from datetime import datetime, timedelta
-from django.conf import settings
+from datetime import datetime
+
 
 def get_date_range(from_date=None, to_date=None):
     """

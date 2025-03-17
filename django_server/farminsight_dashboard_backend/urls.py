@@ -30,6 +30,7 @@ from farminsight_dashboard_backend.views import (
     signup_view,
     change_password_view,
     logout_view,
+    post_log_message,
 )
 
 urlpatterns = [
@@ -65,5 +66,6 @@ urlpatterns = [
     path('signup/', signup_view, name='signup_view'),
     path('logout', logout_view, name='logout_view'),
     path('change-password', change_password_view, name='change_password_view'),
+    path('log_message', post_log_message, name='post_log_message'),
 ]
 
