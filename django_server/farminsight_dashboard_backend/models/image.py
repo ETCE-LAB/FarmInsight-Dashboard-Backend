@@ -11,4 +11,4 @@ class Image(models.Model):
     camera = models.ForeignKey(Camera, related_name='images', on_delete=models.CASCADE)
 
     def __str__(self):
-        return f"{self.camera.name} {self.measuredAt}"
+        return f"{self.camera.name} {self.measuredAt} {self.camera}"

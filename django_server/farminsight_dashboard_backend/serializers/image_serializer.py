@@ -12,6 +12,7 @@ class ImageURLSerializer(serializers.ModelSerializer):
         fields = [
             'url',
             'measuredAt',
+            'camera'
         ]
 
     def get_url(self, obj):
