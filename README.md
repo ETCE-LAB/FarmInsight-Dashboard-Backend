@@ -181,10 +181,11 @@ docker-compose down
 ```
 
 #### Starting the Django app
-If necessary, migrate the SQLite database
+If necessary, migrate the SQLite database and load the default application
 ```sh
 python manage.py makemigrations
 python manage.py migrate
+python manage.py loaddata application
 ```
 
 Start on 
@@ -194,7 +195,7 @@ python manage.py runsever
 
 Run on a desired port
 ```sh
-python manage.py runserver localhost:8002 
+python manage.py runserver localhost:8000 
 ```
 
 
@@ -209,7 +210,12 @@ influx query 'from(bucket:"c7e6528b-76fd-4895-8bb9-c6cd500fc152") |> range(start
 ### Pitfalls during development
 When startup fails check that the .env.dev and oidc.key file exist and are filled out correctly.
 
-When api requests fail and using the django backend login system an application needs to be registered with the farminsight client id, public client secret, oidc support rsa sha-256, grant type code and the frontent callback urls in http://localhost:8000/o/applications/register/
+
+When you encounter **Error: invalid_request Invalid client_id parameter value.** while trying to log in it means your database is not fully setup.
+To remedy this and setup an application and default admin superuser (pw:1234) **DEVELOPMENT ONLY**:
+```sh
+python manage.py loaddata application
+```
 
 The FPF-Backend is setup so it can only be one FPF at a time, if the Dashboard backend DB gets emptied and you want to create a new FPF, u also need to empty the FPF-Backend configuration tables.
 ### Administrative actions
