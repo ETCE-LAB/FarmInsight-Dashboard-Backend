@@ -1,7 +1,8 @@
 from farminsight_dashboard_backend.models import Image
+from farminsight_dashboard_backend.serializers import ImageURLSerializer
 
 
-def get_images_by_camera(camera_id, from_date, to_date=None):
+def get_images_by_camera(camera_id, from_date, to_date=None) -> ImageURLSerializer:
     """
     Retrieve snapshots for a specific camera within a given timeframe.
 
@@ -13,4 +14,4 @@ def get_images_by_camera(camera_id, from_date, to_date=None):
     images = Image.objects.filter(camera_id=camera_id, measuredAt__gte=from_date)
     if to_date:
         images = images.filter(measuredAt__lte=to_date)
-    return images.order_by('-measuredAt')
+    return ImageURLSerializer(images.order_by('-measuredAt'), many=True)

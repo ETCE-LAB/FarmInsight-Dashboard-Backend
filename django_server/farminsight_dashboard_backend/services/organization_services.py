@@ -1,4 +1,4 @@
-from farminsight_dashboard_backend.models import Membership, MembershipRole, FPF
+from farminsight_dashboard_backend.models import Membership, MembershipRole, FPF, Sensor
 from farminsight_dashboard_backend.serializers import OrganizationSerializer
 from farminsight_dashboard_backend.models import Organization
 from django.core.exceptions import PermissionDenied
@@ -20,6 +20,12 @@ def get_organization_by_id(id: str) -> Organization:
 def get_organization_by_fpf_id(fpf_id) -> Organization:
     org = FPF.objects.select_related('organization').get(id=fpf_id).organization
     return org
+
+
+def get_organization_by_sensor_id(sensor_id) -> Organization:
+    org = Sensor.objects.select_related('FPF').get(id=sensor_id).FPF.organization
+    return org
+
 
 def update_organization(org_id, data, user) -> OrganizationSerializer:
     """

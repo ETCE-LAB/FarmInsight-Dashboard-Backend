@@ -38,6 +38,8 @@ tags:
     description: FPF, Sensor and Camera data retrieveal
   - name: auth
     description: Authentification endpoints
+  - name: log
+    description: Log Message endpoints
 paths:
   /fpfs:
     post:
@@ -1348,6 +1350,71 @@ paths:
                 properties:
                   token:
                     type: string
+  /log_message/{resourceType}/{resourceId}:
+    get:
+      tags:
+        - log
+      summary: Find Log Messages by type and id
+      description: Returns a list of LogMessages
+      operationId: getLogMessageByTypeAndId
+      parameters:
+        - name: resourceType
+          in: path
+          description: Type of resource the log messages belong to
+          required: true
+          schema:
+            type: string
+            enum: [fpf, sensor]
+        - name: resourceId
+          in: path
+          description: Id of resource the log messages belong to 
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: amount
+          in: query
+          description: Amount of newest log messages to return. AMOUNT or FROM is required!
+          schema:
+            type: integer
+        - name: from
+          in: query
+          description: Datetime at which the range begins. AMOUNT or FROM is required!
+          schema:
+            type: string
+            format: date-time
+        - name: to
+          in: query
+          description: Datetime at which the range ends
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      format: uuid
+                    createdAt:
+                      type: string
+                      format: date-time
+                    relatedResourceId:
+                      type: string
+                    logLevel:
+                      type: string
+                    message:
+                      type: string
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
 components:
   schemas:
     Userprofile:

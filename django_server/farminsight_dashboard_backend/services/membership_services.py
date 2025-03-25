@@ -10,13 +10,8 @@ def get_memberships(user: Userprofile) -> QuerySet[Membership]:
     return Membership.objects.filter(userprofile_id=user.id).prefetch_related('organization').all()
 
 
-def create_membership(creating_user: Userprofile, data: dict) -> MembershipSerializer:
-    # Check that the one adding a Member is an Admin of the Organization, or System Admin of the Backend
-    memberships = get_memberships(creating_user) \
-        .filter(organization_id=data['organizationId'], membershipRole=MembershipRole.Admin.value) \
-        .all()
-
-    if len(memberships) > 0 or creating_user.systemRole == SystemRole.SystemAdmin.value:
+def create_membership(user: Userprofile, data: dict) -> MembershipSerializer:
+    if is_admin(user, data['organizationId']):
         membership_serializer = MembershipSerializer(data=data)
         if membership_serializer.is_valid(raise_exception=True):
             membership_serializer.save()
@@ -27,35 +22,29 @@ def create_membership(creating_user: Userprofile, data: dict) -> MembershipSeria
 
 def update_membership(membership_id, creating_user, new_membership_role):
     """
-    An Admin of the Organization, or System Admin of the Backend
-    can promote a user.
+    An Admin of the Organization, or System Admin of the Backend can promote a user.
     :param membership_id:
     :param creating_user:
     :param new_membership_role:
     :return:
     """
-
     try:
         membership = Membership.objects.get(id=membership_id)
     except Membership.DoesNotExist:
         raise NotFoundException(f'Membership {membership_id} not found.')
 
-    memberships = get_memberships(creating_user) \
-        .filter(organization_id=membership.organization.id, membershipRole=MembershipRole.Admin.value) \
-        .all()
-
-    if len(memberships) > 0 or creating_user.systemRole == SystemRole.SystemAdmin.value:
+    if is_admin(creating_user, membership.organization_id):
         membership.membershipRole = new_membership_role
         membership.save()
         return
     raise PermissionDenied()
 
 
-def remove_membership(membership_id, creating_user):
+def remove_membership(membership_id, user):
     """
     Only an admin can delete a user.
     :param membership_id:
-    :param creating_user:
+    :param user:
     :return:
     """
     try:
@@ -63,11 +52,7 @@ def remove_membership(membership_id, creating_user):
     except Membership.DoesNotExist:
         raise NotFoundException(f'Membership {membership_id} not found.')
 
-    memberships = get_memberships(creating_user) \
-        .filter(organization_id=membership.organization.id, membershipRole=MembershipRole.Admin.value) \
-        .all()
-
-    if len(memberships) > 0 or creating_user.systemRole == SystemRole.SystemAdmin.value:
+    if is_admin(user, membership.organization_id):
         membership.delete()
         return
     raise PermissionDenied()
@@ -80,6 +65,14 @@ def is_member(user, organization_id):
         return False
     return True
   
-  
+
+def is_admin(user, organization_id):
+    membership = Membership.objects.filter(userprofile_id=user.id, organization_id=organization_id, membershipRole=MembershipRole.Admin.value).first()
+    if membership is not None:
+        return True
+
+    return user.systemRole == SystemRole.SystemAdmin.value
+
+
 def get_memberships_by_organization(organization_id):
     return Membership.objects.filter(organization_id=organization_id)
