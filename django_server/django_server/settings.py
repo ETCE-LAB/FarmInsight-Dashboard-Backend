@@ -50,7 +50,7 @@ CSRF_TRUSTED_ORIGINS = [
 # Camera snapshot storage config
 MEDIA_URL = '/'
 MEDIA_ROOT = BASE_DIR
-SITE_URL = env("SITE_URL", default="http://localhost:8000")
+SITE_URL = env("SITE_URL", default="http://127.0.0.1:8000")
 
 # Application definition
 
@@ -219,7 +219,7 @@ keep the old userprofile records intact on migration.
 '''
 OAUTH2_PROVIDER = {
     'OIDC_ENABLED': True,
-    'OIDC_ISS_ENDPOINT': env('OIDC_ISS_ENDPOINT', default='http://localhost:8000'),
+    'OIDC_ISS_ENDPOINT': env('OIDC_ISS_ENDPOINT', default='http://127.0.0.1:8000'),
     'OIDC_RSA_PRIVATE_KEY': open(os.path.join(BASE_DIR, 'oidc.key')).read(),
     'SCOPES': {"openid": ''},
     #'RESOURCE_SERVER_INTROSPECTION_URL': 'https://development-isse-identityserver.azurewebsites.net/connect/introspect',
