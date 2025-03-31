@@ -32,9 +32,15 @@ class FpfView(views.APIView):
 
     def get(self, request, fpf_id):
         fpf = FPFFullSerializer(get_fpf_by_id(fpf_id))
-        if not (is_member(request.user, get_organization_by_fpf_id(fpf_id).id) or fpf.data['isPublic']):
+        member = is_member(request.user, get_organization_by_fpf_id(fpf_id).id)
+        if not (member or fpf.data['isPublic']):
             return Response(status=status.HTTP_403_FORBIDDEN)
-        return Response(fpf.data, status=status.HTTP_200_OK)
+
+        data = fpf.data
+        if not member: # only show inActive sensors to members 
+            data['Sensors'] = [sensor for sensor in data['Sensors'] if sensor['isActive']]
+
+        return Response(data, status=status.HTTP_200_OK)
 
 @api_view(['GET'])
 def get_fpf_api_key(request, fpf_id):
