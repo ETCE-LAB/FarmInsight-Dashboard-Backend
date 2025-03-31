@@ -12,6 +12,7 @@ class SensorSerializer(serializers.ModelSerializer):
             'name',
             'location',
             'unit',
+            'parameter',
             'modelNr',
             'isActive',
             'intervalSeconds',
@@ -28,6 +29,7 @@ class SensorDataSerializer(serializers.ModelSerializer):
             'name',
             'location',
             'unit',
+            'parameter',
             'modelNr',
             'isActive',
             'intervalSeconds',
@@ -48,6 +50,7 @@ class SensorDataSerializer(serializers.ModelSerializer):
             to_date=to_date_iso,
         ).get(str(obj.id), [])
 
+
 class SensorLastValueSerializer(serializers.ModelSerializer):
     lastMeasurement = serializers.SerializerMethodField()
 
@@ -58,6 +61,7 @@ class SensorLastValueSerializer(serializers.ModelSerializer):
             'name',
             'location',
             'unit',
+            'parameter',
             'modelNr',
             'isActive',
             'intervalSeconds',
@@ -74,6 +78,7 @@ class SensorLastValueSerializer(serializers.ModelSerializer):
             ).get(str(obj.id), [])
         except Exception as e:
             return {'error': 'Could not fetch last measurement.'}
+
 
 class SensorDBSchemaSerializer(serializers.ModelSerializer):
     class Meta:
