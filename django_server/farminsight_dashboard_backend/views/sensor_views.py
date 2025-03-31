@@ -70,6 +70,7 @@ class SensorView(APIView):
             "intervalSeconds": sensor.get('intervalSeconds'),
             "sensorClassId": sensor.get('hardwareConfiguration', {}).get('sensorClassId', ''),
             "additionalInformation": sensor.get('hardwareConfiguration', {}).get('additionalInformation', {}),
+            "isActive": sensor.get('isActive'),
         }
 
         try:
@@ -101,7 +102,8 @@ class SensorView(APIView):
         update_fpf_payload = {
             "intervalSeconds": data.get('intervalSeconds'),
             "sensorClassId": data.get('hardwareConfiguration', {}).get('sensorClassId', ''),
-            "additionalInformation": data.get('hardwareConfiguration', {}).get('additionalInformation', {})
+            "additionalInformation": data.get('hardwareConfiguration', {}).get('additionalInformation', {}),
+            "isActive": data.get('isActive'),
         }
 
         send_request_to_fpf(fpf_id, 'put', f'/api/sensors/{sensor_id}', update_fpf_payload)

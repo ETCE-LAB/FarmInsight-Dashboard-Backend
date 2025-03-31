@@ -37,7 +37,7 @@ class FpfView(views.APIView):
             return Response(status=status.HTTP_403_FORBIDDEN)
 
         data = fpf.data
-        if not member: # only show inActive sensors to members 
+        if not member: # only show inactive sensors to members
             data['Sensors'] = [sensor for sensor in data['Sensors'] if sensor['isActive']]
 
         return Response(data, status=status.HTTP_200_OK)
