@@ -6,7 +6,10 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.permissions import IsAuthenticated, AllowAny
+from farminsight_dashboard_backend.utils import get_logger
 
+
+logger = get_logger()
 
 class FpfView(views.APIView):
     def get_permissions(self):
@@ -24,6 +27,7 @@ class FpfView(views.APIView):
         :return:
         """
         fpf = update_fpf(fpf_id, request.data, request.user)
+        logger.info('updated fpf', extra={'resource_id': fpf_id})
         return Response(fpf.data, status=status.HTTP_200_OK)
 
     def post(self, request):

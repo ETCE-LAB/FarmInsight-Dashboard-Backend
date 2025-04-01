@@ -5,6 +5,7 @@ from django.utils import timezone
 from .sensor import Sensor
 from .fpf import FPF
 
+
 class LogMessage(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     createdAt = models.DateTimeField(default=timezone.now)
