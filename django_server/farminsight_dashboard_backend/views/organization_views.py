@@ -7,6 +7,10 @@ from rest_framework.views import APIView
 from farminsight_dashboard_backend.serializers import OrganizationFullSerializer
 from farminsight_dashboard_backend.services import create_organization, get_memberships, get_organization_by_id, \
     update_organization
+from farminsight_dashboard_backend.utils import get_logger
+
+
+logger = get_logger()
 
 
 class OrganizationView(APIView):
@@ -30,6 +34,7 @@ class OrganizationView(APIView):
         :return:
         """
         organization = update_organization(organization_id, request.data, request.user)
+        logger.info('organization updated', extra={'resource_id': organization_id})
         return Response(organization.data, status=status.HTTP_200_OK)
 
 

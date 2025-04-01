@@ -46,7 +46,7 @@ class DataRetentionScheduler:
     # how to run this?
     def stop(self):
         self._scheduler.shutdown()
-        self.logger.debug("Cleanup task stopped")
+        self.logger.debug("DataRetentionScheduler stopped")
 
 
 def cleanup_task(logger):

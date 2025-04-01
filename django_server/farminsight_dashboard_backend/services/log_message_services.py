@@ -21,6 +21,8 @@ def write_log_message(level: str, message: str, related_resource_id='', created_
 
 
 def get_log_messages_by_amount(resource_id: str, amount: int) -> LogMessageSerializer:
+    if resource_id == 'None':
+        resource_id = None
     messages = LogMessage.objects.filter(relatedResourceId=resource_id).order_by('-createdAt')[:amount]
     return LogMessageSerializer(messages, many=True)
 

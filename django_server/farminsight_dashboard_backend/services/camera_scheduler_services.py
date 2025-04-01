@@ -1,4 +1,3 @@
-import logging
 import threading
 from datetime import timedelta
 
@@ -9,6 +8,8 @@ from django.utils import timezone
 from farminsight_dashboard_backend.models import Camera
 from farminsight_dashboard_backend.services import get_camera_by_id
 from farminsight_dashboard_backend.services.fpf_connection_services import fetch_camera_snapshot
+from farminsight_dashboard_backend.utils import get_logger
+
 
 class CameraScheduler:
     _instance = None
@@ -30,7 +31,7 @@ class CameraScheduler:
         """
         if not getattr(self, "_initialized", False):
             self._scheduler = BackgroundScheduler()
-            self.log = logging.getLogger("farminsight_dashboard_backend")
+            self.log = get_logger()
             self._initialized = True
 
     def start(self):
@@ -41,7 +42,7 @@ class CameraScheduler:
         self._add_all_camera_jobs()
         self._scheduler.start()
 
-        self.log.info("CameraScheduler started.")
+        self.log.debug("CameraScheduler started.")
 
     def add_camera_job(self, camera_id: str):
         """
@@ -60,7 +61,7 @@ class CameraScheduler:
                     replace_existing=True,
                     next_run_time=timezone.now() + timedelta(seconds=1)
                 )
-                self.log.info(f"Camera {camera.id} snapshot task scheduled with interval {interval} seconds.")
+                self.log.debug(f"Camera {camera.id} snapshot task scheduled with interval {interval} seconds.")
         except Camera.DoesNotExist:
             self.log.warning(f"Camera with ID {camera_id} does not exist or is not active.")
 
@@ -74,7 +75,7 @@ class CameraScheduler:
             camera = Camera.objects.get(id=camera_id, isActive=True)
             if camera.isActive:
                 self._scheduler.remove_job(job_id=f"camera_{camera.id}_snapshot")
-                self.log.info(f"Camera {camera.id} snapshot task deleted.")
+                self.log.debug(f"Camera {camera.id} snapshot task deleted.")
         except Camera.DoesNotExist:
             self.log.warning(f"Camera with ID {camera_id} does not exist or is not active.")
 
@@ -93,7 +94,7 @@ class CameraScheduler:
             if existing_job:
                 # Remove the existing job
                 self._scheduler.remove_job(job_id=job_id)
-                self.log.info(f"Existing job for camera {camera_id} removed.")
+                self.log.debug(f"Existing job for camera {camera_id} removed.")
 
             # Add a new job with the updated interval
             camera = get_camera_by_id(camera_id)
@@ -106,7 +107,7 @@ class CameraScheduler:
                     replace_existing=True,
                     next_run_time=timezone.now() + timedelta(seconds=1)
                 )
-                self.log.info(f"Camera {camera.id} snapshot task rescheduled with new interval {new_interval} seconds.")
+                self.log.debug(f"Camera {camera.id} snapshot task rescheduled with new interval {new_interval} seconds.")
             else:
                 self.log.warning(f"Camera {camera_id} is not active. Cannot reschedule task.")
         except Camera.DoesNotExist:

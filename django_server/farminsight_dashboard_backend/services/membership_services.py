@@ -59,11 +59,11 @@ def remove_membership(membership_id, user):
 
 
 def is_member(user, organization_id):
-    memberships = get_memberships(user)
-    organization_ids = memberships.values_list('organization_id', flat=True)
-    if organization_id not in organization_ids:
-        return False
-    return True
+    membership = Membership.objects.filter(userprofile_id=user.id, organization_id=organization_id).first()
+    if membership is not None:
+        return True
+
+    return is_system_admin(user)
   
 
 def is_admin(user, organization_id):
@@ -71,6 +71,10 @@ def is_admin(user, organization_id):
     if membership is not None:
         return True
 
+    return is_system_admin(user)
+
+
+def is_system_admin(user):
     return user.systemRole == SystemRole.SystemAdmin.value
 
 
