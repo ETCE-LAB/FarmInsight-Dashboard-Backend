@@ -1,11 +1,14 @@
-import logging
 import time
-from django.apps import AppConfig
+import signal
 import os
 import threading
+
+from django.apps import AppConfig
 from django.db.utils import OperationalError
 from django.db.migrations.executor import MigrationExecutor
 from django.db import connections
+
+from farminsight_dashboard_backend.utils import get_logger
 
 
 class FarminsightDashboardBackendConfig(AppConfig):
@@ -14,7 +17,7 @@ class FarminsightDashboardBackendConfig(AppConfig):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.log = logging.getLogger('farminsight_dashboard_backend')
+        self.log = get_logger()
 
     def initialize_app(self, max_retries=3, retry_interval=3):
         """
@@ -29,10 +32,11 @@ class FarminsightDashboardBackendConfig(AppConfig):
                     time.sleep(retry_interval)
                     retry_count += 1
                 else:
-                    from farminsight_dashboard_backend.services import InfluxDBManager, CameraScheduler
+                    from farminsight_dashboard_backend.services import InfluxDBManager, CameraScheduler, DataRetentionScheduler
 
                     InfluxDBManager.get_instance().initialize_connection()
                     CameraScheduler.get_instance().start()
+                    DataRetentionScheduler.get_instance().start()
                     self.log.info("Started successfully.")
                     break
             except OperationalError as e:
@@ -65,4 +69,3 @@ class FarminsightDashboardBackendConfig(AppConfig):
         """
         if os.environ.get('RUN_MAIN') == 'true':
             threading.Thread(target=self.initialize_app, daemon=True).start()
-

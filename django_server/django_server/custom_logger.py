@@ -1,5 +1,4 @@
 import logging
-from django.db import connection
 
 
 class DatabaseLogHandler(logging.Handler):

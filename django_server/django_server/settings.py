@@ -239,4 +239,8 @@ REST_FRAMEWORK = {
 }
 
 # 0 or negative for indefinite duration
-API_KEY_VALIDATION_DURATION_DAYS = int(env('API_KEY_VALIDATION_DURATION_DAYS', default='30'))
+API_KEY_VALIDATION_DURATION_DAYS = env('API_KEY_VALIDATION_DURATION_DAYS', default=30)
+
+
+# How long until log messages get deleted from the DB to avoid unnecessary bloat
+DB_LOG_RETENTION_DAYS = env('DB_LOG_RETENTION_DAYS', default=7)
