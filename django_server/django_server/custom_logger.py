@@ -8,11 +8,16 @@ class DatabaseLogHandler(logging.Handler):
         resource_id = getattr(record, 'resource_id', None)
 
         try:
-            LogMessage.objects.create(
+            '''
+            Messages coming straight from django itself are in async context because we're using channels and daphne
+            and thus can't synchronously write to the DB, so just using the acreate function in this case.
+            '''
+            LogMessage.objects.acreate(
                 message=self.format(record),
                 logLevel=record.levelname,
                 relatedResourceId=resource_id,
             )
+            return
         except Exception as e:
-            print(e)
-            pass # ignore here, to log somewhere to file in another logger as backup
+            # print(f'DatabaseLogHandler: {e}')
+            pass

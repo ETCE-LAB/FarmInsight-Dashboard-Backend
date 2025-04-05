@@ -2,7 +2,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
-from farminsight_dashboard_backend.serializers import DateRangeSerializer, FPFFullDataSerializer, ImageURLSerializer
+from farminsight_dashboard_backend.serializers import DateRangeSerializer, FPFFullDataSerializer
 from farminsight_dashboard_backend.services import get_all_fpf_data, get_all_sensor_data, get_images_by_camera
 
 

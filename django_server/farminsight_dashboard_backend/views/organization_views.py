@@ -1,12 +1,12 @@
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from farminsight_dashboard_backend.serializers import OrganizationFullSerializer
 from farminsight_dashboard_backend.services import create_organization, get_memberships, get_organization_by_id, \
-    update_organization
+    update_organization, is_member
 from farminsight_dashboard_backend.utils import get_logger
 
 
@@ -21,7 +21,7 @@ class OrganizationView(APIView):
         if org is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        if len(org.membership_set.filter(userprofile=request.user).all()) == 0:  # this Endpoint is only for org members
+        if is_member(request.user, organization_id):
             return Response(status=status.HTTP_403_FORBIDDEN)
 
         return Response(OrganizationFullSerializer(org).data)

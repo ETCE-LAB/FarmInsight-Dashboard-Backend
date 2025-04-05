@@ -1,7 +1,9 @@
+from django.core.exceptions import PermissionDenied
+
+from farminsight_dashboard_backend.models import Organization
 from farminsight_dashboard_backend.models import Membership, MembershipRole, FPF, Sensor, Camera
 from farminsight_dashboard_backend.serializers import OrganizationSerializer
-from farminsight_dashboard_backend.models import Organization
-from django.core.exceptions import PermissionDenied
+from farminsight_dashboard_backend.services.membership_services import is_admin
 
 
 def create_organization(data, user) -> OrganizationSerializer:
@@ -40,12 +42,7 @@ def update_organization(org_id, data, user) -> OrganizationSerializer:
     :param user: user requesting update
     :return:
     """
-    from farminsight_dashboard_backend.services import get_memberships
-    memberships = get_memberships(user) \
-        .filter(organization_id=org_id, membershipRole=MembershipRole.Admin.value) \
-        .all()
-
-    if len(memberships) > 0 or user.systemRole == user.SystemAdmin.value:
+    if is_admin(user, org_id):
         organization = Organization.objects.get(id=org_id)
         serializer = OrganizationSerializer(organization, data=data)
         if serializer.is_valid(raise_exception=True):

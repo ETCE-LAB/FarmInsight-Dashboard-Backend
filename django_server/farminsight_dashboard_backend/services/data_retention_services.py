@@ -3,6 +3,8 @@ import threading
 from datetime import datetime, timedelta
 
 from apscheduler.schedulers.background import BackgroundScheduler
+from django.utils import timezone
+
 from django_server import settings
 
 from farminsight_dashboard_backend.utils import get_logger
@@ -38,7 +40,7 @@ class DataRetentionScheduler:
 
 
     def start(self):
-        self._scheduler.add_job(cleanup_task, trigger='interval', hours=1, id="cleanup_task", args=[self.logger])
+        self._scheduler.add_job(cleanup_task, trigger='interval', hours=1, id="cleanup_task", args=[self.logger], next_run_time=timezone.now() + timedelta(seconds=1))
         self._scheduler.start()
         self.logger.debug("DataRetentionScheduler started")
 
@@ -56,4 +58,4 @@ def cleanup_task(logger):
         LogMessage.objects.filter(createdAt__lt=dt).delete()
         logger.debug("Cleanup task completed")
     except Exception as e:
-        logger.error(f"Error during cleanpu task: {e}")
+        logger.error(f"Error during cleanup task: {e}")
