@@ -21,7 +21,7 @@ class OrganizationView(APIView):
         if org is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        if is_member(request.user, organization_id):
+        if not is_member(request.user, organization_id):
             return Response(status=status.HTTP_403_FORBIDDEN)
 
         return Response(OrganizationFullSerializer(org).data)
