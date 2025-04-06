@@ -43,7 +43,7 @@ def get_log_messages(request, resource_type, resource_id):
     if resource_type == 'sensor':
         if not is_member(request.user, get_organization_by_sensor_id(resource_id).id):
             return Response(status=status.HTTP_403_FORBIDDEN)
-    if resource_type == 'camera':
+    elif resource_type == 'camera':
         if not is_member(request.user, get_organization_by_camera_id(resource_id).id):
             return Response(status=status.HTTP_403_FORBIDDEN)
     elif resource_type == 'fpf':
