@@ -18,11 +18,12 @@ class OrganizationView(APIView):
 
     def get(self, request, organization_id):
         org = get_organization_by_id(organization_id)
+
+        if not is_member(request.user, org):
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
         if org is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
-
-        if not is_member(request.user, organization_id):
-            return Response(status=status.HTTP_403_FORBIDDEN)
 
         return Response(OrganizationFullSerializer(org).data)
 
@@ -33,7 +34,10 @@ class OrganizationView(APIView):
         :param organization_id:
         :return:
         """
-        organization = update_organization(organization_id, request.data, request.user)
+        if not is_member(request.user, get_organization_by_id(organization_id)):
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+        organization = update_organization(organization_id, request.data)
         logger.info('organization updated', extra={'resource_id': organization_id})
         return Response(organization.data, status=status.HTTP_200_OK)
 

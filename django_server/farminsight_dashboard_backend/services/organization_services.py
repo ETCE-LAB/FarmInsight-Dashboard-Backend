@@ -1,6 +1,6 @@
 from django.core.exceptions import PermissionDenied
 
-from farminsight_dashboard_backend.models import Organization
+from farminsight_dashboard_backend.models import Organization, GrowingCycle, Harvest
 from farminsight_dashboard_backend.models import Membership, MembershipRole, FPF, Sensor, Camera
 from farminsight_dashboard_backend.serializers import OrganizationSerializer
 from farminsight_dashboard_backend.services.membership_services import is_admin
@@ -14,13 +14,23 @@ def create_organization(data, user) -> OrganizationSerializer:
     return serializer
 
 
-def get_organization_by_id(id: str) -> Organization:
-    org = Organization.objects.filter(id=id).prefetch_related('membership_set', 'membership_set__userprofile', 'fpf_set').first()
+def get_organization_by_id(org_id: str) -> Organization:
+    org = Organization.objects.filter(id=org_id).prefetch_related('membership_set', 'membership_set__userprofile', 'fpf_set').first()
+    return org
+
+
+def get_organization_by_membership_id(membership_id: str) -> Organization:
+    org = Membership.objects.filter(id=membership_id).first().organization
     return org
 
 
 def get_organization_by_fpf_id(fpf_id) -> Organization:
     org = FPF.objects.select_related('organization').get(id=fpf_id).organization
+    return org
+
+
+def get_organization_by_growing_cycle_id(growing_cycle_id) -> Organization:
+    org = GrowingCycle.objects.get(id=growing_cycle_id).FPF.organization
     return org
 
 
@@ -34,19 +44,20 @@ def get_organization_by_camera_id(camera_id) -> Organization:
     return org
 
 
-def update_organization(org_id, data, user) -> OrganizationSerializer:
+def get_organization_by_harvest_id(harvest_id) -> Organization:
+    org = Harvest.objects.get(id=harvest_id).growingCycle.FPF.organization
+    return org
+
+
+def update_organization(org_id, data) -> OrganizationSerializer:
     """
     Update the given organization with the given data if the user has sufficient permissions.
     :param org_id: organization id to update
     :param data: new organization data
-    :param user: user requesting update
     :return:
     """
-    if is_admin(user, org_id):
-        organization = Organization.objects.get(id=org_id)
-        serializer = OrganizationSerializer(organization, data=data)
-        if serializer.is_valid(raise_exception=True):
-            serializer.save()
-            return serializer
-
-    raise PermissionDenied()
+    organization = Organization.objects.get(id=org_id)
+    serializer = OrganizationSerializer(organization, data=data)
+    if serializer.is_valid(raise_exception=True):
+        serializer.save()
+        return serializer

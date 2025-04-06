@@ -1,15 +1,15 @@
-from farminsight_dashboard_backend.serializers import FPFFullSerializer
-from farminsight_dashboard_backend.services import create_fpf, get_fpf_by_id, update_fpf_api_key, \
-    get_visible_fpf_preview, is_member, get_organization_by_fpf_id, update_fpf
-from rest_framework import views
+from rest_framework import views, status
 from rest_framework.response import Response
-from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from farminsight_dashboard_backend.utils import get_logger
+from farminsight_dashboard_backend.serializers import FPFFullSerializer
+from farminsight_dashboard_backend.services import create_fpf, get_fpf_by_id, update_fpf_api_key, \
+    get_visible_fpf_preview, is_member, get_organization_by_fpf_id, update_fpf, get_organization_by_id
 
 
 logger = get_logger()
+
 
 class FpfView(views.APIView):
     def get_permissions(self):
@@ -26,21 +26,28 @@ class FpfView(views.APIView):
         :param fpf_id:
         :return:
         """
-        fpf = update_fpf(fpf_id, request.data, request.user)
+        if not is_member(request.user, get_organization_by_fpf_id(fpf_id)):
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+        fpf = update_fpf(fpf_id, request.data)
         logger.info('updated fpf', extra={'resource_id': fpf_id})
         return Response(fpf.data, status=status.HTTP_200_OK)
 
     def post(self, request):
+        if not is_member(request.user, get_organization_by_id(request.data['organizationId'])):
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
         serializer = create_fpf(request.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def get(self, request, fpf_id):
         fpf = FPFFullSerializer(get_fpf_by_id(fpf_id))
-        member = is_member(request.user, get_organization_by_fpf_id(fpf_id).id)
-        if not (member or fpf.data['isPublic']):
+        data = fpf.data
+
+        member = is_member(request.user, get_organization_by_fpf_id(fpf_id))
+        if not (member or data['isPublic']):
             return Response(status=status.HTTP_403_FORBIDDEN)
 
-        data = fpf.data
         if not member: # only show inactive sensors to members
             data['Sensors'] = [sensor for sensor in data['Sensors'] if sensor['isActive']]
 
@@ -56,7 +63,6 @@ def get_fpf_api_key(request, fpf_id):
     :return: 
     """
     update_fpf_api_key(fpf_id)
-    
     return Response(status=status.HTTP_200_OK)
 
 

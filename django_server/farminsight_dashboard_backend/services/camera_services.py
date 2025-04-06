@@ -62,10 +62,9 @@ def update_camera(camera_id:str, camera_data:any) -> Camera:
     return camera
 
 
-def delete_camera(camera_id:str):
+def delete_camera(camera: Camera):
     """
-    Delete camera by id
-    :param camera_id: id of the camera t delete
+    Delete camera
+    :param camera: camera to delete
     """
-    camera = get_camera_by_id(camera_id)
     camera.delete()
