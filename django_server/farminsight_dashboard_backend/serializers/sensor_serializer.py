@@ -56,7 +56,7 @@ class SensorDataSerializer(serializers.ModelSerializer):
 
 class SensorLastValueSerializer(serializers.ModelSerializer):
     lastMeasurement = serializers.SerializerMethodField()
-    state = serializers.SerializerMethodField()
+    status = serializers.SerializerMethodField()
 
     class Meta:
         model = Sensor
@@ -70,7 +70,7 @@ class SensorLastValueSerializer(serializers.ModelSerializer):
             'isActive',
             'intervalSeconds',
             'lastMeasurement',
-            'state',
+            'status',
         ]
 
     def get_lastMeasurement(self, obj):
@@ -81,18 +81,18 @@ class SensorLastValueSerializer(serializers.ModelSerializer):
                 fpf_id=obj.FPF.id,
                 sensor_ids=[str(obj.id)],
             ).get(str(obj.id), [])
-            self.lastMeasurement = value.measuredtAt
+            self.measuredtAt = value.measuredtAt
             return value
         except Exception as e:
-            self.lastMeasurement = None
+            self.measuredtAt = None
             return {'error': 'Could not fetch last measurement.'}
 
-    def get_state(self, obj):
+    def get_status(self, obj):
         if not obj.isActive:
             return 'grey'
 
-        if self.lastMeasurement is not None:
-            seconds_since_last_measurement = (datetime.now() - dateutil.parser.isoparse(self.lastMeasurement)).total_seconds()
+        if self.measuredtAt is not None:
+            seconds_since_last_measurement = (datetime.now() - dateutil.parser.isoparse(self.measuredtAt)).total_seconds()
             if seconds_since_last_measurement < obj.intervalSeconds:
                 return 'green'
             elif seconds_since_last_measurement < 2 * obj.intervalSeconds:
