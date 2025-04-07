@@ -221,6 +221,7 @@ class InfluxDBManager:
 
         return latest_measurements
 
+
     @_retry_connection
     def write_sensor_measurements(self, fpf_id: str, sensor_id: str, measurements):
         """
@@ -241,6 +242,77 @@ class InfluxDBManager:
                 points.append(point)
 
             write_api.write(bucket=fpf_id, record=points)
+
+        except Exception as e:
+            self.client = None
+            raise InfluxDBQueryException(str(e))
+
+    @_retry_connection
+    def fetch_last_weather_forcast(self, orga_id: str, location_ids: list) -> dict:
+        """
+        :param fpf_id: The ID of the FPF (used as the bucket name in InfluxDB).
+        :param sensor_ids: List of sensor IDs to query data for.
+        :return: Dictionary with sensor IDs as keys, each containing the latest measurement.
+        """
+        try:
+            query_api = self.client.query_api()
+
+            # Build the filter part of the query for multiple sensors
+            location_filter = " or ".join([f'r["locationId"] == "{location_id}"' for location_id in location_ids])
+
+            query = (
+                f'from(bucket: "{orga_id}") '
+                f'|> range(start: -1y) '  # Arbitrary long range to include all data
+                f'|> filter(fn: (r) => r["_measurement"] == "location" and ({location_filter})) '
+                f'|> sort(columns: ["_time"], desc: true) '
+                f'|> unique(column: "locationId") '
+            )
+
+            result = query_api.query(org=self.influxdb_settings['org'], query=query)
+
+            # Process and organize results by sensor ID
+            latest_measurements = {}
+            for table in result:
+                for record in table.records:
+                    location_id = record.values["locationID"]
+                    latest_measurements[location_id] = {
+                        "measuredAt": record.get_time().isoformat(),
+                        "value": record.get_value()
+                    }
+
+        except requests.exceptions.ConnectionError as e:
+            self.client = None
+            self.log.error(f"Failed to connect to InfluxDB: {e}")
+            raise InfluxDBNoConnectionException("Unable to connect to InfluxDB.")
+
+        except Exception as e:
+            raise InfluxDBQueryException(str(e))
+
+        return latest_measurements
+
+    @_retry_connection
+    def write_weather_forecast(self, orga_id: str, location_id:str, weather_forecasts):
+        """
+        Writes Weather Forecast for a given Location (Orga) to InfluxDB.
+        :param orga_id: The ID of the Organization (used as the bucket name in InfluxDB).
+        """
+        try:
+            write_api = self.client.write_api(write_options=SYNCHRONOUS)
+
+            points = []
+            for i, date in weather_forecasts:
+                point = Point("weather_forecast") \
+                    .tag("location", location_id) \
+                    .field("temperature_min", weather_forecasts['daily']['temperature_2m_min'][i]) \
+                    .field("temperature_max", weather_forecasts['daily']['temperature_2m_max'][i]) \
+                    .field("rain_sum", weather_forecasts['daily']['rain_sum'][i]) \
+                    .field("sunshine_duration", weather_forecasts['daily']['sunshine_duration'][i]) \
+                    .field("wind_speed_max", weather_forecasts['daily']['wind_speed_10m_max'][i]) \
+                    .field("precipitation_probability_max", weather_forecasts['daily']['precipitation_probability_max'][i]) \
+                    .time(date, WritePrecision.NS)
+                points.append(point)
+
+            write_api.write(bucket=orga_id, record=points)
 
         except Exception as e:
             self.client = None

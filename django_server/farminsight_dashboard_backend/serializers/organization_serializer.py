@@ -14,6 +14,7 @@ class OrganizationSerializer(serializers.ModelSerializer):
 class OrganizationFullSerializer(serializers.ModelSerializer):
     memberships = MembershipSerializerIncUserprofile(many=True, read_only=True, source='membership_set')
     FPFs = FPFTechnicalKeySerializer(many=True, read_only=True, source='fpf_set')
+    locations = LocationSerializer(many=True, read_only=True, source='location_set')
 
     class Meta:
         model = Organization
