@@ -3,7 +3,7 @@ from django.conf import settings
 from influxdb_client.client.write_api import SYNCHRONOUS
 
 from farminsight_dashboard_backend.exceptions import InfluxDBQueryException, InfluxDBNoConnectionException
-from farminsight_dashboard_backend.models import FPF
+from farminsight_dashboard_backend.models import FPF, Organization
 import requests
 import logging
 import threading
@@ -78,6 +78,9 @@ class InfluxDBManager:
             self.sync_fpf_buckets()
             self.log.info("InfluxDB database connection successful.")
 
+            self.sync_organization_buckets()
+            self.log.info("InfluxDB organization buckets synchronized successfully.")
+
         except (requests.exceptions.RequestException, ConnectionError) as e:
             self.log.warning(f"InfluxDB connection failed: {e} Proceeding without InfluxDB.")
             self.client = None
@@ -103,6 +106,28 @@ class InfluxDBManager:
 
         except Exception as e:
             self.log.error(f"Failed to sync FPF buckets with InfluxDB: {e}")
+
+    def sync_organization_buckets(self):
+        """
+        Ensure each Organization in SQLite has a corresponding bucket in InfluxDB.
+        """
+        try:
+            if self.client:
+                bucket_api = self.client.buckets_api()
+                orga_objects = Organization.objects.all()
+
+                if not orga_objects.exists():
+                    self.log.warning("No Organizations found in the database.")
+                    return
+
+                for orga in orga_objects:
+                    bucket_name = str(orga.id)
+                    if not bucket_api.find_bucket_by_name(bucket_name):
+                        self.log.info(f"Creating new bucket: {bucket_name}")
+                        bucket_api.create_bucket(bucket_name=bucket_name, org=self.influxdb_settings['org'])
+
+        except Exception as e:
+            self.log.error(f"Failed to sync Organization buckets with InfluxDB: {e}")
 
     @_retry_connection
     def fetch_sensor_measurements(self, fpf_id: str, sensor_ids: list, from_date: str, to_date: str) -> dict:

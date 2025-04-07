@@ -6,11 +6,17 @@ from farminsight_dashboard_backend.serializers import OrganizationSerializer
 from farminsight_dashboard_backend.services.membership_services import is_admin
 
 
+
 def create_organization(data, user) -> OrganizationSerializer:
+    from farminsight_dashboard_backend.services import InfluxDBManager
+    
     serializer = OrganizationSerializer(data=data)
     if serializer.is_valid(raise_exception=True):
         org = serializer.save()
         Membership.objects.create(organization=org, userprofile=user, membershipRole=MembershipRole.Admin.value)
+
+    InfluxDBManager.get_instance().sync_organization_buckets()
+
     return serializer
 
 
