@@ -75,11 +75,9 @@ class InfluxDBManager:
             if not self.client.ping():
                 raise ConnectionError("InfluxDB is not reachable.")
 
-            self.sync_fpf_buckets()
-            self.log.info("InfluxDB database connection successful.")
+            self.sync_buckets()
+            self.log("Successfully connected to InfluxDB and synchronized buckets.")
 
-            self.sync_organization_buckets()
-            self.log.info("InfluxDB organization buckets synchronized successfully.")
 
         except (requests.exceptions.RequestException, ConnectionError) as e:
             self.log.warning(f"InfluxDB connection failed: {e} Proceeding without InfluxDB.")
@@ -128,6 +126,13 @@ class InfluxDBManager:
 
         except Exception as e:
             self.log.error(f"Failed to sync Organization buckets with InfluxDB: {e}")
+
+    def sync_buckets(self):
+        """
+        Synchronize all buckets in InfluxDB.
+        """
+        self.sync_organization_buckets()
+        self.sync_fpf_buckets()
 
     @_retry_connection
     def fetch_sensor_measurements(self, fpf_id: str, sensor_ids: list, from_date: str, to_date: str) -> dict:
