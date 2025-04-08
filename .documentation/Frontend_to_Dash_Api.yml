@@ -142,6 +142,8 @@ paths:
                           properties:
                             lastMeasurement:
                               $ref: '#/components/schemas/Measurement'
+                            status:
+                              type: string
                   Cameras:
                     type: array
                     items:

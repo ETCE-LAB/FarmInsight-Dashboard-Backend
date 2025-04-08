@@ -13,7 +13,7 @@ class ControllableAction(models.Model):
     maximumDurationSeconds = models.IntegerField(default=0)
     additionalInformation = models.TextField(blank=True)
     FPF = models.ForeignKey(FPF, related_name='actions', on_delete=models.CASCADE)
-    hardware = models.ForeignKey(Hardware, related_name='actions', on_delete=models.SET_NULL, blank=True)
+    hardware = models.ForeignKey(Hardware, related_name='actions', on_delete=models.SET_NULL, blank=True, null=True)
 
     def __str__(self):
         return f"{self.FPF.name}: {self.name} active: {self.isActive}  auto: {self.isAutomated}"

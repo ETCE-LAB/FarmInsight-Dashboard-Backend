@@ -14,7 +14,7 @@ class FPFSerializer(serializers.ModelSerializer):
     class Meta:
         model = FPF
         read_only_fields = ('id',)
-        fields = ('id', 'name', 'isPublic', 'sensorServiceIp', 'address', 'organizationId')
+        fields = ('id', 'name', 'isPublic', 'sensorServiceIp', 'organizationId')
 
     def validate(self, data):
         fpfs = FPF.objects.filter(name=data['name'], organization=data['organization'])
@@ -47,7 +47,6 @@ class FPFFullSerializer(serializers.ModelSerializer):
             'name',
             'isPublic',
             'sensorServiceIp',
-            'address',
             'Sensors',
             'Cameras',
             'GrowingCycles',
@@ -65,7 +64,6 @@ class FPFFullDataSerializer(serializers.ModelSerializer):
             'name',
             'isPublic',
             'sensorServiceIp',
-            'address',
             'Sensors',
             'Cameras',
             'GrowingCycles',

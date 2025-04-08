@@ -15,7 +15,7 @@ class ActionTrigger(models.Model):
     action = models.ForeignKey(ControllableAction, related_name='triggers', on_delete=models.CASCADE)
 
     def __str__(self):
-        return f"{self.action.name}: {self.type} {self.valueType} {self.value} active: {self.isActive}"
+        return f"{self.action.name}: {self.type} {self.actionValue} active: {self.isActive}"
 
 
 class ActionValueType(Enum):
