@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from farminsight_dashboard_backend.models import Organization, Membership
 from .fpf_serializer import FPFTechnicalKeySerializer
+from .location_serializer import LocationSerializer
 from .membership_serializer import MembershipSerializerIncUserprofile
 
 

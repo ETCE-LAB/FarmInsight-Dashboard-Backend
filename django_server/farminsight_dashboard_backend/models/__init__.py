@@ -9,3 +9,4 @@ from .userprofile import Userprofile, SystemRole
 from .single_use_token import SingleUseToken
 from .harvest import Harvest
 from .log_message import LogMessage
+from .location import Location

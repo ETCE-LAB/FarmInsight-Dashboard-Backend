@@ -10,7 +10,6 @@ from farminsight_dashboard_backend.services import is_member, send_request_to_fp
 from farminsight_dashboard_backend.services.sensor_services import get_sensor, create_sensor, update_sensor
 from farminsight_dashboard_backend.utils import get_logger
 
-
 logger = get_logger()
 
 
@@ -50,7 +49,7 @@ class SensorView(APIView):
         if not is_member(request.user, get_organization_by_fpf_id(fpf_id)):
             return Response(status=status.HTTP_403_FORBIDDEN)
 
-        sensor = request.data.copy()
+        sensor = request.data
 
         # Generate a new UUID for the sensor
         new_uuid = uuid.uuid4()
@@ -66,8 +65,8 @@ class SensorView(APIView):
         fpf_sensor_config = {
             "id": sensor.get('id'),
             "intervalSeconds": sensor.get('intervalSeconds'),
-            "sensorClassId": sensor.get('hardwareConfiguration', {}).get('sensorClassId', ''),
-            "additionalInformation": sensor.get('hardwareConfiguration', {}).get('additionalInformation', {}),
+            "sensorClassId": sensor.get('sensorClassId', ''),
+            "additionalInformation": sensor.get('additionalInformation', {}),
             "isActive": sensor.get('isActive'),
         }
 
@@ -99,8 +98,8 @@ class SensorView(APIView):
         # Update sensor on FPF
         update_fpf_payload = {
             "intervalSeconds": data.get('intervalSeconds'),
-            "sensorClassId": data.get('hardwareConfiguration', {}).get('sensorClassId', ''),
-            "additionalInformation": data.get('hardwareConfiguration', {}).get('additionalInformation', {}),
+            "sensorClassId": data.get('sensorClassId', ''),
+            "additionalInformation": data.get('additionalInformation', {}),
             "isActive": data.get('isActive'),
         }
 

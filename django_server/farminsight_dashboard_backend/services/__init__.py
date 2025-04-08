@@ -1,13 +1,17 @@
-from .fpf_services import create_fpf, update_fpf, get_fpf_by_id, update_fpf_api_key, is_user_part_of_fpf, get_visible_fpf_preview
+from .fpf_services import create_fpf, update_fpf, get_fpf_by_id, update_fpf_api_key, is_user_part_of_fpf, \
+    get_visible_fpf_preview
 from .organization_services import create_organization, get_organization_by_id, get_organization_by_fpf_id, \
-    get_organization_by_sensor_id, get_organization_by_camera_id, update_organization, get_organization_by_growing_cycle_id
+    get_organization_by_sensor_id, get_organization_by_camera_id, update_organization, \
+    get_organization_by_growing_cycle_id
 from .measurement_services import store_measurements_in_influx
-from .membership_services import create_membership, get_memberships, update_membership, remove_membership, is_member, is_admin, is_system_admin, get_memberships_by_organization
+from .membership_services import create_membership, get_memberships, update_membership, remove_membership, is_member, \
+    is_admin, is_system_admin, get_memberships_by_organization
 from .userprofile_services import search_userprofiles, update_userprofile_name
 from .data_services import get_all_fpf_data, get_all_sensor_data
 from .influx_services import InfluxDBManager
 from .sensor_services import get_sensor, update_sensor, create_sensor
-from .growing_cycle_services import update_growing_cycle, create_growing_cycle, remove_growing_cycle, get_growing_cycles_by_fpf_id
+from .growing_cycle_services import update_growing_cycle, create_growing_cycle, remove_growing_cycle, \
+    get_growing_cycles_by_fpf_id
 from .fpf_connection_services import send_request_to_fpf
 from .auth_services import get_auth_token, valid_api_key_for_sensor, create_single_use_token, valid_api_key_for_fpf
 from .camera_services import get_active_camera_by_id, create_camera, update_camera, delete_camera, get_camera_by_id
@@ -16,3 +20,4 @@ from .camera_scheduler_services import CameraScheduler
 from .harvest_services import create_harvest, remove_harvest, update_harvest, get_harvests_by_growing_cycle_id
 from .log_message_services import write_log_message, get_log_messages_by_amount, get_log_messages_by_date
 from .data_retention_services import DataRetentionScheduler
+from .location_services import create_location, update_location, remove_location, get_location_by_id, get_locations_by_organization_id
