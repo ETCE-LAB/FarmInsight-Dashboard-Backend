@@ -20,4 +20,4 @@ from .camera_scheduler_services import CameraScheduler
 from .harvest_services import create_harvest, remove_harvest, update_harvest, get_harvests_by_growing_cycle_id
 from .log_message_services import write_log_message, get_log_messages_by_amount, get_log_messages_by_date
 from .data_retention_services import DataRetentionScheduler
-from .location_services import create_location, update_location, remove_location, get_location_by_id, get_locations_by_organization_id
+from .location_services import create_location, update_location, remove_location, get_location_by_id, gather_locations_by_organization_id

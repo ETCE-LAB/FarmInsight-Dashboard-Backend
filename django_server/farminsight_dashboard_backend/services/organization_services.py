@@ -21,7 +21,7 @@ def create_organization(data, user) -> OrganizationSerializer:
 
 
 def get_organization_by_id(org_id: str) -> Organization:
-    org = Organization.objects.filter(id=org_id).prefetch_related('membership_set', 'membership_set__userprofile', 'fpf_set').first()
+    org = Organization.objects.filter(id=org_id).prefetch_related('membership_set', 'membership_set__userprofile', 'fpf_set', 'location_set').first()
     return org
 
 

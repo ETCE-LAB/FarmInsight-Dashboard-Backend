@@ -17,6 +17,7 @@ class OrganizationFullSerializer(serializers.ModelSerializer):
     FPFs = FPFTechnicalKeySerializer(many=True, read_only=True, source='fpf_set')
     locations = LocationSerializer(many=True, read_only=True, source='location_set')
 
+
     class Meta:
         model = Organization
-        fields = ['id', 'name', 'isPublic', 'memberships', 'FPFs']
+        fields = ['id', 'name', 'isPublic', 'memberships', 'FPFs', 'locations']

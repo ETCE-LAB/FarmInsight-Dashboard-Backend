@@ -6,19 +6,30 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from farminsight_dashboard_backend.utils import get_logger
 from farminsight_dashboard_backend.serializers import LocationSerializer
 from farminsight_dashboard_backend.services import create_location, get_location_by_id, \
-    update_location, is_member, get_organization_by_id
-
-from farminsight_dashboard_backend.services.location_services import get_locations_by_organization_id
+    update_location, is_member,  gather_locations_by_organization_id, get_organization_by_id
 
 logger = get_logger()
 
 
-@api_view(['POST'])
+@api_view(['GET'])
 def get_location(request, location_id):
     return Response(LocationSerializer(get_location_by_id(location_id)).data, status=status.HTTP_200_OK)
 
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def post_location(request):
+    """
+    Create a new location
+    :param request:
+    :return:
+    """
+    if not is_member(request.user, get_organization_by_id(request.data['organizationId'])):
+        return Response(status=status.HTTP_403_FORBIDDEN)
+    location = create_location(request.data)
+    return Response(location.data, status=status.HTTP_201_CREATED)
 
 class LocationView(APIView):
+
 
     def put(self, request, location_id):
         """
@@ -34,15 +45,8 @@ class LocationView(APIView):
         logger.info('updated location', extra={'resource_id': location_id})
         return Response(location.data, status=status.HTTP_200_OK)
 
-    def post(self, request):
-        if not is_member(request.user, get_organization_by_id(request.data['organizationId'])):
-            return Response(status=status.HTTP_403_FORBIDDEN)
-
-        serializer = create_location(request.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-
     @api_view(['GET'])
-    def get_all_locations_for_organization(self, request, organization_id):
+    def get_locations_by_organization(request, organization_id):
         """
         Get all locations for a given organization
         :param request:
@@ -52,9 +56,13 @@ class LocationView(APIView):
         if not is_member(request.user, get_organization_by_id(organization_id)):
             return Response(status=status.HTTP_403_FORBIDDEN)
         data = []
-        locations = get_locations_by_organization_id(organization_id)
 
-        for location in locations:
+        locations = gather_locations_by_organization_id(organization_id)
+
+        locations_serializer = LocationSerializer(locations, many=True)
+
+
+        for location in locations_serializer.data:
             data.append({
                 'id': location.id,
                 'name': location.name,
@@ -71,17 +79,3 @@ class LocationView(APIView):
             })
 
         return Response(data, status=status.HTTP_200_OK)
-
-    @api_view(['POST'])
-    @permission_classes([IsAuthenticated])
-    def post_location(self, request):
-        """
-        Create a new location
-        :param request:
-        :return:
-        """
-        serializer = LocationSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

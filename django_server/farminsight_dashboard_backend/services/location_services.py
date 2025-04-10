@@ -1,10 +1,16 @@
-from farminsight_dashboard_backend.models import Location
+from farminsight_dashboard_backend.models import Location, Organization
 
 from farminsight_dashboard_backend.exceptions import NotFoundException
 from farminsight_dashboard_backend.serializers.location_serializer import LocationSerializer
 
 
 def create_location(data) -> LocationSerializer:
+
+    try:
+        organisation = Organization.objects.get(id=data['organizationId'])
+    except Organization.DoesNotExist:
+        raise ValueError("Organisation with the given ID does not exist")
+
     serializer = LocationSerializer(data=data, partial=True)
     if serializer.is_valid(raise_exception=True):
         serializer.save()
@@ -31,7 +37,7 @@ def gat_location_by_id(location_id) -> LocationSerializer:
     return location
 
 
-def get_locations_by_organization_id(organization_id) -> LocationSerializer:
+def gather_locations_by_organization_id(organization_id) -> LocationSerializer:
     locations = Location.objects.filter(organization_id=organization_id)
     if locations is None:
         raise NotFoundException(f'Locations with organization id: {organization_id} was not found.')

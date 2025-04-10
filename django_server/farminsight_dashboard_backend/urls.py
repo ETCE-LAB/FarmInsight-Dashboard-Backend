@@ -34,6 +34,7 @@ from farminsight_dashboard_backend.views import (
     get_log_messages,
     LocationView,
     get_location,
+    post_location,
 )
 
 urlpatterns = [
@@ -82,10 +83,10 @@ urlpatterns = [
     path('log_messages', post_log_message, name='post_log_message'),
     path('log_messages/<str:resource_type>/<str:resource_id>', get_log_messages, name='get_log_messages'),
 
-    path('locations', LocationView.post_location, name='post_location'),
+    path('locations', post_location, name='post_location'),
     path('locations/<str:location_id>', LocationView.as_view(), name='location_operations'),
-    path('locations/organization/<str:organization_id>', LocationView.get_all_locations_for_organization, name='get_locations_by_organization_id'),
-    path('locations/<str:location_id>/details', get_location, name='get_location_by_id'),
+    path('locations/organization/<str:organization_id>', LocationView.get_locations_by_organization, name='get_locations_by_organization_id'),
+    path('locations/<str:location_id>/details', get_location, name='get_location'),
 
 
 
