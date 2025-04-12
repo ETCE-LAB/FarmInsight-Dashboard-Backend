@@ -50,6 +50,7 @@ def update_fpf(fpf_id, data):
     """
     fpf = FPF.objects.get(id=fpf_id)
     serializer = FPFFunctionalSerializer(fpf, data=data)
+    print(serializer)
     if serializer.is_valid(raise_exception=True):
         serializer.save()
         return serializer

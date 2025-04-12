@@ -55,27 +55,7 @@ class LocationView(APIView):
         """
         if not is_member(request.user, get_organization_by_id(organization_id)):
             return Response(status=status.HTTP_403_FORBIDDEN)
-        data = []
 
         locations = gather_locations_by_organization_id(organization_id)
 
-        locations_serializer = LocationSerializer(locations, many=True)
-
-
-        for location in locations_serializer.data:
-            data.append({
-                'id': location.id,
-                'name': location.name,
-                'isPublic': location.isPublic,
-                'organization': {
-                    'id': location.organization.id,
-                    'name': location.organization.name,
-                },
-                'latitude': location.latitude,
-                'longitude': location.longitude,
-                'city': location.city,
-                'street': location.street,
-                'houseNumber': location.houseNumber
-            })
-
-        return Response(data, status=status.HTTP_200_OK)
+        return Response(locations.data, status=status.HTTP_200_OK)

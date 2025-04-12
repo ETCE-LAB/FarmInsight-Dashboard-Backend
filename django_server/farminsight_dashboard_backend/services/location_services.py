@@ -30,7 +30,7 @@ def remove_location(location_id):
     location.delete()
 
 
-def gat_location_by_id(location_id) -> LocationSerializer:
+def get_location_by_id(location_id) -> LocationSerializer:
     location = Location.objects.filter(id=location_id).first()
     if location is None:
         raise NotFoundException(f'Location with id: {location_id} was not found.')
@@ -43,6 +43,3 @@ def gather_locations_by_organization_id(organization_id) -> LocationSerializer:
         raise NotFoundException(f'Locations with organization id: {organization_id} was not found.')
     return LocationSerializer(locations, many=True)
 
-
-def get_location_by_id():
-    return None

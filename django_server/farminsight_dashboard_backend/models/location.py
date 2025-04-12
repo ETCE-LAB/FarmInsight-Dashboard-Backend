@@ -13,6 +13,7 @@ class Location(models.Model):
     city = models.CharField(max_length=64)
     street = models.CharField(max_length=64)
     houseNumber = models.CharField(max_length=16)
+    gatherForecasts = models.BooleanField(default=False)
 
     class Meta:
         constraints = [

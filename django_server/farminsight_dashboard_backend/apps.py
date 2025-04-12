@@ -32,11 +32,12 @@ class FarminsightDashboardBackendConfig(AppConfig):
                     time.sleep(retry_interval)
                     retry_count += 1
                 else:
-                    from farminsight_dashboard_backend.services import InfluxDBManager, CameraScheduler, DataRetentionScheduler
+                    from farminsight_dashboard_backend.services import InfluxDBManager, CameraScheduler, DataRetentionScheduler, WeatherForecastScheduler
 
                     InfluxDBManager.get_instance().initialize_connection()
                     CameraScheduler.get_instance().start()
                     DataRetentionScheduler.get_instance().start()
+                    WeatherForecastScheduler.get_instance().start()
                     self.log.info("Started successfully.")
                     break
             except OperationalError as e:

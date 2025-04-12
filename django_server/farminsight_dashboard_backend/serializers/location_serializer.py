@@ -20,5 +20,6 @@ class LocationSerializer(serializers.ModelSerializer):
             'longitude',
             'city',
             'street',
-            'houseNumber'
+            'houseNumber',
+            'gatherForecasts'
         ]
