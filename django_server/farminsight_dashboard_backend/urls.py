@@ -31,7 +31,7 @@ from farminsight_dashboard_backend.views import (
     change_password_view,
     logout_view,
     post_log_message,
-    get_log_messages,
+    get_log_messages, post_threshold, ThresholdEditViews,
 )
 
 urlpatterns = [
@@ -69,5 +69,7 @@ urlpatterns = [
     path('change-password', change_password_view, name='change_password_view'),
     path('log_messages', post_log_message, name='post_log_message'),
     path('log_messages/<str:resource_type>/<str:resource_id>', get_log_messages, name='get_log_messages'),
+    path('thresholds', post_threshold, name='post_threshold'),
+    path('thresholds/<str:threshold_id>', ThresholdEditViews.as_view(), name='threshold_edits'),
 ]
 

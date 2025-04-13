@@ -4,9 +4,11 @@ from datetime import datetime
 from rest_framework import serializers
 from farminsight_dashboard_backend.models import Sensor
 from farminsight_dashboard_backend.utils import get_date_range
+from .threshold_serializer import ThresholdSerializer
 
 
 class SensorSerializer(serializers.ModelSerializer):
+    thresholds = ThresholdSerializer(many=True)
 
     class Meta:
         model = Sensor
@@ -19,11 +21,13 @@ class SensorSerializer(serializers.ModelSerializer):
             'modelNr',
             'isActive',
             'intervalSeconds',
+            'thresholds',
         ]
 
 
 class SensorDataSerializer(serializers.ModelSerializer):
     measurements = serializers.SerializerMethodField()
+    thresholds = ThresholdSerializer(many=True)
 
     class Meta:
         model = Sensor
@@ -36,7 +40,8 @@ class SensorDataSerializer(serializers.ModelSerializer):
             'modelNr',
             'isActive',
             'intervalSeconds',
-            'measurements'
+            'measurements',
+            'thresholds',
         ]
 
     def get_measurements(self, obj):
@@ -57,6 +62,7 @@ class SensorDataSerializer(serializers.ModelSerializer):
 class SensorLastValueSerializer(serializers.ModelSerializer):
     lastMeasurement = serializers.SerializerMethodField()
     status = serializers.SerializerMethodField()
+    thresholds = ThresholdSerializer(many=True)
 
     class Meta:
         model = Sensor
@@ -71,6 +77,7 @@ class SensorLastValueSerializer(serializers.ModelSerializer):
             'intervalSeconds',
             'lastMeasurement',
             'status',
+            'thresholds',
         ]
 
     def get_lastMeasurement(self, obj):
@@ -113,4 +120,4 @@ class SensorDBSchemaSerializer(serializers.ModelSerializer):
 class PreviewSensorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Sensor
-        fields = ['name']
+        fields = ['name', 'parameter']
