@@ -10,5 +10,15 @@ class ActionTriggerSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ActionTrigger
-        read_only_fields = ['id', 'actionId']
-        fields = ['id', 'type', 'actionValueType', 'actionValue', 'triggerLogic', 'isActive', 'actionId']
+        read_only_fields = ['id',
+                            'actionId'
+                            ]
+        fields = ['id',
+                  'type',
+                  'actionValueType',
+                  'actionValue',
+                  'triggerLogic',
+                  'isActive',
+                  'description',
+                  'actionId'
+                  ]

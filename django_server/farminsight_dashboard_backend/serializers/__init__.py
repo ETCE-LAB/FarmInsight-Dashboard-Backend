@@ -15,3 +15,4 @@ from .action_trigger_serializer import ActionTriggerSerializer
 from .controllable_action_serializer import ControllableActionSerializer
 from .hardware_serializer import HardwareSerializer
 from .threshold_serializer import ThresholdSerializer
+from .action_script_description_serializer import ActionScriptDescriptionSerializer
