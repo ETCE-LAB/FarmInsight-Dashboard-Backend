@@ -1,9 +1,6 @@
-from django.core.exceptions import PermissionDenied
-
-from farminsight_dashboard_backend.models import Organization, GrowingCycle, Harvest
+from farminsight_dashboard_backend.models import Organization, GrowingCycle, Harvest, Threshold
 from farminsight_dashboard_backend.models import Membership, MembershipRole, FPF, Sensor, Camera
 from farminsight_dashboard_backend.serializers import OrganizationSerializer
-from farminsight_dashboard_backend.services.membership_services import is_admin
 
 
 def create_organization(data, user) -> OrganizationSerializer:
@@ -36,6 +33,11 @@ def get_organization_by_growing_cycle_id(growing_cycle_id) -> Organization:
 
 def get_organization_by_sensor_id(sensor_id) -> Organization:
     org = Sensor.objects.select_related('FPF').get(id=sensor_id).FPF.organization
+    return org
+
+
+def get_organization_by_threshold_id(threshold_id) -> Organization:
+    org = Threshold.objects.select_related('sensor').get(id=threshold_id).sensor.FPF.organization
     return org
 
 

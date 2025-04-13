@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from farminsight_dashboard_backend.services import create_threshold, update_threshold, remove_threshold, \
-    is_member, get_organization_by_sensor_id
+    is_member, get_organization_by_sensor_id, get_organization_by_threshold_id
 
 
 @api_view(['POST'])
@@ -29,7 +29,7 @@ class ThresholdEditViews(APIView):
         return Response(threshold.data, status=status.HTTP_200_OK)
 
     def delete(self, request, threshold_id):
-        if not is_member(request.user, get_organization_by_sensor_id(request.data['sensorId'])):
+        if not is_member(request.user, get_organization_by_threshold_id(threshold_id)):
             return Response(status=status.HTTP_403_FORBIDDEN)
 
         remove_threshold(threshold_id)
