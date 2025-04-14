@@ -1,3 +1,4 @@
 from .typed_action_script_factory import TypedActionScriptFactory
 from .typed_action_script import TypedSensor
 from .http_action_scripts import PostHttpActionScript
+from .tapo_p100_smart_plug_action_script import TapoP100SmartPlugActionScript
