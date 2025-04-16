@@ -65,8 +65,8 @@ class SensorView(APIView):
         fpf_sensor_config = {
             "id": sensor.get('id'),
             "intervalSeconds": sensor.get('intervalSeconds'),
-            "sensorClassId": sensor.get('hardwareConfiguration').get('sensorClassId', ''),
-            "additionalInformation": sensor.get('hardwareConfiguration').get('additionalInformation', {}),
+            "sensorClassId": sensor.get('hardwareConfiguration', {}).get('sensorClassId', ''),
+            "additionalInformation": sensor.get('hardwareConfiguration', {}).get('additionalInformation', {}),
             "isActive": sensor.get('isActive'),
         }
 

@@ -276,12 +276,12 @@ class InfluxDBManager:
 
             forecasts = []
 
-            # Iteriere über alle Tabellen, die zurückgegeben werden
+            # Loop through the results (tables and records)
             for table in result:
                 for record in table.records:
                     values = record.values
 
-                    #Hier wird angenommen, dass im _value-Field ein JSON-String mit allen Forecast-Daten steht
+                    #One Field to rule them all
                     data = json.loads(values.get('_value'))
 
                     forecast_date = datetime.strptime(data["ForecastDate"], "%Y-%m-%d")
