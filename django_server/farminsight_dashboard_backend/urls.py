@@ -35,7 +35,9 @@ from farminsight_dashboard_backend.views import (
     LocationView,
     get_location,
     post_location,
+    get_weather_forecasts,
 )
+from farminsight_dashboard_backend.views.data_views import get_weather_forecasts
 
 urlpatterns = [
     path('userprofiles', get_userprofile, name='get_userprofile'),
@@ -87,6 +89,8 @@ urlpatterns = [
     path('locations/<str:location_id>', LocationView.as_view(), name='location_operations'),
     path('locations/organization/<str:organization_id>', LocationView.get_locations_by_organization, name='get_locations_by_organization_id'),
     path('locations/<str:location_id>/details', get_location, name='get_location'),
+
+    path('weather-forecasts/<str:location_id>', get_weather_forecasts, name='get_weather_forecasts'),
 
 
 

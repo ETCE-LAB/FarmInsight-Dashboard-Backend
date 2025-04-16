@@ -14,7 +14,6 @@ class LocationSerializer(serializers.ModelSerializer):
         fields = [
             'id',
             'name',
-            'isPublic',
             'organizationId',
             'latitude',
             'longitude',

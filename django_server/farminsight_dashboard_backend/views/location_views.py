@@ -42,7 +42,7 @@ class LocationView(APIView):
             return Response(status=status.HTTP_403_FORBIDDEN)
 
         location = update_location(location_id, request.data)
-        logger.info('updated location', extra={'resource_id': location_id})
+
         return Response(location.data, status=status.HTTP_200_OK)
 
     @api_view(['GET'])

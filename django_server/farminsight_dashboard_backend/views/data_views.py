@@ -4,6 +4,7 @@ from rest_framework.response import Response
 
 from farminsight_dashboard_backend.serializers import DateRangeSerializer, FPFFullDataSerializer
 from farminsight_dashboard_backend.services import get_all_fpf_data, get_all_sensor_data, get_images_by_camera
+from farminsight_dashboard_backend.services.data_services import get_last_weather_forecast
 
 
 @api_view(['GET'])
@@ -64,3 +65,15 @@ def get_camera_images(request, camera_id):
     serializer = get_images_by_camera(camera_id, from_date, to_date)
 
     return Response(serializer.data, status=status.HTTP_200_OK)
+
+@api_view(['GET'])
+def get_weather_forecasts(request, location_id):
+    """
+    Get current weather data for a given location
+    :param request:
+    :return: 3 Weather Forecasts
+    """
+
+    response = get_last_weather_forecast(location_id)
+
+    return Response(response, status=status.HTTP_200_OK)

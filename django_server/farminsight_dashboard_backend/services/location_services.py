@@ -14,6 +14,10 @@ def create_location(data) -> LocationSerializer:
     serializer = LocationSerializer(data=data, partial=True)
     if serializer.is_valid(raise_exception=True):
         serializer.save()
+        if serializer.data['gatherForecasts']:
+            # Schedule the weather forecast job
+            from farminsight_dashboard_backend.services import WeatherForecastScheduler
+            WeatherForecastScheduler.get_instance().add_forecast_job(serializer.data['id'])
         return serializer
 
 
@@ -22,6 +26,16 @@ def update_location(location_id, data) -> LocationSerializer:
     serializer = LocationSerializer(location, data=data)
     if serializer.is_valid(raise_exception=True):
         serializer.save()
+        if serializer.data['gatherForecasts']:
+
+            # Schedule the weather forecast job
+            from farminsight_dashboard_backend.services import WeatherForecastScheduler
+
+            WeatherForecastScheduler.get_instance().add_forecast_job(serializer.data['id'])
+        else:
+            # Remove the job if gathering is disabled
+            from farminsight_dashboard_backend.services import WeatherForecastScheduler
+            WeatherForecastScheduler.get_instance().remove_forecast_job(serializer.data['id'])
         return serializer
 
 
