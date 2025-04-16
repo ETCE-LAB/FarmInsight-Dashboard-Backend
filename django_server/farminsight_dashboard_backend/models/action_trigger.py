@@ -11,11 +11,12 @@ class ActionTrigger(models.Model):
     actionValueType = models.CharField(max_length=64)
     actionValue = models.CharField(max_length=128)
     triggerLogic = models.TextField()
+    description = models.TextField(null=True)
     isActive = models.BooleanField(default=False)
     action = models.ForeignKey(ControllableAction, related_name='triggers', on_delete=models.CASCADE)
 
     def __str__(self):
-        return f"{self.action.name}: {self.type} {self.actionValue} active: {self.isActive}"
+        return f"{self.action.name}: {self.type} {self.actionValue} active: {self.isActive} description: {self.description}"
 
 
 class ActionValueType(Enum):

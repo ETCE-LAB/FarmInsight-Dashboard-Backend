@@ -65,8 +65,7 @@ def is_admin(user, organization: Organization):
 
 
 def is_system_admin(user):
-    return user.systemRole == SystemRole.SystemAdmin.value
-
+    return getattr(user, "systemRole", None) == SystemRole.SystemAdmin.value
 
 def get_memberships_by_organization(organization_id):
     return Membership.objects.filter(organization_id=organization_id)
