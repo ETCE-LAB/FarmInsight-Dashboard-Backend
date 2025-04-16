@@ -26,7 +26,7 @@ def post_action_trigger(request):
         return Response(status=status.HTTP_403_FORBIDDEN)
 
     get_fpf_by_id(fpf_id)
-    print(request.data)
+
     action_trigger = ActionTriggerSerializer(create_action_trigger(request.data)).data
 
     logger.info("Action trigger created successfully", extra={'resource_id': fpf_id})

@@ -297,7 +297,7 @@ class InfluxDBManager:
                         except Exception as e:
                             print(f"Fehler beim Parsen von fetchDate: {e}")
                             fetch_date = datetime.now()
-                    print(data)
+
                     wf = dict(
                         fetchDate=fetch_date,
                         forecastDate=forecast_date,
@@ -313,7 +313,6 @@ class InfluxDBManager:
                         precipitationProbability=str(data.get("precipitation_probability_max", 0)),
                         locationId=values.get('locationId', "")
                     )
-                    print(wf)
                     forecasts.append(wf)
 
         except requests.exceptions.ConnectionError as e:
