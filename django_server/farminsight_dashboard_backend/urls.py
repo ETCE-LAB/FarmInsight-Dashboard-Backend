@@ -1,5 +1,6 @@
 from django.urls import path
 
+from farminsight_dashboard_backend.models import ControllableAction
 from farminsight_dashboard_backend.views import (
     UserprofileView,
     get_userprofile,
@@ -36,7 +37,10 @@ from farminsight_dashboard_backend.views import (
     get_location,
     post_location,
     get_weather_forecasts,
+    post_controllable_action,
+    ControllableActionView, execute_controllable_action, get_fpf_hardware, post_action_trigger,
 )
+from farminsight_dashboard_backend.views.action_script_views import get_available_action_script_types
 from farminsight_dashboard_backend.views.data_views import get_weather_forecasts
 
 urlpatterns = [
@@ -44,14 +48,14 @@ urlpatterns = [
     path('userprofiles/<str:identifier>', UserprofileView.as_view(), name='userprofile_operations'),
 
     path('organizations/own', get_own_organizations, name='get_own_organizations'),
-    path('organizations/<str:organization_id>', OrganizationView.as_view(), name='organization_operations'),    
+    path('organizations/<str:organization_id>', OrganizationView.as_view(), name='organization_operations'),
     path('organizations', post_organization, name='post_organization'),
-
     path('fpfs', FpfView.as_view(), name='post_fpf'),
     path('fpfs/visible', get_visible_fpf, name='get_visible_fpf'),
     path('fpfs/<str:fpf_id>', FpfView.as_view(), name='fpf_operations'),
     path('fpfs/<str:fpf_id>/api-key', get_fpf_api_key, name='get_fpf_api_key'),
     path('fpfs/<str:fpf_id>/data', get_fpf_data, name='get_fpf_data'),
+    path('fpfs/<str:fpf_id>/hardware', get_fpf_hardware, name='get_fpf_hardware'),
 
     path('memberships', MembershipView.as_view(), name='post_membership'),
     path('memberships/<str:membership_id>', MembershipView.as_view(), name='membership_operations'),
@@ -84,6 +88,12 @@ urlpatterns = [
     path('change-password', change_password_view, name='change_password_view'),
     path('log_messages', post_log_message, name='post_log_message'),
     path('log_messages/<str:resource_type>/<str:resource_id>', get_log_messages, name='get_log_messages'),
+    path('controllable-actions', post_controllable_action, name='post_controllable_action'),
+    path('controllable-actions/<str:controllable_action_id>', ControllableActionView.as_view(), name='controllable_action_operations'),
+    path('action-trigger', post_action_trigger,name='post_action_trigger'),
+    path('execute-actions/<str:controllable_action_id>/<str:trigger_id>', execute_controllable_action, name='execute_controllable_action'),
+    path('action-scripts/types', get_available_action_script_types, name='get_available_action_script_types'),
+
 
     path('locations', post_location, name='post_location'),
     path('locations/<str:location_id>', LocationView.as_view(), name='location_operations'),

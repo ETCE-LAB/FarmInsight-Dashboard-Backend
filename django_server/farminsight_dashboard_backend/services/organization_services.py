@@ -1,6 +1,6 @@
 from django.core.exceptions import PermissionDenied
 
-from farminsight_dashboard_backend.models import Organization, GrowingCycle, Harvest
+from farminsight_dashboard_backend.models import Organization, GrowingCycle, Harvest, ControllableAction
 from farminsight_dashboard_backend.models import Membership, MembershipRole, FPF, Sensor, Camera
 from farminsight_dashboard_backend.serializers import OrganizationSerializer
 from farminsight_dashboard_backend.services.membership_services import is_admin
@@ -54,6 +54,9 @@ def get_organization_by_harvest_id(harvest_id) -> Organization:
     org = Harvest.objects.get(id=harvest_id).growingCycle.FPF.organization
     return org
 
+def get_organization_by_controllable_action_id(controllable_action_id) -> Organization:
+    org = ControllableAction.objects.select_related('FPF').get(id=controllable_action_id).FPF.organization
+    return org
 
 def update_organization(org_id, data) -> OrganizationSerializer:
     """

@@ -1,5 +1,7 @@
 from rest_framework import serializers
 from farminsight_dashboard_backend.models import FPF, Organization, Location
+from farminsight_dashboard_backend.models import FPF, Organization
+from farminsight_dashboard_backend.serializers.controllable_action_serializer import ControllableActionSerializer
 from farminsight_dashboard_backend.serializers.camera_serializer import CameraImageSerializer, CameraSerializer
 from farminsight_dashboard_backend.serializers.growing_cycle_serializer import GrowingCycleSerializer
 from farminsight_dashboard_backend.serializers.sensor_serializer import SensorDataSerializer, SensorLastValueSerializer
@@ -49,6 +51,7 @@ class FPFFullSerializer(serializers.ModelSerializer):
     Cameras = CameraSerializer(many=True, source='cameras')
     GrowingCycles = GrowingCycleSerializer(many=True, source='growingCycles')
     Location = LocationSerializer(many=False, source='location')
+    ControllableAction = ControllableActionSerializer(many=True, source='actions')
 
     class Meta:
         model = FPF
@@ -61,8 +64,10 @@ class FPFFullSerializer(serializers.ModelSerializer):
             'Cameras',
             'GrowingCycles',
             'Location',
+            'ControllableAction'
         ]
-        
+
+
 class FPFFullDataSerializer(serializers.ModelSerializer):
     Sensors = SensorDataSerializer(many=True, source='sensors')
     Cameras = CameraImageSerializer(many=True, source='cameras')
