@@ -97,7 +97,7 @@ class WeatherForecastScheduler:
         :param locationId: Location object
         """
         try:
-            request_url = f"https://api.open-meteo.com/v1/forecast?latitude={latitude}&longitude={longitude}&daily=rain_sum,sunshine_duration,weather_code,wind_speed_10m_max,temperature_2m_min,temperature_2m_max,sunrise,sunset,precipitation_sum,precipitation_probability_max&timezone=Europe%2FBerlin&forecast_days=3"
+            request_url = f"https://api.open-meteo.com/v1/forecast?latitude={latitude}&longitude={longitude}&daily=rain_sum,sunshine_duration,weather_code,wind_speed_10m_max,temperature_2m_min,temperature_2m_max,sunrise,sunset,precipitation_sum,precipitation_probability_max&timezone=Europe%2FBerlin&forecast_days=16"
             response = requests.get(request_url, stream=True)
 
             raw_data = response.json()['daily']
