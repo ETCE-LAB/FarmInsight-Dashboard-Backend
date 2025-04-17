@@ -1,15 +1,16 @@
+import uuid
+
 from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from farminsight_dashboard_backend.serializers import SensorSerializer, SensorDBSchemaSerializer
-from farminsight_dashboard_backend.services import \
-    is_member, send_request_to_fpf, get_fpf_by_id
-from farminsight_dashboard_backend.services.sensor_services import get_sensor, create_sensor, \
-    update_sensor
-from farminsight_dashboard_backend.utils import is_valid_uuid
-import uuid
+from farminsight_dashboard_backend.services import is_member, send_request_to_fpf, get_organization_by_sensor_id, get_organization_by_fpf_id
+from farminsight_dashboard_backend.services.sensor_services import get_sensor, create_sensor, update_sensor
+from farminsight_dashboard_backend.utils import get_logger
+
+logger = get_logger()
 
 
 class SensorView(APIView):
@@ -23,14 +24,10 @@ class SensorView(APIView):
         :param sensor_id:
         :return:
         """
-
-        if not is_valid_uuid(sensor_id):
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+        if not is_member(request.user, get_organization_by_sensor_id(sensor_id)):
+            return Response(status=status.HTTP_403_FORBIDDEN)
 
         sensor = get_sensor(sensor_id)
-
-        if not is_member(request.user, get_fpf_by_id(sensor.FPF_id).organization.id):
-            return Response(status=status.HTTP_403_FORBIDDEN)
 
         fpf_sensor_info = send_request_to_fpf(sensor.FPF_id, 'get', f'/api/sensors/{sensor_id}')
         # todo returns here interval, wich will be duplicated information in the response
@@ -49,10 +46,10 @@ class SensorView(APIView):
         """
         fpf_id = request.data.get('fpfId')
 
-        if not is_member(request.user, get_fpf_by_id(fpf_id).organization.id):
+        if not is_member(request.user, get_organization_by_fpf_id(fpf_id)):
             return Response(status=status.HTTP_403_FORBIDDEN)
 
-        sensor = request.data.copy()
+        sensor = request.data
 
         # Generate a new UUID for the sensor
         new_uuid = uuid.uuid4()
@@ -70,6 +67,7 @@ class SensorView(APIView):
             "intervalSeconds": sensor.get('intervalSeconds'),
             "sensorClassId": sensor.get('hardwareConfiguration', {}).get('sensorClassId', ''),
             "additionalInformation": sensor.get('hardwareConfiguration', {}).get('additionalInformation', {}),
+            "isActive": sensor.get('isActive'),
         }
 
         try:
@@ -91,17 +89,18 @@ class SensorView(APIView):
         :param request:
         :return:
         """
+        if not is_member(request.user, get_organization_by_sensor_id(sensor_id)):
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
         data = request.data
         fpf_id = get_sensor(sensor_id).FPF_id
-
-        if not is_member(request.user, get_fpf_by_id(fpf_id).organization.id):
-            return Response(status=status.HTTP_403_FORBIDDEN)
 
         # Update sensor on FPF
         update_fpf_payload = {
             "intervalSeconds": data.get('intervalSeconds'),
             "sensorClassId": data.get('hardwareConfiguration', {}).get('sensorClassId', ''),
-            "additionalInformation": data.get('hardwareConfiguration', {}).get('additionalInformation', {})
+            "additionalInformation": data.get('hardwareConfiguration', {}).get('additionalInformation', {}),
+            "isActive": data.get('isActive'),
         }
 
         send_request_to_fpf(fpf_id, 'put', f'/api/sensors/{sensor_id}', update_fpf_payload)
@@ -109,6 +108,8 @@ class SensorView(APIView):
         # Update sensor locally
         update_sensor_payload = {key: value for key, value in data.items() if key != "connection"}
         update_sensor(sensor_id, update_sensor_payload)
+
+        logger.info('sensor updated successfully', extra={'resource_id': sensor_id})
 
         return Response(data, status=status.HTTP_200_OK)
 
@@ -121,11 +122,8 @@ def get_fpf_sensor_types(request, fpf_id):
     try to send a request to the fpf
     :return:
     """
-    if not is_member(request.user, get_fpf_by_id(fpf_id).organization.id):
+    if not is_member(request.user, get_organization_by_fpf_id(fpf_id)):
         return Response(status=status.HTTP_403_FORBIDDEN)
 
-    if is_valid_uuid(fpf_id):
-        sensor_types = send_request_to_fpf(fpf_id, 'get', '/api/sensors/types')
-        return Response(sensor_types, status=status.HTTP_200_OK)
-
-    return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    sensor_types = send_request_to_fpf(fpf_id, 'get', '/api/sensors/types')
+    return Response(sensor_types, status=status.HTTP_200_OK)

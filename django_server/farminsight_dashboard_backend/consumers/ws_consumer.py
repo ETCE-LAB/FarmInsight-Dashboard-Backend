@@ -6,6 +6,11 @@ from farminsight_dashboard_backend.services.auth_services import check_single_us
 
 
 class SensorUpdatesConsumer(AsyncWebsocketConsumer):
+    def __init__(self, *args, **kwargs):
+        super().__init__(args, kwargs)
+        self.room_group_name = None
+        self.room_name = None
+
     async def connect(self):
         self.room_name = self.scope['url_route']['kwargs']['sensor_id']
         self.room_group_name = f'sensor_updates_{self.room_name}'

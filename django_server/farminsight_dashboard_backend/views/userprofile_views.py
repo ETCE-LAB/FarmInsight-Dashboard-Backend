@@ -30,6 +30,9 @@ class UserprofileView(APIView):
         return Response(UserprofileSerializer(userprofiles[:10], many=True).data)
 
     def put(self, request, identifier):
+        if str(request.user.id) != identifier:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
         updated_userprofile = update_userprofile_name(identifier, request.data.get('name'))
         return Response(UserprofileSerializer(updated_userprofile).data)
 

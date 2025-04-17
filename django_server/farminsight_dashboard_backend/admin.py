@@ -10,6 +10,7 @@ for model_name, model in app.models.items():
     
 '''
 
-from farminsight_dashboard_backend.models import Userprofile
+from farminsight_dashboard_backend.models import Userprofile, LogMessage
 
 admin.site.register(Userprofile)
+admin.site.register(LogMessage)

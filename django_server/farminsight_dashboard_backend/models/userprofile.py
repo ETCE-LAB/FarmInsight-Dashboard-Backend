@@ -4,7 +4,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 
 class SystemRole(ListableEnum):
-    SystemAdmin = 'sysAdmin'
+    SystemAdmin = 'admin'
     User = 'user'
 
 

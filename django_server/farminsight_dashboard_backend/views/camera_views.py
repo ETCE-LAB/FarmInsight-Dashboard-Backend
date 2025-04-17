@@ -5,11 +5,16 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
+from oauth2_provider.models import AccessToken
 from farminsight_dashboard_backend.serializers.camera_serializer import CameraSerializer
 from farminsight_dashboard_backend.services import get_active_camera_by_id, update_camera, delete_camera, \
-    get_fpf_by_id, create_camera, is_member, get_camera_by_id
+    get_fpf_by_id, create_camera, is_member, get_camera_by_id, get_organization_by_camera_id, \
+    get_organization_by_fpf_id, is_admin
 from farminsight_dashboard_backend.services.fpf_streaming_services import rtsp_stream, http_stream
-from oauth2_provider.models import AccessToken
+from farminsight_dashboard_backend.utils import get_logger
+
+
+logger = get_logger()
 
 class CameraView(views.APIView):
     #permission_classes = [IsAuthenticated]
@@ -31,17 +36,23 @@ class CameraView(views.APIView):
         :param camera_id: id of the camera to update
         :return:
         """
+        if not is_member(request.user, get_organization_by_camera_id(camera_id)):
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
         from farminsight_dashboard_backend.services import CameraScheduler
         serializer = CameraSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         old_interval = get_camera_by_id(camera_id).intervalSeconds
+        old_is_active = get_camera_by_id(camera_id).isActive
 
         # Update the camera
         camera = update_camera(camera_id, serializer.data)
 
+        logger.info("Camera updated successfully", extra={'resource_id': camera_id})
+
         # Update the scheduler
-        if camera.intervalSeconds != old_interval:
+        if camera.intervalSeconds != old_interval or camera.isActive != old_is_active:
             CameraScheduler.get_instance().reschedule_camera_job(camera.id, camera.intervalSeconds)
 
         return Response(CameraSerializer(camera).data, status=status.HTTP_200_OK)
@@ -53,9 +64,19 @@ class CameraView(views.APIView):
         :param camera_id:
         :return:
         """
+        if not is_admin(request.user, get_organization_by_camera_id(camera_id)):
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
         from farminsight_dashboard_backend.services import CameraScheduler
         CameraScheduler.get_instance().remove_camera_job(camera_id)
-        delete_camera(camera_id)
+
+        camera = get_camera_by_id(camera_id)
+        fpf_id = camera.FPF_id
+
+        delete_camera(camera)
+
+        logger.info("Camera deleted successfully", extra={'resource_id': fpf_id})
+
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
@@ -67,13 +88,18 @@ def post_camera(request):
     :param request:
     :return:
     """
-    from farminsight_dashboard_backend.services import CameraScheduler
-
     fpf_id = request.data.get('fpfId')
+
+    if not is_member(request.user, get_organization_by_fpf_id(fpf_id)):
+        return Response(status=status.HTTP_403_FORBIDDEN)
 
     get_fpf_by_id(fpf_id)
 
     camera = CameraSerializer(create_camera(fpf_id, request.data)).data
+
+    logger.info("Camera created successfully", extra={'resource_id': fpf_id})
+
+    from farminsight_dashboard_backend.services import CameraScheduler
     CameraScheduler.get_instance().add_camera_job(camera.get('id'))
 
     return Response(camera, status=status.HTTP_201_CREATED)
@@ -88,6 +114,10 @@ def get_camera_livestream(request, camera_id):
     :param camera_id:
     :return:
     """
+    # TODO: shouldn't this work? Asked Marius as to why this construct exists, hopefully can streamline - js
+    #if not is_member(request.user, get_organization_by_camera_id(camera_id)):
+    #    return Response(status=status.HTTP_403_FORBIDDEN)
+
     token = request.GET.get('token')
 
     if not token:
@@ -105,7 +135,7 @@ def get_camera_livestream(request, camera_id):
     camera = get_active_camera_by_id(camera_id)
     livestream_url = camera.livestreamUrl
 
-    if not is_member(access_token.user, get_fpf_by_id(str(camera.FPF_id)).organization.id):
+    if not is_member(access_token.user, get_organization_by_camera_id(camera_id)):
         return Response(status=status.HTTP_403_FORBIDDEN)
 
     parsed_url = urlparse(livestream_url)

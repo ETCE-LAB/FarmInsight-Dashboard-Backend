@@ -1,4 +1,4 @@
-from farminsight_dashboard_backend.models import FPF, Sensor
+from farminsight_dashboard_backend.models import FPF, Sensor, Location
 from farminsight_dashboard_backend.utils import get_date_range
 from .influx_services import InfluxDBManager
 from ..exceptions import NotFoundException
@@ -45,3 +45,13 @@ def get_all_sensor_data(sensor_id, from_date=None, to_date=None):
         to_date=to_date_iso)
 
     return measurements_by_sensor.get(str(sensor.id), [])
+
+def get_last_weather_forecast(locationId):
+    """
+    Get the last weather forecast for all locations
+    :return: list of weather forecasts
+    """
+    location = Location.objects.get(id=locationId)
+    forecasts = InfluxDBManager.get_instance().fetch_last_weather_forcast(location.organization.id, location.id )
+
+    return forecasts

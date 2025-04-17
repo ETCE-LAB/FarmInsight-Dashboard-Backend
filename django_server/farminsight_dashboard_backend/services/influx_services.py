@@ -1,14 +1,20 @@
+import json
+from dataclasses import dataclass
+from datetime import datetime
+from typing import List
+
 from influxdb_client import InfluxDBClient, Point, WritePrecision
 from django.conf import settings
 from influxdb_client.client.write_api import SYNCHRONOUS
+from django.utils import timezone
 
 from farminsight_dashboard_backend.exceptions import InfluxDBQueryException, InfluxDBNoConnectionException
-from farminsight_dashboard_backend.models import FPF
+from farminsight_dashboard_backend.exceptions.custom_exception_handler import InfluxDBWriteException
+from farminsight_dashboard_backend.models import FPF, Organization
 import requests
 import logging
 import threading
 import time
-
 
 class InfluxDBManager:
     """
@@ -74,9 +80,9 @@ class InfluxDBManager:
 
             if not self.client.ping():
                 raise ConnectionError("InfluxDB is not reachable.")
+            self.sync_buckets()
+            self.log.info("Successfully connected to InfluxDB and synchronized buckets.")
 
-            self.sync_fpf_buckets()
-            self.log.info("InfluxDB database connection successful.")
 
         except (requests.exceptions.RequestException, ConnectionError) as e:
             self.log.warning(f"InfluxDB connection failed: {e} Proceeding without InfluxDB.")
@@ -103,6 +109,35 @@ class InfluxDBManager:
 
         except Exception as e:
             self.log.error(f"Failed to sync FPF buckets with InfluxDB: {e}")
+
+    def sync_organization_buckets(self):
+        """
+        Ensure each Organization in SQLite has a corresponding bucket in InfluxDB.
+        """
+        try:
+            if self.client:
+                bucket_api = self.client.buckets_api()
+                orga_objects = Organization.objects.all()
+
+                if not orga_objects.exists():
+                    self.log.warning("No Organizations found in the database.")
+                    return
+
+                for orga in orga_objects:
+                    bucket_name = str(orga.id)
+                    if not bucket_api.find_bucket_by_name(bucket_name):
+                        self.log.info(f"Creating new bucket: {bucket_name}")
+                        bucket_api.create_bucket(bucket_name=bucket_name, org=self.influxdb_settings['org'])
+
+        except Exception as e:
+            self.log.error(f"Failed to sync Organization buckets with InfluxDB: {e}")
+
+    def sync_buckets(self):
+        """
+        Synchronize all buckets in InfluxDB.
+        """
+        self.sync_organization_buckets()
+        self.sync_fpf_buckets()
 
     @_retry_connection
     def fetch_sensor_measurements(self, fpf_id: str, sensor_ids: list, from_date: str, to_date: str) -> dict:
@@ -168,7 +203,6 @@ class InfluxDBManager:
                 f'|> sort(columns: ["_time"], desc: true) '
                 f'|> unique(column: "sensorId") '
             )
-
             result = query_api.query(org=self.influxdb_settings['org'], query=query)
 
             # Process and organize results by sensor ID
@@ -191,6 +225,7 @@ class InfluxDBManager:
 
         return latest_measurements
 
+
     @_retry_connection
     def write_sensor_measurements(self, fpf_id: str, sensor_id: str, measurements):
         """
@@ -209,12 +244,131 @@ class InfluxDBManager:
                     .time(measurement['measuredAt'], WritePrecision.NS)
                 )
                 points.append(point)
-
             write_api.write(bucket=fpf_id, record=points)
+
 
         except Exception as e:
             self.client = None
             raise InfluxDBQueryException(str(e))
+
+    @_retry_connection
+    def fetch_last_weather_forcast(self, orga_id: str, location_id: str):
+        """
+        :param fpf_id: The ID of the FPF (used as the bucket name in InfluxDB).
+        :param sensor_ids: List of sensor IDs to query data for.
+        :return: Dictionary with sensor IDs as keys, each containing the latest measurement.
+        """
+
+        try:
+            query_api = self.client.query_api()
+
+            # Construct the query
+            query = (
+                f'from(bucket: "{orga_id}") '
+                f'|> range(start: -1y) '  # Arbitrary long range to include all data
+                f'|> filter(fn: (r) => r["_measurement"] == "WeatherForecast" and r["locationId"] == "{str(location_id)}") '
+                f'|> sort(columns: ["_time"], desc: true) '
+                f'|> limit(n: 3) '
+            )
+
+            # Execute the query
+            result = query_api.query(org=self.influxdb_settings['org'], query=query)
+
+            forecasts = []
+
+            # Loop through the results (tables and records)
+            for table in result:
+                for record in table.records:
+                    values = record.values
+
+                    #One Field to rule them all
+                    data = json.loads(values.get('_value'))
+
+                    forecast_date = datetime.strptime(data["ForecastDate"], "%Y-%m-%d")
+
+                    sunrise_date = datetime.strptime(data["sunrise"], "%Y-%m-%dT%H:%M")
+                    sunset_date = datetime.strptime(data["sunset"], "%Y-%m-%dT%H:%M")
+
+
+                    fetch_date = values.get('_time')
+                    if not isinstance(fetch_date, datetime):
+                        try:
+                            fetch_date = datetime.fromisoformat(fetch_date)
+                        except Exception as e:
+                            print(f"Fehler beim Parsen von fetchDate: {e}")
+                            fetch_date = datetime.now()
+
+                    wf = dict(
+                        fetchDate=fetch_date,
+                        forecastDate=forecast_date,
+                        rainMM=str(data.get("rain_sum", 0)),
+                        sunshineDurationSeconds=str(data.get("sunshine_duration", 0)),
+                        weatherCode=str(data.get("weather_code", "")),
+                        windSpeedMax=str(data.get("wind_speed_max", 0)),
+                        temperatureMinC=str(data.get("temperature_min", 0)),
+                        temperatureMaxC=str(data.get("temperature_max", 0)),
+                        sunrise=sunrise_date,
+                        sunset=sunset_date,
+                        precipitationMM=str(data.get("precipitation_sum", 0)),
+                        precipitationProbability=str(data.get("precipitation_probability_max", 0)),
+                        locationId=values.get('locationId', "")
+                    )
+                    forecasts.append(wf)
+
+        except requests.exceptions.ConnectionError as e:
+            self.client = None
+            self.log.error(f"Failed to connect to InfluxDB: {e}")
+            raise InfluxDBNoConnectionException("Unable to connect to InfluxDB.")
+
+        except Exception as e:
+            raise InfluxDBQueryException(str(e))
+
+        return forecasts
+
+    @_retry_connection
+    def write_weather_forecast(self, orga_id: str, location_id: str, weather_forecasts):
+        """
+        Writes Weather Forecast for a given Location (Orga) to InfluxDB.
+        :param orga_id: The ID of the Organization (used as the bucket name in InfluxDB).
+        :param location_id: The ID of the location (UUID).
+        :param weather_forecasts: List of weather forecast dictionaries.
+        """
+        try:
+            write_api = self.client.write_api(write_options=SYNCHRONOUS)
+
+            points = []
+            for forecast in weather_forecasts:
+                forecast_dict = {
+                    "ForecastDate": str(forecast['time']),
+                    "rain_sum": float(forecast['rain_sum']),
+                    "sunshine_duration": float(forecast['sunshine_duration']),
+                    "weather_code": int(forecast['weather_code']),
+                    "wind_speed_max": float(forecast['wind_speed_10m_max']),
+                    "temperature_min": float(forecast['temperature_2m_min']),
+                    "temperature_max": float(forecast['temperature_2m_max']),
+                    "sunrise": str(forecast['sunrise']),
+                    "sunset": str(forecast['sunset']),
+                    "precipitation_sum": float(forecast['precipitation_sum']),
+                    "precipitation_probability_max": int(forecast['precipitation_probability_max'])
+                }
+
+
+                forecast_json = json.dumps(forecast_dict)
+
+                point = (
+                    Point("WeatherForecast")
+                    .tag("locationId", str(location_id))
+                    .field("forecast", forecast_json)
+                    .time(timezone.now().isoformat(), WritePrecision.NS)
+                )
+                #For some reason the write_api.write() method does not accept a list of points
+                write_api.write(bucket=str(orga_id), record=point)
+
+
+        except Exception as e:
+            self.client = None
+            raise InfluxDBWriteException(str(e))
+
 
     def close(self):
         """Close the InfluxDB client if it's open."""

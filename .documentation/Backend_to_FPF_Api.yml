@@ -1,0 +1,295 @@
+openapi: 3.0.3
+info:
+  title: Swagger Farminsight FPF Backend - OpenAPI 3.0
+  description: |-
+    Endpoints that the FPF Backend Service provides for synchronization purposes
+  termsOfService: TOS
+  contact:
+    email: apiteam@swagger.io
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  version: 1.0.11
+externalDocs:
+  description: Find out more about Swagger
+  url: http://swagger.io
+servers:
+  - url: https://anants-pi-cluster.de/api
+tags:
+  - name: auth
+  - name: sensor
+  - name: camera
+paths:
+  /api-keys:
+    post:
+      tags:
+        - auth
+      summary: Sends the FPF Backend it's API-Key
+      operationId: postApiKey
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                apiKey:
+                  type: string
+      responses:
+        '200':
+          description: Successful operation
+        '403':
+          description: Forbidden
+        '422':
+          description: Validation exception
+  /fpf-ids:
+    post:
+      tags:
+        - auth
+      summary: Sends the FPF Backend it's Id
+      operationId: postId
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                fpfId:
+                  type: string
+                  format: uuid
+      responses:
+        '200':
+          description: Successful operation
+        '403':
+          description: Forbidden
+        '422':
+          description: Validation exception
+  /sensors/types:
+    get:
+      tags:
+        - sensor
+      summary: return supported Sensor Types
+      description: Returns a List of Sensor Types
+      operationId: getSensorTypes
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SensorDescription'
+        '403':
+          description: Forbidden
+        '404':
+          description: Sensor not found
+  /sensors:
+    post:
+      tags:
+        - sensor
+      summary: Add new Sensor
+      operationId: postSensorConfiguration
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Sensor'
+      responses:
+        '201':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Sensor'
+        '403':
+          description: Forbidden
+        '422':
+          description: Validation exception
+  /sensors/{sensorId}:
+    get:
+      tags:
+        - sensor
+      summary: get existing Sensor
+      operationId: getSensorConfiguration
+      parameters:
+        - name: sensorId
+          in: path
+          description: ID of Sensor to return
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Sensor'
+        '403':
+          description: Forbidden
+        '422':
+          description: Validation exception
+    put:
+      tags:
+        - sensor
+      summary: Update existing Sensor
+      operationId: putSensorConfiguration
+      parameters:
+        - name: sensorId
+          in: path
+          description: ID of Sensor to Update
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/Sensor'
+                - type: object
+                  properties:
+                    id:
+                      readOnly: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Sensor'
+        '403':
+          description: Forbidden
+        '422':
+          description: Validation exception
+  /cameras:
+    post:
+      tags:
+        - camera
+      summary: Upload Camera configuration 
+      operationId: postCameraConfiguration
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Camera'
+      responses:
+        '201':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Camera'
+        '403':
+          description: Forbidden
+        '422':
+          description: Validation exception
+  /cameras/{cameraId}:
+    put:
+      tags:
+        - camera
+      summary: Update existing Camera
+      operationId: putCameraConfiguration
+      parameters:
+        - name: cameraId
+          in: path
+          description: ID of Camera to Update
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/Camera'
+                - type: object
+                  properties:
+                    id:
+                      readOnly: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Camera'
+        '403':
+          description: Forbidden
+        '422':
+          description: Validation exception
+  /cameras/{cameraId}/stream:
+    get:
+      tags:
+        - camera
+      summary: Video stream of a Camera
+      parameters:
+        - name: cameraId
+          in: path
+          description: ID of Camera that the Interval belong to
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Successful operation
+        '403':
+          description: Forbidden
+        '404':
+          description: Camera not found
+components:
+  schemas:
+    Sensor:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        intervalSeconds:
+          type: integer
+        sensorClassId:
+          type: string
+        additionalInformation:
+          type: object
+    Camera:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        resolution:
+          type: string
+        intervalSeconds:
+          type: integer
+    SensorDescription:
+      type: object
+      properties:
+        sensorClassId: 
+          type: string
+        name: 
+          type: string
+        connection: 
+          type: string
+        parameter: 
+          type: string
+        tags: 
+          type: object
+        fields: 
+          type: array
+          items:
+            $ref: '#/components/schemas/FieldDescription'
+    FieldDescription:
+      type: object
+      properties:
+        name: 
+          type: string
+        type:
+          type: string
+        rules: 
+          type: array
+          items:
+            type: object

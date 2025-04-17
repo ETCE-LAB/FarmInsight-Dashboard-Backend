@@ -1,3 +1,6 @@
+import dateutil.parser
+from django.utils import timezone
+
 from rest_framework import serializers
 from farminsight_dashboard_backend.models import Sensor
 from farminsight_dashboard_backend.utils import get_date_range
@@ -12,6 +15,7 @@ class SensorSerializer(serializers.ModelSerializer):
             'name',
             'location',
             'unit',
+            'parameter',
             'modelNr',
             'isActive',
             'intervalSeconds',
@@ -28,6 +32,7 @@ class SensorDataSerializer(serializers.ModelSerializer):
             'name',
             'location',
             'unit',
+            'parameter',
             'modelNr',
             'isActive',
             'intervalSeconds',
@@ -48,8 +53,10 @@ class SensorDataSerializer(serializers.ModelSerializer):
             to_date=to_date_iso,
         ).get(str(obj.id), [])
 
+
 class SensorLastValueSerializer(serializers.ModelSerializer):
     lastMeasurement = serializers.SerializerMethodField()
+    status = serializers.SerializerMethodField()
 
     class Meta:
         model = Sensor
@@ -58,22 +65,41 @@ class SensorLastValueSerializer(serializers.ModelSerializer):
             'name',
             'location',
             'unit',
+            'parameter',
             'modelNr',
             'isActive',
             'intervalSeconds',
-            'lastMeasurement'
+            'lastMeasurement',
+            'status',
         ]
 
     def get_lastMeasurement(self, obj):
         from farminsight_dashboard_backend.services import InfluxDBManager
 
         try:
-            return InfluxDBManager.get_instance().fetch_latest_sensor_measurements(
+            value = InfluxDBManager.get_instance().fetch_latest_sensor_measurements(
                 fpf_id=obj.FPF.id,
                 sensor_ids=[str(obj.id)],
             ).get(str(obj.id), [])
+            self.measured_at = value['measuredAt']
+            return value
         except Exception as e:
+            self.measured_at = None
             return {'error': 'Could not fetch last measurement.'}
+
+    def get_status(self, obj):
+        if not obj.isActive:
+            return 'grey'
+
+        if self.measured_at is not None:
+            seconds_since_last_measurement = (timezone.now() - dateutil.parser.isoparse(self.measured_at)).total_seconds()
+            if seconds_since_last_measurement < obj.intervalSeconds:
+                return 'green'
+            elif seconds_since_last_measurement < 2 * obj.intervalSeconds:
+                return 'yellow'
+
+        return 'red'
+
 
 class SensorDBSchemaSerializer(serializers.ModelSerializer):
     class Meta:

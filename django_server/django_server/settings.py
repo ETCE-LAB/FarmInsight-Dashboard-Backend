@@ -144,16 +144,20 @@ LOGGING = {
             'level': 'DEBUG',  # Set to INFO or WARNING in production
             'class': 'logging.StreamHandler',
             'formatter': 'simple',
-        }
+        },
+       'db_handler': {
+           'level': 'DEBUG', # set to ERROR in production
+           'class': 'django_server.custom_logger.DatabaseLogHandler',
+       },
     },
     'loggers': {
         'django': {
-            'handlers': ['console'],
+            'handlers': ['console', 'db_handler'],
             'level': 'INFO',  # Set to INFO in production
             'propagate': True,
         },
         'farminsight_dashboard_backend': {
-            'handlers': ['console'],
+            'handlers': ['console', 'db_handler'],
             'level': 'DEBUG',
             'propagate': False,
         },
@@ -239,4 +243,8 @@ REST_FRAMEWORK = {
 URL_PREFIX = env('URL_PREFIX', default='api/')
 
 # 0 or negative for indefinite duration
-API_KEY_VALIDATION_DURATION_DAYS = int(env('API_KEY_VALIDATION_DURATION_DAYS', default='30'))
+API_KEY_VALIDATION_DURATION_DAYS = env('API_KEY_VALIDATION_DURATION_DAYS', default=30)
+
+
+# How long until log messages get deleted from the DB to avoid unnecessary bloat
+DB_LOG_RETENTION_DAYS = env('DB_LOG_RETENTION_DAYS', default=7)

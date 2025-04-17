@@ -1,0 +1,42 @@
+[
+    {
+        "model": "farminsight_dashboard_backend.userprofile",
+        "pk": 1,
+        "fields": {
+            "password": "pbkdf2_sha256$870000$3Xxxp4mtzcIcpDGDEE7RH0$7cYTKti6DK9TJIMqDFb8zpXHLbohSBpaDTO7NSrKDbo=",
+            "last_login": null,
+            "is_superuser": true,
+            "username": "admin",
+            "first_name": "",
+            "last_name": "",
+            "email": "admin@does-not-exist.com",
+            "is_staff": true,
+            "is_active": true,
+            "date_joined": "2025-03-24T10:28:58.783Z",
+            "name": "",
+            "systemRole": "admin",
+            "groups": [],
+            "user_permissions": []
+        }
+    },
+	{
+        "model": "oauth2_provider.application",
+        "pk": 1,
+        "fields": {
+            "client_id": "interactive",
+            "user": 1,
+            "redirect_uris": "http://localhost:3000/auth/callback",
+            "post_logout_redirect_uris": "http://localhost:3000/auth/signout-callback",
+            "client_type": "public",
+            "authorization_grant_type": "authorization-code",
+            "client_secret": "pbkdf2_sha256$870000$1PVOAyD7SdiIBdaIdBYaAj$5inXXgsfobA6n21sjCfOvY1j2lZ6Nji2IATUXCYgg7k=",
+            "hash_client_secret": true,
+            "name": "Farminsight",
+            "skip_authorization": true,
+            "created": "2025-01-22T20:13:57.424Z",
+            "updated": "2025-01-22T20:13:57.424Z",
+            "algorithm": "RS256",
+            "allowed_origins": ""
+        }
+    }
+]

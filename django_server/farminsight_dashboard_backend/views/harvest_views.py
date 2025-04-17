@@ -4,13 +4,17 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from farminsight_dashboard_backend.services import create_harvest, update_harvest, remove_harvest, get_harvests_by_growing_cycle_id
+from farminsight_dashboard_backend.services import create_harvest, update_harvest, remove_harvest, \
+    get_harvests_by_growing_cycle_id, is_member, get_organization_by_growing_cycle_id
 
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def post_harvest(request):
-    harvest = create_harvest(request.data, request.user)
+    if not is_member(request.user, get_organization_by_growing_cycle_id(request.data['growingCycleId'])):
+        return Response(status=status.HTTP_403_FORBIDDEN)
+
+    harvest = create_harvest(request.data)
     return Response(harvest.data, status=status.HTTP_201_CREATED)
 
 
@@ -18,11 +22,17 @@ class HarvestEditViews(APIView):
     permission_classes = [IsAuthenticated]
 
     def put(self, request, harvest_id):
-        harvest = update_harvest(harvest_id, request.data, request.user)
+        if not is_member(request.user, get_organization_by_growing_cycle_id(request.data['growingCycleId'])):
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+        harvest = update_harvest(harvest_id, request.data)
         return Response(harvest.data, status=status.HTTP_200_OK)
 
     def delete(self, request, harvest_id):
-        remove_harvest(harvest_id, request.user)
+        if not is_member(request.user, get_organization_by_growing_cycle_id(request.data['growingCycleId'])):
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+        remove_harvest(harvest_id)
         return Response(status=status.HTTP_200_OK)
 
 

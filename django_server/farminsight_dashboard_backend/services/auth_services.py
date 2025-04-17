@@ -5,7 +5,7 @@ from channels.db import database_sync_to_async
 from decouple import config
 from django.utils import timezone
 
-from farminsight_dashboard_backend.models import Sensor, SingleUseToken
+from farminsight_dashboard_backend.models import Sensor, FPF, SingleUseToken
 from farminsight_dashboard_backend.utils import generate_random_token
 
 
@@ -28,6 +28,13 @@ def get_auth_token():
         return response.json().get("access_token")
     else:
         raise Exception(f"Failed to obtain token: {response.status_code}, {response.text}")
+
+
+def valid_api_key_for_fpf(api_key: str, fpf_id: str) -> bool:
+    fpf = FPF.objects.get(id=fpf_id)
+    if fpf.apiKeyValidUntil is None:
+        return fpf.apiKey == api_key
+    return fpf.apiKey == api_key and fpf.apiKeyValidUntil > timezone.now()
 
 
 def valid_api_key_for_sensor(api_key: str, sensor_id: str) -> bool:

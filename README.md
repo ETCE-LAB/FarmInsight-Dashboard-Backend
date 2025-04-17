@@ -20,6 +20,8 @@
   - [Set up InfluxDB in Docker](#set-up-influxdb-in-docker)
 - [Running the Application](#running-the-application)
   - [Manual Querying of data with Influx CLI](#manual-querying-of-data-with-influx-cli)
+  - [Pitfalls during development](#pitfalls-during-development)
+  - [Administrative actions](#administrative-actions)
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -189,10 +191,11 @@ docker-compose down
 ```
 
 #### Starting the Django app
-If necessary, migrate the SQLite database
+If necessary, migrate the SQLite database and load the default application
 ```sh
 python manage.py makemigrations
 python manage.py migrate
+python manage.py loaddata application
 ```
 
 Start on 
@@ -202,7 +205,7 @@ python manage.py runsever
 
 Run on a desired port
 ```sh
-python manage.py runserver localhost:8002 
+python manage.py runserver localhost:8000 
 ```
 
 
@@ -213,6 +216,33 @@ To check the data stored within your InfluxDB buckets, you can use the InfluxDB 
 Below is an example command to query data from a specific bucket:
 ```
 influx query 'from(bucket:"c7e6528b-76fd-4895-8bb9-c6cd500fc152") |> range(start: -1000y) |> filter(fn: (r) => r._measurement == "SensorData")'
+```
+### Pitfalls during development
+When startup fails check that the .env.dev and oidc.key file exist and are filled out correctly.
+
+
+When you encounter **Error: invalid_request Invalid client_id parameter value.** while trying to log in it means your database is not fully setup.
+To remedy this and setup an application and default admin superuser (pw:1234) **DEVELOPMENT ONLY**:
+```sh
+python manage.py loaddata application
+```
+
+The FPF-Backend is setup so it can only be one FPF at a time, if the Dashboard backend DB gets emptied and you want to create a new FPF, u also need to empty the FPF-Backend configuration tables.
+### Administrative actions
+Deleting user accounts or doing other potentially necessary cleanup of Database entries not covered through the standard can be done through the django admin panel.
+
+To do that one needs an admin accounts with privileges, in our case that's Benjamin Leidings account and the admin Account (pw is with Anant), and log into the admin panel, ours: [farminsight backend](https://farminsight-backend.etce.isse.tu-clausthal.de/admin/).
+
+By the standard configuration only the Userprofile is editable, to edit all models edit the "farminsight_dashboard_backend/admin.py" file and enable the following code:
+```python
+from django.apps import apps
+app = apps.get_app_config('farminsight_dashboard_backend')
+for model_name, model in app.models.items():
+    admin.site.register(model)
+```
+If there is no admin account with adequate rights you need to create a superuser using the console interface:
+```sh
+python manage.py createsuperuser
 ```
 
 ## Contributing

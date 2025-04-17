@@ -13,6 +13,9 @@ class DateRangeSerializer(serializers.Serializer):
         }
     )
 
+    """
+    to_date is returned as None if it does not exist. Only form_date is required.
+    """
     to_date = serializers.DateTimeField(
         input_formats=['%Y-%m-%dT%H:%M:%SZ', '%Y-%m-%d'],
         required=False,

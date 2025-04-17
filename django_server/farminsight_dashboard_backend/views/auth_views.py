@@ -1,8 +1,7 @@
 from django.conf import settings
 from django.contrib.auth.forms import PasswordChangeForm
 from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
 from farminsight_dashboard_backend.services import create_single_use_token
