@@ -1,5 +1,5 @@
 import dateutil.parser
-from datetime import datetime
+from django.utils import timezone
 
 from rest_framework import serializers
 from farminsight_dashboard_backend.models import Sensor
@@ -88,18 +88,18 @@ class SensorLastValueSerializer(serializers.ModelSerializer):
                 fpf_id=obj.FPF.id,
                 sensor_ids=[str(obj.id)],
             ).get(str(obj.id), [])
-            self.measuredtAt = value.measuredtAt
+            self.measured_at = value['measuredAt']
             return value
         except Exception as e:
-            self.measuredtAt = None
+            self.measured_at = None
             return {'error': 'Could not fetch last measurement.'}
 
     def get_status(self, obj):
         if not obj.isActive:
             return 'grey'
 
-        if self.measuredtAt is not None:
-            seconds_since_last_measurement = (datetime.now() - dateutil.parser.isoparse(self.measuredtAt)).total_seconds()
+        if self.measured_at is not None:
+            seconds_since_last_measurement = (timezone.now() - dateutil.parser.isoparse(self.measured_at)).total_seconds()
             if seconds_since_last_measurement < obj.intervalSeconds:
                 return 'green'
             elif seconds_since_last_measurement < 2 * obj.intervalSeconds:
