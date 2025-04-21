@@ -61,7 +61,6 @@ class SensorDataSerializer(serializers.ModelSerializer):
 
 class SensorLastValueSerializer(serializers.ModelSerializer):
     lastMeasurement = serializers.SerializerMethodField()
-    status = serializers.SerializerMethodField()
     thresholds = ThresholdSerializer(many=True)
 
     class Meta:
@@ -76,7 +75,6 @@ class SensorLastValueSerializer(serializers.ModelSerializer):
             'isActive',
             'intervalSeconds',
             'lastMeasurement',
-            'status',
             'thresholds',
         ]
 
@@ -84,28 +82,12 @@ class SensorLastValueSerializer(serializers.ModelSerializer):
         from farminsight_dashboard_backend.services import InfluxDBManager
 
         try:
-            value = InfluxDBManager.get_instance().fetch_latest_sensor_measurements(
+            return InfluxDBManager.get_instance().fetch_latest_sensor_measurements(
                 fpf_id=obj.FPF.id,
                 sensor_ids=[str(obj.id)],
             ).get(str(obj.id), [])
-            self.measured_at = value['measuredAt']
-            return value
         except Exception as e:
-            self.measured_at = None
             return {'error': 'Could not fetch last measurement.'}
-
-    def get_status(self, obj):
-        if not obj.isActive:
-            return 'grey'
-
-        if self.measured_at is not None:
-            seconds_since_last_measurement = (timezone.now() - dateutil.parser.isoparse(self.measured_at)).total_seconds()
-            if seconds_since_last_measurement < obj.intervalSeconds:
-                return 'green'
-            elif seconds_since_last_measurement < 2 * obj.intervalSeconds:
-                return 'yellow'
-
-        return 'red'
 
 
 class SensorDBSchemaSerializer(serializers.ModelSerializer):
