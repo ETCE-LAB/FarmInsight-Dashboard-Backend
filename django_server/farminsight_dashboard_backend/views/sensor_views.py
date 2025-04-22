@@ -10,7 +10,6 @@ from farminsight_dashboard_backend.services import is_member, send_request_to_fp
 from farminsight_dashboard_backend.services.sensor_services import get_sensor, create_sensor, update_sensor
 from farminsight_dashboard_backend.utils import get_logger
 
-
 logger = get_logger()
 
 
@@ -50,7 +49,7 @@ class SensorView(APIView):
         if not is_member(request.user, get_organization_by_fpf_id(fpf_id)):
             return Response(status=status.HTTP_403_FORBIDDEN)
 
-        sensor = request.data.copy()
+        sensor = request.data
 
         # Generate a new UUID for the sensor
         new_uuid = uuid.uuid4()

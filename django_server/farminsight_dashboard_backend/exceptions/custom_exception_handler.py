@@ -22,3 +22,8 @@ class InfluxDBQueryException(APIException):
     status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
     default_detail = "Failed to retrieve sensor measurements due to an InfluxDB error."
     default_code = "influxdb_query_error"
+
+class InfluxDBWriteException(APIException):
+    status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+    default_detail = "Failed to write data to InfluxDB."
+    default_code = "influxdb_write_error"

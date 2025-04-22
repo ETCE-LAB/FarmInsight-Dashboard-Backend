@@ -9,8 +9,9 @@ class ActionQueue(models.Model):
     createdAt = models.DateTimeField(auto_now_add=True, null=True)
     startedAt = models.DateTimeField(null=True)
     endedAt = models.DateTimeField(null=True)
+    value = models.TextField(null=True)
     action = models.ForeignKey(ControllableAction, related_name='queueEntries', on_delete=models.CASCADE)
     trigger = models.ForeignKey(ActionTrigger, on_delete=models.CASCADE)
 
     def __str__(self):
-        return f"{self.action.name}: {self.trigger.actionValue} {self.trigger.type} a: {self.createdAt} s: {self.startedAt} e:{self.endedAt}"
+        return f"{self.action.name}: {self.trigger.actionValue} {self.trigger.type} a: {self.createdAt} s: {self.startedAt} e:{self.endedAt} v: {self.value}"

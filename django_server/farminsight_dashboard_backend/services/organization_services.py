@@ -1,18 +1,23 @@
-from farminsight_dashboard_backend.models import Organization, GrowingCycle, Harvest, Threshold
+from farminsight_dashboard_backend.models import Organization, GrowingCycle, Harvest, Threshold, ControllableAction
 from farminsight_dashboard_backend.models import Membership, MembershipRole, FPF, Sensor, Camera
 from farminsight_dashboard_backend.serializers import OrganizationSerializer
 
 
 def create_organization(data, user) -> OrganizationSerializer:
+    from farminsight_dashboard_backend.services import InfluxDBManager
+
     serializer = OrganizationSerializer(data=data)
     if serializer.is_valid(raise_exception=True):
         org = serializer.save()
         Membership.objects.create(organization=org, userprofile=user, membershipRole=MembershipRole.Admin.value)
+
+    InfluxDBManager.get_instance().sync_organization_buckets()
+
     return serializer
 
 
 def get_organization_by_id(org_id: str) -> Organization:
-    org = Organization.objects.filter(id=org_id).prefetch_related('membership_set', 'membership_set__userprofile', 'fpf_set').first()
+    org = Organization.objects.filter(id=org_id).prefetch_related('membership_set', 'membership_set__userprofile', 'fpf_set', 'location_set').first()
     return org
 
 
@@ -50,6 +55,9 @@ def get_organization_by_harvest_id(harvest_id) -> Organization:
     org = Harvest.objects.get(id=harvest_id).growingCycle.FPF.organization
     return org
 
+def get_organization_by_controllable_action_id(controllable_action_id) -> Organization:
+    org = ControllableAction.objects.select_related('FPF').get(id=controllable_action_id).FPF.organization
+    return org
 
 def update_organization(org_id, data) -> OrganizationSerializer:
     """

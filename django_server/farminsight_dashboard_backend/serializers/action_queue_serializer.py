@@ -9,11 +9,11 @@ class ActionQueueSerializer(serializers.ModelSerializer):
     )
 
     actionTriggerId = serializers.PrimaryKeyRelatedField(
-        source='actionTrigger',
+        source='trigger',
         queryset=ActionTrigger.objects.all()
     )
 
     class Meta:
         model = ActionQueue
         read_only_fields = ['id', 'createdAt', 'actionId', 'actionTriggerId']
-        fields = ['id', 'createdAt', 'startedAt', 'endedAt', 'actionId', 'actionTriggerId']
+        fields = ['id', 'createdAt', 'startedAt', 'endedAt', 'value', 'actionId', 'actionTriggerId']
