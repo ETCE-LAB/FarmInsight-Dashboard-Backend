@@ -1,6 +1,5 @@
 from django.urls import path
 
-from farminsight_dashboard_backend.models import ControllableAction
 from farminsight_dashboard_backend.views import (
     UserprofileView,
     get_userprofile,
@@ -38,15 +37,19 @@ from farminsight_dashboard_backend.views import (
     post_location,
     get_weather_forecasts,
     post_controllable_action,
-    ControllableActionView, execute_controllable_action, get_fpf_hardware, post_action_trigger,
+    ControllableActionView,
+    execute_controllable_action,
+    get_fpf_hardware,
+    post_action_trigger,
+    post_threshold,
+    ThresholdEditViews,
+    get_available_action_script_types,
 )
-from farminsight_dashboard_backend.views.action_script_views import get_available_action_script_types
-from farminsight_dashboard_backend.views.data_views import get_weather_forecasts
+
 
 urlpatterns = [
     path('userprofiles', get_userprofile, name='get_userprofile'),
     path('userprofiles/<str:identifier>', UserprofileView.as_view(), name='userprofile_operations'),
-
     path('organizations/own', get_own_organizations, name='get_own_organizations'),
     path('organizations/<str:organization_id>', OrganizationView.as_view(), name='organization_operations'),
     path('organizations', post_organization, name='post_organization'),
@@ -94,7 +97,6 @@ urlpatterns = [
     path('execute-actions/<str:controllable_action_id>/<str:trigger_id>', execute_controllable_action, name='execute_controllable_action'),
     path('action-scripts/types', get_available_action_script_types, name='get_available_action_script_types'),
 
-
     path('locations', post_location, name='post_location'),
     path('locations/<str:location_id>', LocationView.as_view(), name='location_operations'),
     path('locations/organization/<str:organization_id>', LocationView.get_locations_by_organization, name='get_locations_by_organization_id'),
@@ -102,9 +104,7 @@ urlpatterns = [
 
     path('weather-forecasts/<str:location_id>', get_weather_forecasts, name='get_weather_forecasts'),
 
-
-
-
-
+    path('thresholds', post_threshold, name='post_threshold'),
+    path('thresholds/<str:threshold_id>', ThresholdEditViews.as_view(), name='threshold_edits'),
 ]
 
