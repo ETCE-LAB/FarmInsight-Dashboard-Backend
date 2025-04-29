@@ -2,7 +2,9 @@ from django.utils.timezone import now
 
 from farminsight_dashboard_backend.models import ActionQueue, ControllableAction, ActionTrigger
 from farminsight_dashboard_backend.serializers import ActionQueueSerializer
-from farminsight_dashboard_backend.services.action_trigger_services import get_all_auto_action_triggers, get_action_trigger
+from farminsight_dashboard_backend.services.MeasurementTriggerManager import MeasurementTriggerManager
+
+from farminsight_dashboard_backend.services.action_trigger_services import get_action_trigger, get_all_auto_timeOfDay_action_triggers
 from farminsight_dashboard_backend.services.trigger_handlers import TriggerHandlerFactory
 from farminsight_dashboard_backend.utils import get_logger
 from farminsight_dashboard_backend.action_scripts import TypedActionScriptFactory
@@ -28,9 +30,12 @@ def process_action_queue():
     """
     Iterates through all the not finished triggers and processes them (checks if the trigger still triggers and if the
     action is executable)
+
     :return:
     """
-    pending_actions = ActionQueue.objects.filter(endedAt__isnull=True).order_by('createdAt')
+
+    # Filter out finished and cancelled actions
+    pending_actions = ActionQueue.objects.filter(endedAt__isnull=True, startedAt__isnull=True).order_by('createdAt')
 
     for queue_entry in pending_actions:
         action = queue_entry.action
@@ -42,37 +47,37 @@ def process_action_queue():
             logger.info(f"Skipping action {action.id} because it is not active.")
             continue
 
-        # Don't execute auto actions if manual action is active
+        # Don't execute auto actions if manual action is active, cancel the auto action in the queue
+        # New auto action would need to be triggered again
         if trigger.type != 'manual' and not action.isAutomated:
-            logger.info(f"Skipping auto action {action.id} because action is set to manual.")
+            logger.info(f"Cancel auto action {action.id} because action is set to manual.")
+            queue_entry.endedAt = now()
+            queue_entry.save()
             continue
 
         # TODO - Don't execute if another action for the same hardware is still running
 
         # If the trigger action is already active skip it.
+        # Cancel it. This should never happen anyway, actually.
         if not is_new_action(action.id, trigger.id):
             logger.info(f"Trigger '{trigger}' action is already active for this action.")
+            queue_entry.endedAt = now()
+            queue_entry.save()
             continue
 
         # Execute the action
         try:
-            handler = TriggerHandlerFactory.get_handler(trigger)
 
-            # Recheck if the trigger still triggers, else delete the entry
-            if handler.should_trigger():
-                logger.info(f"Executing action {action.id} on hardware {hardware}")
-                queue_entry.startedAt = now()
+            logger.info(f"Executing action {action.id} on hardware {hardware}")
+            queue_entry.startedAt = now()
 
-                script = typed_action_script_factory.get_typed_action_script_class(str(action.actionClassId))
-                script_class = script(action)
-                script_class.run(trigger.actionValue)
+            script = typed_action_script_factory.get_typed_action_script_class(str(action.actionClassId))
+            script_class = script(action)
+            script_class.run(trigger.actionValue)
 
-                queue_entry.endedAt = now()
-                queue_entry.save()
-                logger.info(f"Finished executing action {action.id}")
-            else:
-                queue_entry.delete()
-                logger.info(f"Deleted entry from action queue {queue_entry} for action {action.id} because the trigger did no longer trigger.")
+            queue_entry.endedAt = now()
+            queue_entry.save()
+            logger.info(f"Finished executing action {action.id}")
 
         except Exception as e:
             logger.error(f"Failed to execute action {action.id}: {str(e)}")
@@ -91,7 +96,7 @@ def create_auto_triggered_actions_in_queue(action_id=None):
     :return:
     """
     try:
-        auto_triggers = get_all_auto_action_triggers(action_id)
+        auto_triggers = get_all_auto_timeOfDay_action_triggers(action_id)
 
         for auto_trigger in auto_triggers:
             # Trigger type logic to check for triggering && currently active trigger for the action must not be this trigger.
@@ -101,6 +106,7 @@ def create_auto_triggered_actions_in_queue(action_id=None):
                     serializer = ActionQueueSerializer(data={
                                     "actionId": str(auto_trigger.action.id),
                                     "actionTriggerId": str(auto_trigger.id),
+                                    "value": str(auto_trigger.actionValue),
                                 }, partial=True)
                     if serializer.is_valid(raise_exception=True):
                             serializer.save()
@@ -110,6 +116,36 @@ def create_auto_triggered_actions_in_queue(action_id=None):
 
     except Exception as e:
         logger.error(f"Failed to add action {action_id}: {str(e)}")
+
+
+def create_measurement_auto_triggered_actions_in_queue(sensor_id, measurement_value):
+    """
+    Creates an entry for the measurement auto trigger.
+    :param measurement_value:
+    :param sensor_id:
+    :return:
+    """
+
+    trigger_ids = MeasurementTriggerManager.get_trigger_ids_for_sensor(sensor_id)
+
+    if len(trigger_ids) >= 0:
+        for trigger_id in trigger_ids:
+            trigger = get_action_trigger(str(trigger_id))
+            # Trigger type logic to check for triggering && currently active trigger for the action must not be this trigger.
+            handler = TriggerHandlerFactory.get_handler(trigger)
+            if trigger.action.isAutomated and handler.should_trigger(measurement=measurement_value):
+                if is_new_action(trigger.action.id, trigger.id):
+                    serializer = ActionQueueSerializer(data={
+                        "actionId": str(trigger.action.id),
+                        "actionTriggerId": str(trigger.id),
+                        "value": str(measurement_value)
+                    }, partial=True)
+                    if serializer.is_valid(raise_exception=True):
+                        serializer.save()
+                        logger.info(f"Queued auto trigger {trigger.id} for action {trigger.action.id}")
+
+        process_action_queue()
+
 
 def create_manual_triggered_action_in_queue(action_id, trigger_id):
     """
