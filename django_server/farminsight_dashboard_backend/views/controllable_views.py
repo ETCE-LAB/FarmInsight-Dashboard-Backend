@@ -5,11 +5,12 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 
 from farminsight_dashboard_backend.serializers.controllable_action_serializer import ControllableActionSerializer
+
 from farminsight_dashboard_backend.utils import get_logger
 from farminsight_dashboard_backend.services import get_fpf_by_id, \
     get_organization_by_fpf_id, is_admin, create_controllable_action, delete_controllable_action, \
-    get_controllable_action_by_id, get_organization_by_controllable_action_id, create_action_in_queue, \
-    process_action_queue, set_is_automated
+    get_controllable_action_by_id, get_organization_by_controllable_action_id, \
+    set_is_automated, create_auto_triggered_actions_in_queue, create_manual_triggered_action_in_queue
 
 logger = get_logger()
 
@@ -111,16 +112,14 @@ def execute_controllable_action(request, controllable_action_id, trigger_id):
     if not is_admin(request.user, get_organization_by_controllable_action_id(controllable_action_id)):
         return Response(status=status.HTTP_403_FORBIDDEN)
 
-    # The user set the controllable action to automatic
-    if trigger_id == "auto":
+    if trigger_id == "auto": # The user set the controllable action to automatic
         set_is_automated(controllable_action_id, True)
-        create_action_in_queue({'actionId': controllable_action_id})
+        # Check if the trigger for the affected action can trigger and process the queue
+        create_auto_triggered_actions_in_queue(controllable_action_id)
 
     else: # The user activated a manual trigger
-    # TODO update the manual trigger e.g. if input is a number (actionValue) it has to be set and saved before the
-
         set_is_automated(controllable_action_id, False)
-        create_action_in_queue({'actionId':controllable_action_id, 'actionTriggerId':trigger_id})
+        #create_action_in_queue({'actionId':controllable_action_id, 'actionTriggerId':trigger_id})
+        create_manual_triggered_action_in_queue(controllable_action_id, trigger_id)
 
-    process_action_queue()
     return Response(status=status.HTTP_200_OK)

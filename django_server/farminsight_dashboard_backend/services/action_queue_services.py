@@ -1,11 +1,9 @@
 from django.utils.timezone import now
-import logging
-import importlib
-import json
-from datetime import datetime, timedelta
 
-from farminsight_dashboard_backend.models import ActionQueue, ControllableAction
+from farminsight_dashboard_backend.models import ActionQueue, ControllableAction, ActionTrigger
 from farminsight_dashboard_backend.serializers import ActionQueueSerializer
+from farminsight_dashboard_backend.services.action_trigger_services import get_all_auto_action_triggers, get_action_trigger
+from farminsight_dashboard_backend.services.trigger_handlers import TriggerHandlerFactory
 from farminsight_dashboard_backend.utils import get_logger
 from farminsight_dashboard_backend.action_scripts import TypedActionScriptFactory
 
@@ -13,39 +11,23 @@ typed_action_script_factory = TypedActionScriptFactory()
 
 logger = get_logger()
 
-def get_active_action_for_hardware(hardware):
-    # Return the oldest unfinished (active) action for this hardware
+def get_active_state_of_action(action_id):
+    """
+    Get the active state (trigger) for an action.
+    (Last executed action is the currently active action)
+    :param action_id:
+    :return:
+    """
     return ActionQueue.objects.filter(
-        action__hardware=hardware,
-        endedAt__isnull=True
-    ).order_by('createdAt').first()
-
-
-
-def is_blocked_by_manual_trigger(hardware, current_entry=None):
-    if current_entry is None:
-        return False
-
-    # Only check if the current trigger is a manual one
-    if current_entry.trigger.type != 'manual':
-        return False
-
-    # Get all pending manual triggers for this hardware, ordered by creation time
-    manual_entries = ActionQueue.objects.filter(
-        action__hardware=hardware,
-        trigger__type='manual',
-        endedAt__isnull=True,
-    ).order_by('createdAt')
-
-    # Allow only the oldest one (i.e., the first in the ordered list) to proceed
-    if manual_entries and manual_entries.first().id != current_entry.id:
-        return True  # block if current_entry is not the first
-    return False
-
+        action__id=action_id,
+        endedAt__isnull=False,
+        startedAt__isnull=False,
+    ).order_by('createdAt').last()
 
 def process_action_queue():
     """
-
+    Iterates through all the not finished triggers and processes them (checks if the trigger still triggers and if the
+    action is executable)
     :return:
     """
     pending_actions = ActionQueue.objects.filter(endedAt__isnull=True).order_by('createdAt')
@@ -55,120 +37,126 @@ def process_action_queue():
         trigger = queue_entry.trigger
         hardware = action.hardware
 
-        if is_blocked_by_manual_trigger(hardware, current_entry=queue_entry):
-            logger.info(f"Hardware '{hardware}' is blocked by another manual trigger.")
-            continue
-
-        active_action = get_active_action_for_hardware(hardware)
-        if active_action and active_action.id != queue_entry.id:
-            logger.info(f"Hardware '{hardware}' is currently executing another action: {active_action.id}")
-            continue  # block this one until the earlier is finished
-
+        # Don't execute actions for inactive controllable action
         if not action.isActive:
             logger.info(f"Skipping action {action.id} because it is not active.")
             continue
 
+        # Don't execute auto actions if manual action is active
+        if trigger.type != 'manual' and not action.isAutomated:
+            logger.info(f"Skipping auto action {action.id} because action is set to manual.")
+            continue
+
+        # TODO - Don't execute if another action for the same hardware is still running
+
+        # If the trigger action is already active skip it.
+        if not is_new_action(action.id, trigger.id):
+            logger.info(f"Trigger '{trigger}' action is already active for this action.")
+            continue
+
+        # Execute the action
         try:
-            logger.info(f"Executing action {action.id} on hardware {hardware}")
-            queue_entry.startedAt = now()
-            queue_entry.save()
+            handler = TriggerHandlerFactory.get_handler(trigger)
 
-            script = typed_action_script_factory.get_typed_action_script_class(str(action.actionClassId))
-            script_class = script(action)
-            script_class.run(trigger.actionValue)
+            # Recheck if the trigger still triggers, else delete the entry
+            if handler.should_trigger():
+                logger.info(f"Executing action {action.id} on hardware {hardware}")
+                queue_entry.startedAt = now()
 
-            queue_entry.endedAt = now()
-            queue_entry.save()
+                script = typed_action_script_factory.get_typed_action_script_class(str(action.actionClassId))
+                script_class = script(action)
+                script_class.run(trigger.actionValue)
 
-            logger.info(f"Finished executing action {action.id}")
+                queue_entry.endedAt = now()
+                queue_entry.save()
+                logger.info(f"Finished executing action {action.id}")
+            else:
+                queue_entry.delete()
+                logger.info(f"Deleted entry from action queue {queue_entry} for action {action.id} because the trigger did no longer trigger.")
+
         except Exception as e:
             logger.error(f"Failed to execute action {action.id}: {str(e)}")
 
-            # Consider it done anyway for now.
-            queue_entry.endedAt = now()
-            queue_entry.save()
 
-
-
-def create_action_in_queue(action_queue_item)-> None:
+def create_auto_triggered_actions_in_queue(action_id=None):
     """
-    Create a new action(s) in the action queue.
+    This function will be called periodically and checks for all existing, active auto-triggers if they are triggering.
+    Trigger Type Logic will be called to check if it triggers and
+    the action queue will be checked that this trigger is not already active.
+    If a trigger triggers, an entry in the action queue will be created.
+    After all auto triggers are processed, process the action queue to start the actions.
 
-    If the controllable action is set to isAutomated:
-    - all active automatic actions are added to the queue
-
-    If isAutomated is False:
-    - all running automatic actions will be set to completed
-    - the given manual trigger is added to the queue
-
-    If the action is automated, enqueue all non-manual triggers.
-    If the action is manual, enqueue it and end any active non-manual queue entries for the same action.
+    An action_id can be passed to call the process only for one action. This will happen when the user actively selects the
+    "AUTO" button in the frontend.
+    :return:
     """
-    logger.debug(f"Creating action in queue with: {action_queue_item}")
-
-    action_id = action_queue_item.get("actionId")
-    trigger_id = action_queue_item.get("actionTriggerId")
-
-    if not action_id:
-        logger.error("Missing 'actionId' in input")
-        return None
-
     try:
-        controllable_action = ControllableAction.objects.get(id=action_id)
-    except ControllableAction.DoesNotExist:
-        logger.error(f"ControllableAction with id={action_id} not found")
-        return None
+        auto_triggers = get_all_auto_action_triggers(action_id)
 
-    if controllable_action.isAutomated:
-        logger.info(f"ControllableAction {action_id} is in automated mode. Adding all non-manual triggers to queue.")
+        for auto_trigger in auto_triggers:
+            # Trigger type logic to check for triggering && currently active trigger for the action must not be this trigger.
+            handler = TriggerHandlerFactory.get_handler(auto_trigger)
+            if handler.should_trigger() and auto_trigger.action.isAutomated:
+                if is_new_action(auto_trigger.action.id, auto_trigger.id):
+                    serializer = ActionQueueSerializer(data={
+                                    "actionId": str(auto_trigger.action.id),
+                                    "actionTriggerId": str(auto_trigger.id),
+                                }, partial=True)
+                    if serializer.is_valid(raise_exception=True):
+                            serializer.save()
+                            logger.info(f"Queued auto trigger {auto_trigger.id} for action {auto_trigger.action.id}")
 
-        non_manual_active_triggers = controllable_action.triggers.filter(
-            isActive=True
-        ).exclude(
-            type='manual'
-        )
+        process_action_queue()
 
-        for trigger in non_manual_active_triggers:
+    except Exception as e:
+        logger.error(f"Failed to add action {action_id}: {str(e)}")
+
+def create_manual_triggered_action_in_queue(action_id, trigger_id):
+    """
+    When the user manually selects a manual button in the frontend, the trigger will be activated and
+    an entry in the action queue will be created. (If no other actions for the same controllable actions are currently
+    running.
+    :param action_id:
+    :param trigger_id:
+    :return:
+    """
+    try:
+        trigger = get_action_trigger(trigger_id)
+        if trigger.isActive and is_new_action(action_id, trigger.id):
             serializer = ActionQueueSerializer(data={
-                "actionId": str(controllable_action.id),
-                "actionTriggerId": str(trigger.id),
+                "actionId": action_id,
+                "actionTriggerId": trigger_id,
             }, partial=True)
-
             if serializer.is_valid(raise_exception=True):
                 serializer.save()
-                logger.debug(f"Queued auto trigger {trigger.id} for action {action_id}")
-            else:
-                logger.warning(f"Failed to queue trigger {trigger.id}: {serializer.errors}")
-    else:
-        logger.info(f"ControllableAction {action_id} is in manual mode. Preparing to queue manual action.")
+                logger.debug(f"Queued auto trigger {trigger_id} for action {action_id}")
 
-        # End all unfinished non-manual queue entries for this action
-        unfinished_non_manual = ActionQueue.objects.filter(
-            action=controllable_action,
-            endedAt__isnull=True,
-        ).exclude(trigger__type='manual')
+        process_action_queue()
 
-        updated = unfinished_non_manual.update(endedAt=now())
-        logger.info(f"Ended {updated} unfinished non-manual queue entries for action {action_id}")
-
-        # Now add the manual action to the queue
-        serializer = ActionQueueSerializer(data=action_queue_item, partial=True)
-        if serializer.is_valid(raise_exception=True):
-            serializer.save()
-            logger.debug(f"Queued manual action with trigger {trigger_id}")
-        else:
-            logger.error(f"Failed to queue manual action: {serializer.errors}")
-
-
-
+    except Exception as e:
+        logger.error(f"Failed to add action {action_id}: {str(e)}")
 
 def get_active_state(controllable_action_id: str):
-    # Get the most recent queue entry for this action (whether ended or still running)
+    """
+    Get the most recent queue entry for this action (whether ended or still running)
+    :param controllable_action_id:
+    :return:
+    """
     latest_entry = ActionQueue.objects.filter(
         action__id=controllable_action_id
     ).order_by('-endedAt', '-createdAt').first()
 
     if latest_entry:
         return latest_entry.trigger
-
     return None
+
+
+def is_new_action(action_id, trigger_id):
+    """
+    Returns if the given trigger id is a new one for the action or not.
+    :return:
+    """
+    active_state = get_active_state_of_action(action_id)
+    if active_state is None or active_state.trigger.id != trigger_id:
+        return True
+    return False
