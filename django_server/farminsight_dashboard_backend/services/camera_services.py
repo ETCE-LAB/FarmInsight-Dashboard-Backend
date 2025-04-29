@@ -68,3 +68,7 @@ def delete_camera(camera: Camera):
     :param camera: camera to delete
     """
     camera.delete()
+
+
+def get_active_camera_count():
+    return len(Camera.objects.filter(isActive=True).all())

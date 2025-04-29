@@ -13,7 +13,7 @@ from .sensor_services import get_sensor, update_sensor, create_sensor, sensor_ex
 from .growing_cycle_services import update_growing_cycle, create_growing_cycle, remove_growing_cycle, get_growing_cycles_by_fpf_id
 from .fpf_connection_services import send_request_to_fpf
 from .auth_services import get_auth_token, valid_api_key_for_sensor, create_single_use_token, valid_api_key_for_fpf
-from .camera_services import get_active_camera_by_id, create_camera, update_camera, delete_camera, get_camera_by_id
+from .camera_services import get_active_camera_by_id, create_camera, update_camera, delete_camera, get_camera_by_id, get_active_camera_count
 from .image_services import get_images_by_camera
 from .camera_scheduler_services import CameraScheduler
 from .harvest_services import create_harvest, remove_harvest, update_harvest, get_harvests_by_growing_cycle_id

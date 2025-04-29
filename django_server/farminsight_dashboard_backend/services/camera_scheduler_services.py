@@ -6,7 +6,7 @@ from apscheduler.triggers.interval import IntervalTrigger
 from django.utils import timezone
 
 from farminsight_dashboard_backend.models import Camera
-from farminsight_dashboard_backend.services import get_camera_by_id
+from farminsight_dashboard_backend.services import get_camera_by_id, get_active_camera_count
 from farminsight_dashboard_backend.services.fpf_connection_services import fetch_camera_snapshot
 from farminsight_dashboard_backend.utils import get_logger
 
@@ -59,7 +59,8 @@ class CameraScheduler:
                     args=[camera.id, camera.snapshotUrl],
                     id=f"camera_{camera.id}_snapshot",
                     replace_existing=True,
-                    next_run_time=timezone.now() + timedelta(seconds=1)
+                    next_run_time=timezone.now() + timedelta(seconds=1),
+                    max_instances=get_active_camera_count()
                 )
                 self.log.debug(f"Camera {camera.id} snapshot task scheduled with interval {interval} seconds.")
         except Camera.DoesNotExist:
@@ -105,7 +106,8 @@ class CameraScheduler:
                     args=[camera.id, camera.snapshotUrl],
                     id=job_id,
                     replace_existing=True,
-                    next_run_time=timezone.now() + timedelta(seconds=1)
+                    next_run_time=timezone.now() + timedelta(seconds=1),
+                    max_instances=get_active_camera_count()
                 )
                 self.log.debug(f"Camera {camera.id} snapshot task rescheduled with new interval {new_interval} seconds.")
             else:
