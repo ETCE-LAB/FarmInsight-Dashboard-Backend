@@ -37,3 +37,21 @@ def get_all_auto_action_triggers(action_id):
         ).exclude(
             type='manual'
         )
+
+def get_all_auto_timeOfDay_action_triggers(action_id):
+    """
+    Returns all active, not-manual timeOfDay triggers.
+    :param action_id:
+    :return:
+    """
+    if not action_id:
+        return ActionTrigger.objects.filter(
+            isActive=True,
+            type='timeOfDay'
+        )
+    else:
+        return ActionTrigger.objects.filter(
+            isActive=True,
+            action_id=action_id,
+            type='timeOfDay'
+        )
