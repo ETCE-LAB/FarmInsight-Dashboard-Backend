@@ -27,8 +27,9 @@ def post_action_trigger(request):
 
     get_fpf_by_id(fpf_id)
 
-    action_trigger = ActionTriggerSerializer(create_action_trigger(request.data)).data
+    trigger = create_action_trigger(request.data)
+    serialized = ActionTriggerSerializer(trigger)
 
     logger.info("Action trigger created successfully", extra={'resource_id': fpf_id})
 
-    return Response(action_trigger, status=status.HTTP_201_CREATED)
+    return Response(serialized.data, status=status.HTTP_201_CREATED)
