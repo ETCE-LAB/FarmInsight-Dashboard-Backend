@@ -19,5 +19,5 @@ class DatabaseLogHandler(logging.Handler):
             )
             return
         except Exception as e:
-            # print(f'DatabaseLogHandler: {e}')
+            print(f'DatabaseLogHandler: {e}')
             pass
