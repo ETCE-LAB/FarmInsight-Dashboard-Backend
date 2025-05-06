@@ -9,7 +9,7 @@ from .membership_services import create_membership, get_memberships, update_memb
 from .userprofile_services import search_userprofiles, update_userprofile_name
 from .data_services import get_all_fpf_data, get_all_sensor_data
 from .influx_services import InfluxDBManager
-from .sensor_services import get_sensor, update_sensor, create_sensor, sensor_exists
+from .sensor_services import get_sensor, update_sensor, create_sensor, sensor_exists_async
 from .growing_cycle_services import update_growing_cycle, create_growing_cycle, remove_growing_cycle, get_growing_cycles_by_fpf_id
 from .fpf_connection_services import send_request_to_fpf
 from .auth_services import get_auth_token, valid_api_key_for_sensor, create_single_use_token, valid_api_key_for_fpf
