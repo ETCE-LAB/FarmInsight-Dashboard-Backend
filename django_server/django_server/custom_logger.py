@@ -12,12 +12,11 @@ class DatabaseLogHandler(logging.Handler):
             Messages coming straight from django itself are in async context because we're using channels and daphne
             and thus can't synchronously write to the DB, so just using the acreate function in this case.
             '''
-            LogMessage.objects.acreate(
+            LogMessage.objects.create(
                 message=self.format(record),
                 logLevel=record.levelname,
                 relatedResourceId=resource_id,
             )
-            return
         except Exception as e:
-            print(f'DatabaseLogHandler: {e}')
+            #print(f'DatabaseLogHandler: {e} {type(e)}')
             pass

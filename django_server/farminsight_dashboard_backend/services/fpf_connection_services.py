@@ -4,8 +4,9 @@ import requests
 from django.core.files import File
 from requests import RequestException
 from farminsight_dashboard_backend.models import Image
+from farminsight_dashboard_backend.utils import get_logger
 
-
+logger = get_logger()
 
 def send_request_to_fpf(fpf_id, method, endpoint, data=None, params=None):
     """
@@ -51,7 +52,6 @@ def fetch_camera_snapshot(camera_id, snapshot_url):
     try:
         response = requests.get(snapshot_url, stream=True)
         if response.status_code == 200:
-
             filename = f"{str(uuid.uuid4())}.jpg"
             Image.objects.create(
                 camera_id=camera_id,
@@ -59,11 +59,10 @@ def fetch_camera_snapshot(camera_id, snapshot_url):
             )
 
             return filename
-
         else:
-            raise ValueError(f"Failed to fetch snapshot. HTTP {response.status_code}")
+            raise ValueError(f"HTTP error {response.status_code}")
     except Exception as e:
-        print(f"Error fetching snapshot for Camera {camera_id}: {e}")
+        logger.error(f"Error fetching snapshot for Camera: {e}", extra={'resource_id': camera_id})
 
 def build_fpf_url(fpf_address, endpoint):
     """
