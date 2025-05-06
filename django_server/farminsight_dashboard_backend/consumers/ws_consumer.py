@@ -17,6 +17,8 @@ class SensorUpdatesConsumer(AsyncWebsocketConsumer):
 
     async def connect(self):
         try:
+            logger.info("Connecting to websocket")
+            logger.info(self.scope['url_route']['kwargs'])
             self.room_name = self.scope['url_route']['kwargs']['sensor_id']
             self.room_group_name = f'sensor_updates_{self.room_name}'
 
