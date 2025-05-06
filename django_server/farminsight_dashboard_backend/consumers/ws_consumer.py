@@ -2,11 +2,8 @@ import json
 
 from channels.generic.websocket import AsyncWebsocketConsumer
 
+from farminsight_dashboard_backend.models import LogMessage
 from farminsight_dashboard_backend.services import sensor_exists
-from farminsight_dashboard_backend.utils import get_logger
-
-
-logger = get_logger()
 
 
 class SensorUpdatesConsumer(AsyncWebsocketConsumer):
@@ -17,8 +14,6 @@ class SensorUpdatesConsumer(AsyncWebsocketConsumer):
 
     async def connect(self):
         try:
-            logger.info("Connecting to websocket")
-            logger.info(self.scope['url_route']['kwargs'])
             self.room_name = self.scope['url_route']['kwargs']['sensor_id']
             self.room_group_name = f'sensor_updates_{self.room_name}'
 
@@ -28,7 +23,10 @@ class SensorUpdatesConsumer(AsyncWebsocketConsumer):
             else:
                 await self.close()
         except Exception as e:
-            logger.error(e)
+            await LogMessage.objects.acreate(
+                message=f"{e}",
+                logLevel='INFO',
+            )
 
     async def disconnect(self, close_code):
         await self.channel_layer.group_discard(self.room_group_name, self.channel_name)

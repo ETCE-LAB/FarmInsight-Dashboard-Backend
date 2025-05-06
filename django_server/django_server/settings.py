@@ -141,19 +141,19 @@ LOGGING = {
     },
     'handlers': {
         'console': {
-            'level': 'DEBUG',  # Set to INFO or WARNING in production
+            'level': 'DEBUG',
             'class': 'logging.StreamHandler',
             'formatter': 'simple',
         },
-       'db_handler': {
-           'level': 'DEBUG', # set to ERROR in production
-           'class': 'django_server.custom_logger.DatabaseLogHandler',
-       },
+        'db_handler': {
+            'level': 'DEBUG',
+            'class': 'django_server.custom_logger.DatabaseLogHandler',
+        },
     },
     'loggers': {
         'django': {
-            'handlers': ['console', 'db_handler'],
-            'level': 'INFO',  # Set to INFO in production
+            'handlers': ['console'],
+            'level': 'INFO',
             'propagate': True,
         },
         'farminsight_dashboard_backend': {
