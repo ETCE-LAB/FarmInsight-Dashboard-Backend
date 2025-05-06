@@ -1,3 +1,5 @@
+from functools import partial
+
 from rest_framework import views
 from rest_framework.response import Response
 from rest_framework import status
@@ -10,7 +12,8 @@ from farminsight_dashboard_backend.utils import get_logger
 from farminsight_dashboard_backend.services import get_fpf_by_id, \
     get_organization_by_fpf_id, is_admin, create_controllable_action, delete_controllable_action, \
     get_controllable_action_by_id, get_organization_by_controllable_action_id, \
-    set_is_automated, create_auto_triggered_actions_in_queue, create_manual_triggered_action_in_queue
+    set_is_automated, create_auto_triggered_actions_in_queue, create_manual_triggered_action_in_queue, is_member, \
+    update_controllable_action
 
 logger = get_logger()
 
@@ -26,28 +29,16 @@ class ControllableActionView(views.APIView):
         :return:
         """
         pass
-        """
-        if not is_member(request.user, get_organization_by_camera_id(camera_id)):
+
+        if not is_member(request.user, get_organization_by_controllable_action_id(controllable_action_id)):
             return Response(status=status.HTTP_403_FORBIDDEN)
 
-        from farminsight_dashboard_backend.services import CameraScheduler
-        serializer = CameraSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        old_interval = get_camera_by_id(camera_id).intervalSeconds
-        old_is_active = get_camera_by_id(camera_id).isActive
-
         # Update the camera
-        camera = update_camera(camera_id, serializer.data)
+        controllable_action = update_controllable_action(controllable_action_id, request.data)
+        logger.info("Controllable Action updated successfully", extra={'resource_id': controllable_action_id})
 
-        logger.info("Camera updated successfully", extra={'resource_id': camera_id})
+        return Response(request.data, status=status.HTTP_200_OK)
 
-        # Update the scheduler
-        if camera.intervalSeconds != old_interval or camera.isActive != old_is_active:
-            CameraScheduler.get_instance().reschedule_camera_job(camera.id, camera.intervalSeconds)
-
-        return Response(CameraSerializer(camera).data, status=status.HTTP_200_OK)
-        """
 
     def delete(self, request, controllable_action_id):
         """
@@ -87,7 +78,7 @@ def post_controllable_action(request):
 
     get_fpf_by_id(fpf_id)
 
-    controllable_action = ControllableActionSerializer(create_controllable_action(fpf_id, request.data)).data
+    controllable_action = ControllableActionSerializer(create_controllable_action(fpf_id, request.data), partial=True).data
 
     logger.info("Controllable action created successfully", extra={'resource_id': fpf_id})
 

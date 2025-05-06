@@ -55,3 +55,19 @@ def get_all_auto_timeOfDay_action_triggers(action_id):
             action_id=action_id,
             type='timeOfDay'
         )
+
+def update_action_trigger(actionTrigger_id, data) -> ActionTriggerSerializer:
+    """
+    Update the given organization with the given data if the user has sufficient permissions.
+    :param org_id: organization id to update
+    :param data: new organization data
+    :return:
+    """
+    actionTrigger = ActionTrigger.objects.get(id=actionTrigger_id)
+    data["actionId"] = actionTrigger.action_id#
+    data["id"] = actionTrigger_id
+    serializer = ActionTriggerSerializer(actionTrigger, data=data)
+
+    if serializer.is_valid(raise_exception=True):
+        serializer.save()
+        return serializer
