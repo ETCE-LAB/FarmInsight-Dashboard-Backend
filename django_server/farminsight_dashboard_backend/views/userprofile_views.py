@@ -9,7 +9,7 @@ from rest_framework.decorators import api_view, permission_classes
 
 
 class UserprofileView(APIView):
-    #permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated]
 
     def get(self, request, identifier):
         """
@@ -38,6 +38,6 @@ class UserprofileView(APIView):
 
 
 @api_view(['GET'])
-#@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated])
 def get_userprofile(request):
     return Response(UserprofileSerializer(request.user).data)
