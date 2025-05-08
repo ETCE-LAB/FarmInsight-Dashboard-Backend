@@ -5,12 +5,14 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 
 from farminsight_dashboard_backend.serializers.controllable_action_serializer import ControllableActionSerializer
+from farminsight_dashboard_backend.services.trigger import create_manual_triggered_action_in_queue
 
 from farminsight_dashboard_backend.utils import get_logger
 from farminsight_dashboard_backend.services import get_fpf_by_id, \
     get_organization_by_fpf_id, is_admin, create_controllable_action, delete_controllable_action, \
     get_controllable_action_by_id, get_organization_by_controllable_action_id, \
-    set_is_automated, create_auto_triggered_actions_in_queue, create_manual_triggered_action_in_queue
+    set_is_automated, \
+    get_action_trigger, create_auto_triggered_actions_in_queue
 
 logger = get_logger()
 
@@ -115,7 +117,10 @@ def execute_controllable_action(request, controllable_action_id, trigger_id):
     if trigger_id == "auto": # The user set the controllable action to automatic
         set_is_automated(controllable_action_id, True)
         # Check if the trigger for the affected action can trigger and process the queue
+
+        # get trigger type and refresh the creation
         create_auto_triggered_actions_in_queue(controllable_action_id)
+
 
     else: # The user activated a manual trigger
         set_is_automated(controllable_action_id, False)

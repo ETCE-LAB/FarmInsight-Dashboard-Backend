@@ -10,7 +10,7 @@ from farminsight_dashboard_backend.action_scripts.typed_action_script import Typ
 
 logger = get_logger()
 
-class PostHttpActionScript(TypedSensor):
+class ShellyPlugHttpActionScript(TypedSensor):
     http_endpoint = None
 
     def init_additional_information(self):
@@ -33,32 +33,44 @@ class PostHttpActionScript(TypedSensor):
             ]
         )
 
-
     async def control_smart_plug(self, action_value):
         """
-        Controls the smart plug by turning it on or off.
-        :param action_value:
-        :return:
+        Controls the Shelly plug via HTTP.
+        Supports:
+        - Plain string: "on" / "off"
+        - JSON string: {"value": "on", "delay": 1800}
         """
-        if action_value not in ['on', 'off']:
-            logger.error(f"Invalid action value: {action_value}. Excpected 'on' or 'off'.")
-            return
-
-        on_value = action_value == 'on'
-
-        url = f"http://{self.http_endpoint}/rpc/Switch.Set"
-        payload = {"id": 0, "on": on_value}
-
         try:
-            response = requests.post(url, json=payload, timeout=5)
+            # Try parsing JSON input
+            try:
+                action = json.loads(action_value)
+                value = action.get("value", "").strip().lower()
+                delay = action.get("delay", 0)
+            except (json.JSONDecodeError, TypeError):
+                value = str(action_value).strip().lower()
+                delay = 0
+
+            if value not in ["on", "off"]:
+                logger.error(f"Invalid action value: {value}. Expected 'on' or 'off'.")
+                return
+
+            # Build URL
+            url = f"http://{self.http_endpoint}/relay/0"
+            params = {"turn": value}
+
+            if delay > 0:
+                params["timer"] = delay
+
+            # Send HTTP request
+            response = requests.get(url, params=params, timeout=5)
+
             if response.status_code == 200:
-                logger.info(f"Successfully sent {action_value} command to Shelly plug.")
+                logger.info(f"Successfully sent '{value}' command to Shelly plug with delay={delay}s.")
             else:
-                logger.error(f"Failed to send {action_value} command to Shelly plug.")
+                logger.error(f"Failed to control Shelly plug. Status code: {response.status_code}")
 
-        except requests.exceptions.RequestException as e:
-            logger.error(f"Failed to send {action_value} command to Shelly plug.")
-
+        except Exception as e:
+            logger.error(f"Exception during Shelly smart plug control: {e}")
 
     def run(self, action_value):
         try:

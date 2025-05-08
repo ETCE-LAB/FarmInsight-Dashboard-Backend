@@ -340,15 +340,15 @@ class InfluxDBManager:
             for forecast in weather_forecasts:
                 forecast_dict = {
                     "ForecastDate": str(forecast['time']),
-                    "rain_sum": float(forecast['rain_sum']),
-                    "sunshine_duration": float(forecast['sunshine_duration']),
+                    "rain_sum": float(forecast['rain_sum'] or 0.0),
+                    "sunshine_duration": float(forecast['sunshine_duration'] or 0.0),
                     "weather_code": int(forecast['weather_code']),
                     "wind_speed_max": float(forecast['wind_speed_10m_max']),
                     "temperature_min": float(forecast['temperature_2m_min']),
                     "temperature_max": float(forecast['temperature_2m_max']),
                     "sunrise": str(forecast['sunrise']),
                     "sunset": str(forecast['sunset']),
-                    "precipitation_sum": float(forecast['precipitation_sum']),
+                    "precipitation_sum": float(forecast['precipitation_sum'] or 0),
                     "precipitation_probability_max": int(forecast['precipitation_probability_max'])
                 }
 
