@@ -18,7 +18,7 @@ class ShellyPlugHttpActionScript(TypedSensor):
     def init_additional_information(self):
         additional_information = json.loads(self.controllable_action.additionalInformation)
         self.http_endpoint = additional_information['http']
-        self.delay = additional_information.get('delay', 0)
+        self.delay = int(additional_information.get('delay', 0))
 
     @staticmethod
     def get_description() -> ActionScriptDescription:
@@ -27,7 +27,7 @@ class ShellyPlugHttpActionScript(TypedSensor):
             name='Shelly Plug S (HTTP)',
             fields=[
                 FieldDescription(
-                    name='Http',
+                    name='http',
                     description="HTTP endpoint of the Shelly plug.",
                     type=FieldType.STRING,
                     rules=[
@@ -35,7 +35,7 @@ class ShellyPlugHttpActionScript(TypedSensor):
                     ]
                 ),
                 FieldDescription(
-                    name='Delay',
+                    name='delay',
                     description="Optional delay in seconds before turning off the plug after turning it on.",
                     type=FieldType.INTEGER,
                     rules=[],

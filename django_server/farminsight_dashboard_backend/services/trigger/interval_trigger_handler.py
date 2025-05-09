@@ -20,8 +20,8 @@ class IntervalTriggerHandler(BaseTriggerHandler):
     def enqueue_if_needed(self):
         logic = json.loads(self.trigger.triggerLogic)
         delay = logic.get("delayInSeconds", 0)
-        duration = logic.get("durationInSeconds", 0)
-        interval = delay + duration
+
+        interval = delay + int(json.loads(self.trigger.action.additionalInformation).get("delay", 0))
 
         job_id = f"interval_trigger_{self.trigger.id}"
 
