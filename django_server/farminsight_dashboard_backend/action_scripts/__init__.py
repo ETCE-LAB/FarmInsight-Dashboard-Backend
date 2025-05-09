@@ -1,4 +1,4 @@
 from .typed_action_script_factory import TypedActionScriptFactory
 from .typed_action_script import TypedSensor
 from .tapo_p100_action_script import TapoP100SmartPlugActionScriptWithDelay
-from .shelly_plug_s_http_action_script import ShellyPlugHttpActionScript
+from .shelly_plug_s_http_action_script import ShellyPlugHttpActionScript, ShellyPlugMqttActionScript
