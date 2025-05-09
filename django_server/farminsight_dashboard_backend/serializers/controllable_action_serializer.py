@@ -22,7 +22,7 @@ class ControllableActionSerializer(serializers.ModelSerializer):
     )
     hardware = HardwareSerializer(read_only=True)
 
-    trigger = ActionTriggerSerializer(many=True, source='triggers', read_only=True)
+    trigger = ActionTriggerSerializer(many=True, source='triggers', read_only=True, required=False)
     actionScriptName = serializers.SerializerMethodField()
     status = serializers.SerializerMethodField()
 
