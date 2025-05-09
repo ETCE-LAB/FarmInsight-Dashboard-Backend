@@ -1,29 +1,50 @@
-from rest_framework.exceptions import APIException
+from django.db import IntegrityError
+
+from rest_framework.views import exception_handler
+from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.exceptions import APIException
+
+from farminsight_dashboard_backend.utils import get_logger
 
 
-class NotFoundException(APIException):
-    status_code = status.HTTP_404_NOT_FOUND
-    default_code = "not_found"
-
-    def __init__(self, detail=None):
-        if detail is None:
-            detail = "The requested resource was not found."
-        self.detail = detail
+logger = get_logger()
 
 
-class InfluxDBNoConnectionException(APIException):
-    status_code = status.HTTP_503_SERVICE_UNAVAILABLE
-    default_detail = "Failed to connect to InfluxDB."
-    default_code = "influxdb_connection_error"
+def custom_exception_handler(exc, context):
+    response = exception_handler(exc, context)
 
+    resource_id = None
+    if 'sensor_id' in context['kwargs']:
+        resource_id = context['kwargs']['sensor_id']
+    elif 'camera_id' in context['kwargs']:
+        resource_id = context['kwargs']['camera_id']
+    elif 'fpf_id' in context['kwargs']:
+        resource_id = context['kwargs']['fpf_id']
+    elif 'organization_id' in context['kwargs']:
+        resource_id = context['kwargs']['organization_id']
+    elif 'resource_id' in context['kwargs']:
+        resource_id = context['kwargs']['resource_id']
 
-class InfluxDBQueryException(APIException):
-    status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-    default_detail = "Failed to retrieve sensor measurements due to an InfluxDB error."
-    default_code = "influxdb_query_error"
+    if isinstance(exc, IntegrityError):
+        logger.error("A database integrity error occurred. " + str(exc), extra={'resource_id': resource_id})
+        return Response(
+            {"error": "A database integrity error occurred.", "details": str(exc)},
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
-class InfluxDBWriteException(APIException):
-    status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-    default_detail = "Failed to write data to InfluxDB."
-    default_code = "influxdb_write_error"
+    if isinstance(exc, APIException):
+        logger.error(str(exc.default_detail) + str(exc.detail), extra={'resource_id': resource_id})
+        return Response(
+            {"error": exc.default_detail, "details": exc.detail},
+            status=exc.status_code
+        )
+
+    logger.error("An unexpected error occurred. " + str(exc), extra={'resource_id': resource_id})
+    if response is None:
+        return Response(
+            {"error": "An unexpected error occurred.", "details": str(exc)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+    return response
