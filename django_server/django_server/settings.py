@@ -239,7 +239,7 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'oauth2_provider.contrib.rest_framework.OAuth2Authentication',
     ),
-    'EXCEPTION_HANDLER': 'farminsight_dashboard_backend.exceptions.exceptions.custom_exception_handler'
+    'EXCEPTION_HANDLER': 'farminsight_dashboard_backend.exceptions.custom_exception_handler'
 }
 
 # 0 or negative for indefinite duration
