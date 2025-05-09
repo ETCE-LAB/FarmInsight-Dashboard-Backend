@@ -28,6 +28,8 @@ def get_log_messages_by_amount(resource_id: str, amount: int) -> LogMessageSeria
 
 
 def get_log_messages_by_date(resource_id: str, dt_from, dt_to=None) -> LogMessageSerializer:
+    if resource_id == 'None':
+        resource_id = None
     messages = LogMessage.objects.filter(relatedResourceId=resource_id, createdAt__gt=dt_from)
     if dt_to is not None:
         messages = messages.filter(createdAt__lt=dt_to)
