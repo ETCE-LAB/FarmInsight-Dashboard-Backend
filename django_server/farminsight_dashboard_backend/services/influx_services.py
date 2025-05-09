@@ -9,7 +9,7 @@ from influxdb_client.client.write_api import SYNCHRONOUS
 from django.utils import timezone
 
 from farminsight_dashboard_backend.exceptions import InfluxDBQueryException, InfluxDBNoConnectionException
-from farminsight_dashboard_backend.exceptions.custom_exception_handler import InfluxDBWriteException
+from farminsight_dashboard_backend.exceptions.exceptions import InfluxDBWriteException
 from farminsight_dashboard_backend.models import FPF, Organization
 import requests
 import logging

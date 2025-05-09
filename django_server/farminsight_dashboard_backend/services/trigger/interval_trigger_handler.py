@@ -49,18 +49,11 @@ def enqueue_interval_action(trigger_id):
     trigger = get_action_trigger(trigger_id)
 
     if trigger and trigger.action.isAutomated:
-        logic = json.loads(trigger.triggerLogic)
-        duration = logic.get("durationInSeconds", 0)
-
-        action_value = json.dumps({
-            "actionValue": trigger.actionValue,
-            "durationInSeconds": duration
-        })
 
         serializer = ActionQueueSerializer(data={
             "actionId": str(trigger.action.id),
             "actionTriggerId": str(trigger.id),
-            "value": action_value
+            "value": trigger.actionValue
         }, partial=True)
 
         if serializer.is_valid(raise_exception=True):

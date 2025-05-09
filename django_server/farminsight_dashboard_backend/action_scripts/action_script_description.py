@@ -11,8 +11,10 @@ class FieldType(Enum):
 
 class FieldDescription(NamedTuple):
     name: str
+    description: str
     type: FieldType
     rules: List[object]
+    defaultValue: object = ""
 
 class ValidHttpEndpointRule(NamedTuple):
     pass

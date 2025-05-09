@@ -24,8 +24,10 @@ class EnumField(serializers.ChoiceField):
 
 class FieldDescriptionSerializer(serializers.Serializer):
     name = serializers.CharField()
+    description = serializers.CharField()
     type = EnumField(enum_class=FieldType)
     rules = serializers.SerializerMethodField()
+    defaultValue = serializers.CharField()
 
     def get_rules(self, obj):
         data = []

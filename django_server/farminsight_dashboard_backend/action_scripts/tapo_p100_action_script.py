@@ -14,33 +14,45 @@ class TapoP100SmartPlugActionScriptWithDelay(TypedSensor):
     ip_address = None
     tapo_account_email = None
     tapo_account_password = None
+    delay = 0
 
     def init_additional_information(self):
         additional_information = json.loads(self.controllable_action.additionalInformation)
         self.ip_address = additional_information['IP Address']
         self.tapo_account_email = additional_information['Tapo Account Email']
         self.tapo_account_password = additional_information['Tapo Account Password']
+        self.delay = additional_information.get('delay', 0)
 
     @staticmethod
     def get_description() -> ActionScriptDescription:
         return ActionScriptDescription(
             action_script_class_id='dc83813b-1541-4aac-8caa-ba448a6bbdda',
-            name='Tapo Smart Plug',
+            name='Tapo Smart Plug (HTTP)',
             fields=[
                 FieldDescription(
                     name='IP Address',
+                    description="IP address of the Tapo smart plug.",
                     type=FieldType.STRING,
                     rules=[]
                 ),
                 FieldDescription(
                     name='Tapo Account Email',
+                    description="Tapo account email.",
                     type=FieldType.STRING,
                     rules=[]
                 ),
                 FieldDescription(
                     name='Tapo Account Password',
+                    description="Tapo account password.",
                     type=FieldType.STRING,
                     rules=[]
+                ),
+                FieldDescription(
+                    name='Delay',
+                    description="Optional delay in seconds before turning off the plug after turning it on. Default: 0",
+                    type=FieldType.INTEGER,
+                    rules=[],
+                    defaultValue=0
                 )
             ]
         )
@@ -53,32 +65,23 @@ class TapoP100SmartPlugActionScriptWithDelay(TypedSensor):
             - JSON string: {"value": "on", "delay": 1800}
             """
         try:
-            # Try parsing as JSON
-            try:
-                action = json.loads(action_value)
-                value = action.get('value')
-                delay = action.get('delay', 0)
-            except (json.JSONDecodeError, TypeError):
-                # Fallback to plain string
-                value = action_value.strip().lower()
-                delay = 0
 
-            if value not in ['on', 'off']:
-                logger.error(f"Invalid action value: {value}. Expected 'on' or 'off'.")
+            if action_value not in ['on', 'off']:
+                logger.error(f"Invalid action value: {action_value}. Expected 'on' or 'off'.")
                 return
 
             p100 = PyP100.P100(self.ip_address, self.tapo_account_email, self.tapo_account_password)
             p100.handshake()
             p100.login()
 
-            if value == 'on':
+            if action_value == 'on':
                 p100.turnOn()
-                if delay > 0:
-                    p100.turnOffWithDelay(delay)
+                if self.delay > 0:
+                    p100.turnOffWithDelay(self.delay)
             else:
                 p100.turnOff()
-                if delay > 0:
-                    p100.turnOnWithDelay(delay)
+                if self.delay > 0:
+                    p100.turnOnWithDelay(self.delay)
 
         except Exception as e:
             logger.error(f"Failed to control smart plug with value '{action_value}': {e}")
