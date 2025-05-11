@@ -16,3 +16,4 @@ from .action_script_views import typed_action_script_factory, get_available_acti
 from .hardware_views import get_fpf_hardware
 from .action_trigger import post_action_trigger
 from .threshold_views import post_threshold, ThresholdEditViews
+from .utility_views import get_direct_ping
