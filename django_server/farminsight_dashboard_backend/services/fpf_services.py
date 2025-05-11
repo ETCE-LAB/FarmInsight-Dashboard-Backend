@@ -19,8 +19,7 @@ def create_fpf(data) -> FPFSerializer:
     :param data:
     :return:
     """
-    from farminsight_dashboard_backend.services import InfluxDBManager
-    from farminsight_dashboard_backend.services import send_request_to_fpf
+    from farminsight_dashboard_backend.services import InfluxDBManager, post_fpf_id
 
     serializer = FPFSerializer(data=data, partial=True)
 
@@ -29,7 +28,7 @@ def create_fpf(data) -> FPFSerializer:
         fpf_id = serializer.data.get('id')
         try:
             update_fpf_api_key(fpf_id)
-            send_request_to_fpf(fpf_id, 'post', '/api/fpf-ids', {"fpfId": fpf_id})
+            post_fpf_id(fpf_id)
         except Exception as api_error:
             instance = serializer.instance
             if instance:
@@ -73,9 +72,9 @@ def update_fpf_api_key(fpf_id):
     :param fpf_id:
     :return:
     """
-    from farminsight_dashboard_backend.services import send_request_to_fpf
+    from farminsight_dashboard_backend.services import post_fpf_api_key
     key = generate_random_api_key()
-    send_request_to_fpf(fpf_id, 'post', '/api/api-keys', {"apiKey": key})
+    post_fpf_api_key(fpf_id, key)
     fpf = FPF.objects.get(id=fpf_id)
     fpf.apiKey = key
     if settings.API_KEY_VALIDATION_DURATION_DAYS > 0:
