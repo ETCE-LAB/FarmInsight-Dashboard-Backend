@@ -262,7 +262,7 @@ class InfluxDBManager:
             # Construct the query
             query = (
                 f'from(bucket: "{orga_id}") '
-                f'|> range(start: -1y) '  # Arbitrary long range to include all data
+                f'|> range(start: -24h) '  # Arbitrary long range to include all data
                 f'|> filter(fn: (r) => r["_measurement"] == "WeatherForecast" and r["locationId"] == "{str(location_id)}") '
                 f'|> sort(columns: ["_time"], desc: false) '
                 f'|> limit(n: 3) '
@@ -351,7 +351,6 @@ class InfluxDBManager:
                     "precipitation_probability_max": int(forecast['precipitation_probability_max'])
                 }
 
-
                 forecast_json = json.dumps(forecast_dict)
 
                 point = (
@@ -362,7 +361,6 @@ class InfluxDBManager:
                 )
                 #For some reason the write_api.write() method does not accept a list of points
                 write_api.write(bucket=str(orga_id), record=point)
-
 
         except Exception as e:
             self.client = None
