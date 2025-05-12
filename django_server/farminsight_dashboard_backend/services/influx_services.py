@@ -264,7 +264,7 @@ class InfluxDBManager:
                 f'from(bucket: "{orga_id}") '
                 f'|> range(start: -1y) '  # Arbitrary long range to include all data
                 f'|> filter(fn: (r) => r["_measurement"] == "WeatherForecast" and r["locationId"] == "{str(location_id)}") '
-                f'|> sort(columns: ["_time"], desc: true) '
+                f'|> sort(columns: ["_time"], desc: false) '
                 f'|> limit(n: 3) '
             )
 
@@ -311,6 +311,8 @@ class InfluxDBManager:
                         locationId=values.get('locationId', "")
                     )
                     forecasts.append(wf)
+
+            forecasts.sort(key=lambda x: x['forecastDate'], reverse=True)
 
         except requests.exceptions.ConnectionError as e:
             self.client = None
