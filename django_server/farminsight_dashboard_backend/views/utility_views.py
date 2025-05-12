@@ -25,19 +25,12 @@ def get_direct_ping(request, resource_type, resource_id):
 
         url = hardware_configuration['additionalInformation']['http']
 
-        i = 0
-        while i < 3:
-            i += 1
-            try:
-                response = requests.get(url, timeout=10).json()
-                break
-            except JSONDecodeError:
-                return Response(data={'warning': 'Response. But no valid json.'}, status=HTTP_200_OK)
-            except Exception:
-                if i == 3:
-                    return Response(data={'error': 'No response. Connection timed out'}, status=HTTP_200_OK)
-                else:
-                    time.sleep(5)
+        try:
+            response = requests.get(url, timeout=10).json()
+        except JSONDecodeError:
+            return Response(data={'warning': 'Got aResponse. But no valid json.'}, status=HTTP_200_OK)
+        except Exception as e:
+            return Response(data={'error': f'{e}'}, status=HTTP_200_OK)
     else:
         return Response(status=HTTP_404_NOT_FOUND)
 
