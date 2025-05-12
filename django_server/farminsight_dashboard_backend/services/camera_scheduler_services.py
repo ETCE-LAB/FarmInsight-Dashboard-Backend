@@ -6,8 +6,7 @@ from apscheduler.triggers.interval import IntervalTrigger
 from django.utils import timezone
 
 from farminsight_dashboard_backend.models import Camera
-from farminsight_dashboard_backend.services import get_camera_by_id, get_active_camera_count
-from farminsight_dashboard_backend.services.fpf_connection_services import fetch_camera_snapshot
+from farminsight_dashboard_backend.services import get_camera_by_id, get_active_camera_count, fetch_camera_snapshot
 from farminsight_dashboard_backend.utils import get_logger
 
 

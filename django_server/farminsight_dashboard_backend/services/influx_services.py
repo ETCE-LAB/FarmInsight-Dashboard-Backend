@@ -1,20 +1,17 @@
 import json
-from dataclasses import dataclass
-from datetime import datetime
-from typing import List
-
-from influxdb_client import InfluxDBClient, Point, WritePrecision
-from django.conf import settings
-from influxdb_client.client.write_api import SYNCHRONOUS
-from django.utils import timezone
-
-from farminsight_dashboard_backend.exceptions import InfluxDBQueryException, InfluxDBNoConnectionException
-from farminsight_dashboard_backend.exceptions.custom_exception_handler import InfluxDBWriteException
-from farminsight_dashboard_backend.models import FPF, Organization
 import requests
 import logging
 import threading
 import time
+from datetime import datetime
+from django.conf import settings
+from django.utils import timezone
+from influxdb_client.client.write_api import SYNCHRONOUS
+from influxdb_client import InfluxDBClient, Point, WritePrecision
+
+from farminsight_dashboard_backend.exceptions import InfluxDBQueryException, InfluxDBNoConnectionException, InfluxDBWriteException
+from farminsight_dashboard_backend.models import FPF, Organization
+
 
 class InfluxDBManager:
     """
