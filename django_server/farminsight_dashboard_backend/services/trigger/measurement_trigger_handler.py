@@ -30,7 +30,7 @@ class MeasurementTriggerHandler(BaseTriggerHandler):
                 max_measurement = logic.get("max")
                 return min_measurement <= measurement <= max_measurement
             else:
-                print(f"[MeasurementTriggerHandler] Unknown comparison type: {comparison}")
+                logger.debug(f"[MeasurementTriggerHandler] Unknown comparison type: {comparison}")
                 return False
 
         except Exception as e:
@@ -53,7 +53,7 @@ def create_measurement_auto_triggered_actions_in_queue(sensor_id, measurement_va
     from farminsight_dashboard_backend.services.trigger.MeasurementTriggerManager import MeasurementTriggerManager
 
     trigger_ids = MeasurementTriggerManager.get_trigger_ids_for_sensor(sensor_id)
-    print("wo", trigger_ids)
+
     if len(trigger_ids) >= 0:
         for trigger_id in trigger_ids:
             trigger = get_action_trigger(str(trigger_id))
@@ -68,7 +68,7 @@ def create_measurement_auto_triggered_actions_in_queue(sensor_id, measurement_va
                     }, partial=True)
                     if serializer.is_valid(raise_exception=True):
                         serializer.save()
-                        logger.info(f"Queued auto trigger {trigger.id} for action {trigger.action.id}")
+                        logger.info(f"Queued auto sensor measurement trigger {trigger.id} for action {trigger.action.id}", extra={'resource_id': trigger.action.FPF_id})
 
         process_action_queue()
 

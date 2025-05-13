@@ -34,7 +34,6 @@ class TimeOfDayTriggerHandler(BaseTriggerHandler):
 
     def enqueue_if_needed(self):
         from farminsight_dashboard_backend.services.action_queue_services import is_new_action, process_action_queue
-
         if self.should_trigger() and self.trigger.action.isAutomated:
             if is_new_action(self.trigger.action.id, self.trigger.id):
                 serializer = ActionQueueSerializer(data={
@@ -44,6 +43,6 @@ class TimeOfDayTriggerHandler(BaseTriggerHandler):
                 }, partial=True)
                 if serializer.is_valid(raise_exception=True):
                     serializer.save()
-                    logger.info(f"Queued timeOfDay trigger {self.trigger.id}")
+                    logger.info(f"Queued timeOfDay trigger {self.trigger.id}", extra={'resource_id': self.trigger.action.FPF_id})
 
 

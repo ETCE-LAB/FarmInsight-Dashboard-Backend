@@ -10,6 +10,7 @@ class FieldType(Enum):
     STRING = 'str'
 
 class FieldDescription(NamedTuple):
+    id: str
     name: str
     description: str
     type: FieldType
@@ -22,6 +23,8 @@ class ValidHttpEndpointRule(NamedTuple):
 class ActionScriptDescription(NamedTuple):
     action_script_class_id:str
     name: str
+    description: str
+    action_values: List[str]
     '''
     Fields are inputs by the user and are stored as a json dict in the additionalInformation DB column
     '''

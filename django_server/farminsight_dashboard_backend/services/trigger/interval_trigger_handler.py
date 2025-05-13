@@ -3,7 +3,6 @@ import json
 from datetime import timedelta
 from django.utils.timezone import now
 
-
 from farminsight_dashboard_backend.utils import get_logger
 from farminsight_dashboard_backend.serializers import ActionQueueSerializer
 from farminsight_dashboard_backend.services.trigger.base_trigger_handlers import BaseTriggerHandler
@@ -45,19 +44,24 @@ def enqueue_interval_action(trigger_id):
     :return:
     """
     from farminsight_dashboard_backend.services.action_trigger_services import get_action_trigger
-    from farminsight_dashboard_backend.services.action_queue_services import process_action_queue
+    from farminsight_dashboard_backend.services.action_queue_services import process_action_queue, is_already_enqueued
+
     trigger = get_action_trigger(trigger_id)
 
     if trigger and trigger.action.isAutomated:
 
-        serializer = ActionQueueSerializer(data={
-            "actionId": str(trigger.action.id),
-            "actionTriggerId": str(trigger.id),
-            "value": trigger.actionValue
-        }, partial=True)
 
-        if serializer.is_valid(raise_exception=True):
-            serializer.save()
-            logger.info(f"[IntervalTrigger] Queued action {trigger.action.id}")
+        # Only enqueue if the action is new (there must not be a created action in the queue, which is not not ended yet.)
+        if not is_already_enqueued(trigger_id):
+        
+            serializer = ActionQueueSerializer(data={
+                "actionId": str(trigger.action.id),
+                "actionTriggerId": str(trigger.id),
+                "value": trigger.actionValue
+            }, partial=True)
 
-        process_action_queue()
+            if serializer.is_valid(raise_exception=True):
+                serializer.save()
+                logger.info(f"[IntervalTrigger] Queued action {trigger.action.id}", extra={'resource_id': trigger.action.FPF_id})
+
+            process_action_queue()

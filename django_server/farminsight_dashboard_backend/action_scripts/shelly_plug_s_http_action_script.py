@@ -13,34 +13,30 @@ logger = get_logger()
 
 class ShellyPlugHttpActionScript(TypedSensor):
     http_endpoint = None
-    delay = 0
+    maximumDurationInSeconds = 0
 
     def init_additional_information(self):
+        self.maximumDurationInSeconds = self.controllable_action.maximumDurationSeconds or 0
         additional_information = json.loads(self.controllable_action.additionalInformation)
         self.http_endpoint = additional_information['http']
-        self.delay = int(additional_information.get('delay', 0))
 
     @staticmethod
     def get_description() -> ActionScriptDescription:
         return ActionScriptDescription(
             action_script_class_id='baa6ef9a-58dc-4e28-b429-d525dfef0941',
             name='Shelly Plug S (HTTP)',
+            description="Turns a Shelly Plug S via HTTP calls on and off. MaximumDurationInSeconds adds a delay (optional) to reset the command after the specified time.",
+            action_values=['On', 'Off'],
             fields=[
                 FieldDescription(
-                    name='http',
+                    id='http',
+                    name='Http endpoint;HTTP Endpunkt',
                     description="HTTP endpoint of the Shelly plug.",
                     type=FieldType.STRING,
                     rules=[
                         ValidHttpEndpointRule(),
                     ]
-                ),
-                FieldDescription(
-                    name='delay',
-                    description="Optional delay in seconds before turning off the plug after turning it on.",
-                    type=FieldType.INTEGER,
-                    rules=[],
-                    defaultValue=0
-                ),
+                )
             ]
         )
 
@@ -62,14 +58,14 @@ class ShellyPlugHttpActionScript(TypedSensor):
             url = f"http://{self.http_endpoint}/relay/0"
             params = {"turn": action_value}
 
-            if self.delay > 0:
-                params["timer"] = self.delay
+            if self.maximumDurationInSeconds > 0:
+                params["timer"] = self.maximumDurationInSeconds
 
             # Send HTTP request
             response = requests.get(url, params=params, timeout=5)
 
             if response.status_code == 200:
-                logger.info(f"Successfully sent '{action_value}' command to Shelly plug with delay={self.delay}s.")
+                logger.info(f"Successfully sent '{action_value}' command to Shelly plug with delay={self.maximumDurationInSeconds}s.")
             else:
                 logger.error(f"Failed to control Shelly plug. Status code: {response.status_code}")
 
@@ -89,58 +85,58 @@ class ShellyPlugMqttActionScript(TypedSensor):
     mqtt_username = None
     mqtt_password = None
     mqtt_topic = None
-    delay = 0
+    maximumDurationInSeconds = 0
 
     def init_additional_information(self):
+        self.maximumDurationInSeconds = self.controllable_action.maximumDurationSeconds or 0
         info = json.loads(self.controllable_action.additionalInformation)
-        self.mqtt_broker = info['mqtt_broker']
-        self.mqtt_port = info.get('mqtt_port', 1883)
-        self.mqtt_username = info.get('mqtt_username')
-        self.mqtt_password = info.get('mqtt_password')
-        self.mqtt_topic = info['mqtt_topic']  # e.g., "shellies/shellyplug-s-1234/relay/0/command"
-        self.delay = info.get('delay', 0)
+        self.mqtt_broker = info['mqtt-broker']
+        self.mqtt_port = info.get('mqtt-port', 1883)
+        self.mqtt_username = info.get('mqtt-username')
+        self.mqtt_password = info.get('mqtt-password')
+        self.mqtt_topic = info['mqtt-topic']  # e.g., "shellies/shellyplug-s-1234/relay/0/command"
 
     @staticmethod
     def get_description() -> ActionScriptDescription:
         return ActionScriptDescription(
             action_script_class_id='d821e939-3f67-4ac9-bb3c-274ac0a2056e',
             name='Shelly Plug S (MQTT)',
+            description="Turns a Shelly Plug S via MQTT communication on and off. MaximumDurationInSeconds adds a delay (optional) to reset the command after the specified time.;Steuert einen Shelly Plug S via MQTT. MaximumDurationInSeconds kann optional genutzt werden um den Befehl nach angegebener Zeit zurückzusetzen.",
+            action_values=['On', 'Off'],
             fields=[
                 FieldDescription(
-                    name='MQTT broker',
-                    description="MQTT broker address. Example: '192.168.1.100'",
+                    id='mqtt-broker',
+                    name='MQTT broker;MQTT Vermittler',
+                    description="MQTT broker address. Example: '192.168.1.100';MQTT Verteiler Adresse. Beispiel: '192.168.1.100'",
                     type=FieldType.STRING,
                     rules=[],
                 ),
                 FieldDescription(
-                    name='MQTT port',
-                    description="Optionally specify a custom MQTT broker port.",
+                    id='mqtt-port',
+                    name='MQTT port;MQTT Port',
+                    description="Optionally specify a custom MQTT broker port.;Definiere optional einen eigenen MQTT Port.",
                     type=FieldType.INTEGER,
                     rules=[],
                     defaultValue=1883
                 ),
                 FieldDescription(
-                    name='MQTT username',
-                    description="MQTT broker username.",
+                    id='mqtt-username',
+                    name='MQTT username;MQTT Nutzername',
+                    description="MQTT broker username.;MQTT Verteiler Nutzername.",
                     type=FieldType.STRING,
                     rules=[]),
                 FieldDescription(
-                    name='MQTT password',
-                    description="MQTT broker password.",
+                    id='mqtt-password',
+                    name='MQTT password;MQTT Passwort',
+                    description="MQTT broker password.;MQTT Verteiler Passwort.",
                     type=FieldType.STRING,
                     rules=[]),
                 FieldDescription(
-                    name='MQTT topic',
-                    description="MQTT topic to send the command to. Example: 'shellies/shellyplug-s-1234/relay/0/command'",
+                    id='mqtt-topic',
+                    name='MQTT topic;MQTT Thema',
+                    description="MQTT topic to send the command to. Example: 'shellies/shellyplug-s-1234/relay/0/command';MQTT Thema an den der Befehl gesendet wird. Beispiel: 'shellies/shellyplug-s-1234/relay/0/command'",
                     type=FieldType.STRING,
                     rules=[]),
-                FieldDescription(
-                    name='Delay',
-                    description="Delay in seconds before turning off the plug after turning it on.",
-                    type=FieldType.INTEGER,
-                    rules=[],
-                    defaultValue=0
-                ),
             ]
         )
 
@@ -174,9 +170,9 @@ class ShellyPlugMqttActionScript(TypedSensor):
 
             self.send_mqtt_command(self.mqtt_topic, action_value)
 
-            if self.delay > 0:
-                logger.info(f"Delaying {self.delay} seconds before sending 'off' command.")
-                asyncio.run(self.delayed_off(self.delay))
+            if self.maximumDurationInSeconds > 0:
+                logger.info(f"Delaying {self.maximumDurationInSeconds} seconds before sending 'off' command.")
+                asyncio.run(self.delayed_off(self.maximumDurationInSeconds))
 
         except Exception as e:
             logger.error(f"Exception during Shelly smart plug control: {e}")

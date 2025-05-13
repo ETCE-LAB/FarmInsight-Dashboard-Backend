@@ -24,7 +24,7 @@ class MeasurementView(views.APIView):
         api_key = auth.split(' ')[1]
         if not (valid_api_key_for_sensor(api_key, sensor_id)):
             return Response(status=status.HTTP_403_FORBIDDEN)
-        print("?ß")
+
         store_measurements_in_influx(sensor_id, request.data)
         layer = get_channel_layer()
         if layer is not None:

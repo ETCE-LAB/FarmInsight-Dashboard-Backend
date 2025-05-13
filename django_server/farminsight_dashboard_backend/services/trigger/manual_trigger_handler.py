@@ -28,7 +28,10 @@ def create_manual_triggered_action_in_queue(action_id, trigger_id):
 
     try:
         trigger = get_action_trigger(trigger_id)
-        if trigger.isActive and is_new_action(action_id, trigger.id):
+        if trigger.isActive: #and is_new_action(action_id, trigger.id): Disabled for now.
+            # We would need to check all controllable actions with the same hardware in the active state and maybe the
+            # user want to trigger a manual action more than once in case of network failure.
+
             serializer = ActionQueueSerializer(data={
                 "actionId": action_id,
                 "actionTriggerId": trigger_id,
@@ -36,7 +39,7 @@ def create_manual_triggered_action_in_queue(action_id, trigger_id):
             }, partial=True)
             if serializer.is_valid(raise_exception=True):
                 serializer.save()
-                logger.debug(f"Queued auto trigger {trigger_id} for action {action_id}")
+                logger.debug(f"Queued auto trigger {trigger_id} for action {action_id}", extra={'resource_id': trigger.action.FPF_id})
 
         process_action_queue()
 

@@ -1,6 +1,9 @@
+from datetime import timedelta
+
 from django.utils.timezone import now
 
 from farminsight_dashboard_backend.models import ActionQueue
+from farminsight_dashboard_backend.services import get_controllable_action_by_id
 
 from farminsight_dashboard_backend.services.action_trigger_services import get_all_active_auto_triggers
 from farminsight_dashboard_backend.services.trigger.trigger_handler_factory import TriggerHandlerFactory
@@ -11,17 +14,45 @@ typed_action_script_factory = TypedActionScriptFactory()
 
 logger = get_logger()
 
-def get_active_state_of_action(action_id):
+def get_active_state_of_action(controllable_action_id):
     """
     Get the active state (trigger) for an action.
     (Last executed action is the currently active action)
-    :param action_id:
+    :param controllable_action_id:
+    :return:
+    """
+
+    last_action =  ActionQueue.objects.filter(
+        action__id=controllable_action_id,
+        endedAt__isnull=False,
+        startedAt__isnull=False,
+    ).order_by('createdAt').last()
+
+    if last_action is None:
+        return None
+
+    # For auto actions, return them always. (we check here anyway if the action has a matching isAutomated)
+    if last_action.trigger.type != 'manual' and get_controllable_action_by_id(controllable_action_id).isAutomated:
+        return last_action
+
+    # Return manual action only if the action is in manual mode.
+    # We need this to activate a manual trigger which was in auto mode.
+    if last_action.trigger.type == 'manual' and not get_controllable_action_by_id(controllable_action_id).isAutomated:
+        return last_action
+    else:
+        return None
+
+def is_already_enqueued(trigger_id):
+    """
+    Return if the trigger is already enqueued in the queue but not started or finished yet.
+    This prevents overloading the queue with the same action multiple times.
+    :param trigger_id:
     :return:
     """
     return ActionQueue.objects.filter(
-        action__id=action_id,
-        endedAt__isnull=False,
-        startedAt__isnull=False,
+        trigger_id=trigger_id,
+        endedAt__isnull=True,
+        startedAt__isnull=True,
     ).order_by('createdAt').last()
 
 def process_action_queue():
@@ -53,32 +84,53 @@ def process_action_queue():
             queue_entry.save()
             continue
 
-        # TODO - Don't execute if another action for the same hardware is still running
+        # Don't execute if another action for the same hardware is still running
+        if hardware is not None:
+            last_action = ActionQueue.objects.filter(
+                action__hardware=hardware,
+                endedAt__isnull=False
+            ).order_by('-endedAt').last()
 
-        # If the trigger action is already active skip it.
-        # Cancel it. This should never happen anyway, actually.
-        #if not is_new_action(action.id, trigger.id):
-        #    logger.info(f"Trigger '{trigger}' action is already active for this action.")
-        #    queue_entry.endedAt = now()
-        #    queue_entry.save()
-        #    continue
+            if last_action and last_action.endedAt > now():
+                logger.info(
+                    f"Skipping action {action.id} because hardware {hardware} is busy until {last_action.endedAt}")
+                continue
+
+            # Don't execute if other actions with the same hardware are on Manual mode while this one is on auto.
+            manual_action = ActionQueue.objects.filter(
+                action__hardware=hardware,
+                trigger__type='manual',
+                endedAt__isnull=False,
+                startedAt__isnull=False,
+            ).exclude(
+                id=queue_entry.id
+            ).order_by('createdAt').last()
+
+            # No other active manual action for the same hardware when the action is in manual mode
+            # when this action is in auto mode
+            if manual_action and not manual_action.action.isAutomated and action.isAutomated:
+                logger.info(
+                    f"Skipping action {action.id} because hardware {hardware} has another action in MANUAL mode, which is blocking this auto trigger.")
+                continue
+
 
         # Execute the action
         try:
 
-            logger.info(f"Executing action {action.id} on hardware {hardware}")
+            logger.info(f"Executing action {action.id} on hardware {hardware}", extra={'resource_id': action.FPF_id })
             queue_entry.startedAt = now()
 
             script = typed_action_script_factory.get_typed_action_script_class(str(action.actionClassId))
             script_class = script(action)
             script_class.run(trigger.actionValue)
 
-            queue_entry.endedAt = now()
+            # Set endedAt with the given maximum duration of the action
+            queue_entry.endedAt = now() + timedelta(action.maximumDurationSeconds or 0)
             queue_entry.save()
-            logger.info(f"Finished executing action {action.id}")
+            logger.info(f"Finished executing action {action.id}", extra={'resource_id': action.FPF_id })
 
         except Exception as e:
-            logger.error(f"Failed to execute action {action.id}: {str(e)}")
+            logger.error(f"Failed to execute action {action.id}: {str(e)}", extra={'resource_id': action.FPF_id })
 
 def create_auto_triggered_actions_in_queue(action_id=None):
     try:

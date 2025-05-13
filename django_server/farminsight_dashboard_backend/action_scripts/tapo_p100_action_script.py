@@ -14,45 +14,43 @@ class TapoP100SmartPlugActionScriptWithDelay(TypedSensor):
     ip_address = None
     tapo_account_email = None
     tapo_account_password = None
-    delay = 0
+    maximumDurationInSeconds = 0
 
     def init_additional_information(self):
+        self.maximumDurationInSeconds = self.controllable_action.maximumDurationSeconds or 0
         additional_information = json.loads(self.controllable_action.additionalInformation)
-        self.ip_address = additional_information['IP Address']
-        self.tapo_account_email = additional_information['Tapo Account Email']
-        self.tapo_account_password = additional_information['Tapo Account Password']
-        self.delay = additional_information.get('delay', 0)
+        self.ip_address = additional_information['ip-address']
+        self.tapo_account_email = additional_information['tapo-account-email']
+        self.tapo_account_password = additional_information['tapo-account-password']
 
     @staticmethod
     def get_description() -> ActionScriptDescription:
         return ActionScriptDescription(
             action_script_class_id='dc83813b-1541-4aac-8caa-ba448a6bbdda',
             name='Tapo Smart Plug (HTTP)',
+            description="Turns a Tapo Smart Plug via HTTP calls on and off. MaximumDurationInSeconds adds a delay (optional) to reset the command after the specified time.;Kontrolliert einen Tapo Smart Plug via HTTP-Anfrage. MaximumDurationInSeconds kann optional genutzt werden um den Befehl nach angegebener Zeit zurückzusetzen.",
+            action_values=['On', 'Off'],
             fields=[
                 FieldDescription(
-                    name='IP Address',
-                    description="IP address of the Tapo smart plug.",
+                    id='ip-address',
+                    name='IP Address;IP Adresse',
+                    description="IP address of the Tapo smart plug.;IP Adresse vom Tapo Smart Plug.",
                     type=FieldType.STRING,
                     rules=[]
                 ),
                 FieldDescription(
-                    name='Tapo Account Email',
-                    description="Tapo account email.",
+                    id='tapo-account-email',
+                    name='Tapo Account Email;Tapo Konto Email',
+                    description="Tapo account email.;Tapo Konto Email.",
                     type=FieldType.STRING,
                     rules=[]
                 ),
                 FieldDescription(
-                    name='Tapo Account Password',
-                    description="Tapo account password.",
+                    id='tapo-account-password',
+                    name='Tapo Account Password;Tapo Konto Passwort',
+                    description="Tapo account password.;Tapo Konto Passwort.",
                     type=FieldType.STRING,
                     rules=[]
-                ),
-                FieldDescription(
-                    name='Delay',
-                    description="Optional delay in seconds before turning off the plug after turning it on. Default: 0",
-                    type=FieldType.INTEGER,
-                    rules=[],
-                    defaultValue=0
                 )
             ]
         )
@@ -62,7 +60,6 @@ class TapoP100SmartPlugActionScriptWithDelay(TypedSensor):
             Controls the smart plug by turning it on or off.
             Supports:
             - Plain string: "on" / "off"
-            - JSON string: {"value": "on", "delay": 1800}
             """
         try:
 
@@ -76,12 +73,12 @@ class TapoP100SmartPlugActionScriptWithDelay(TypedSensor):
 
             if action_value == 'on':
                 p100.turnOn()
-                if self.delay > 0:
-                    p100.turnOffWithDelay(self.delay)
+                if self.maximumDurationInSeconds > 0:
+                    p100.turnOffWithDelay(self.maximumDurationInSeconds)
             else:
                 p100.turnOff()
-                if self.delay > 0:
-                    p100.turnOnWithDelay(self.delay)
+                if self.maximumDurationInSeconds > 0:
+                    p100.turnOnWithDelay(self.maximumDurationInSeconds)
 
         except Exception as e:
             logger.error(f"Failed to control smart plug with value '{action_value}': {e}")
