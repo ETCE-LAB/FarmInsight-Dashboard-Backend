@@ -15,10 +15,10 @@ from farminsight_dashboard_backend.utils import get_logger
 from farminsight_dashboard_backend.services import get_fpf_by_id, \
     get_organization_by_fpf_id, is_admin, create_controllable_action, delete_controllable_action, \
     get_controllable_action_by_id, get_organization_by_controllable_action_id, \
-    set_is_automated, create_auto_triggered_actions_in_queue, create_manual_triggered_action_in_queue, is_member, \
-    update_controllable_action
-    set_is_automated, \
-    get_action_trigger, create_auto_triggered_actions_in_queue, create_hardware
+    set_is_automated, create_auto_triggered_actions_in_queue, is_member, \
+    update_controllable_action, create_hardware, get_action_trigger
+
+
 
 logger = get_logger()
 
@@ -29,8 +29,8 @@ class ControllableActionView(views.APIView):
         """
         If incoming camera data is valid, update the camera by given id with the incoming data
         If the interval was updated, reschedule the job of the camera
+        :param controllable_action_id:
         :param request:
-        :param camera_id: id of the camera to update
         :return:
         """
         pass
