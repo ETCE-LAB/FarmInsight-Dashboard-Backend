@@ -1,12 +1,14 @@
+from django.db import IntegrityError
+
 from rest_framework.views import exception_handler
 from rest_framework.response import Response
 from rest_framework import status
-from django.db import IntegrityError
 from rest_framework.exceptions import APIException
-import logging
+
+from farminsight_dashboard_backend.utils import get_logger
 
 
-logger = logging.getLogger(__name__)
+logger = get_logger()
 
 
 def custom_exception_handler(exc, context):
@@ -21,6 +23,8 @@ def custom_exception_handler(exc, context):
         resource_id = context['kwargs']['fpf_id']
     elif 'organization_id' in context['kwargs']:
         resource_id = context['kwargs']['organization_id']
+    elif 'resource_id' in context['kwargs']:
+        resource_id = context['kwargs']['resource_id']
 
     if isinstance(exc, IntegrityError):
         logger.error("A database integrity error occurred. " + str(exc), extra={'resource_id': resource_id})
@@ -36,7 +40,7 @@ def custom_exception_handler(exc, context):
             status=exc.status_code
         )
 
-    logger.error("An unexpected error occurred." + str(exc), extra={'resource_id': resource_id})
+    logger.error("An unexpected error occurred. " + str(exc), extra={'resource_id': resource_id})
     if response is None:
         return Response(
             {"error": "An unexpected error occurred.", "details": str(exc)},

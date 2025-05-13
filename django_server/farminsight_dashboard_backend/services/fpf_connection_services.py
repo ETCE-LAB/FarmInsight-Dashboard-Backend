@@ -1,12 +1,8 @@
-import uuid
 from json import JSONDecodeError
 import requests
-from django.core.files import File
 from requests import RequestException
-from farminsight_dashboard_backend.models import Image
-from farminsight_dashboard_backend.utils import get_logger
+from farminsight_dashboard_backend.models import Sensor
 
-logger = get_logger()
 
 def send_request_to_fpf(fpf_id, method, endpoint, data=None, params=None):
     """
@@ -42,27 +38,24 @@ def send_request_to_fpf(fpf_id, method, endpoint, data=None, params=None):
     except ValueError:
         raise Exception("Invalid JSON response from the FPF service.")
 
-def fetch_camera_snapshot(camera_id, snapshot_url):
-    """
-    Fetch a snapshot from the given snapshot URL of the camera and store it as a jpg file.
-    :param camera_id:
-    :param snapshot_url:
-    :return:
-    """
-    try:
-        response = requests.get(snapshot_url, stream=True)
-        if response.status_code == 200:
-            filename = f"{str(uuid.uuid4())}.jpg"
-            Image.objects.create(
-                camera_id=camera_id,
-                image=File(response.raw, name=filename)
-            )
 
-            return filename
-        else:
-            raise ValueError(f"HTTP error {response.status_code}")
-    except Exception as e:
-        logger.error(f"Error fetching snapshot for Camera: {e}", extra={'resource_id': camera_id})
+def get_sensor_hardware_configuration(sensor: Sensor):
+    return send_request_to_fpf(sensor.FPF_id, 'get', f'/api/sensors/{sensor.id}')
+
+def post_fpf_id(fpf_id: str):
+    return send_request_to_fpf(fpf_id, 'post', '/api/fpf-ids', {"fpfId": fpf_id})
+
+def post_fpf_api_key(fpf_id: str, key: str):
+    return send_request_to_fpf(fpf_id, 'post', '/api/api-keys', {"apiKey": key})
+
+def get_sensor_types(fpf_id: str):
+    return send_request_to_fpf(fpf_id, 'get', '/api/sensors/types')
+
+def post_sensor(fpf_id: str, sensor_config: dict):
+    return send_request_to_fpf(fpf_id, 'post', '/api/sensors', sensor_config)
+
+def put_update_sensor(fpf_id: str, sensor_id: str, update_fpf_payload: dict):
+    return send_request_to_fpf(fpf_id, 'put', f'/api/sensors/{sensor_id}', update_fpf_payload)
 
 def build_fpf_url(fpf_address, endpoint):
     """

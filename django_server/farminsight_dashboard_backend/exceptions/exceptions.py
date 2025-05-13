@@ -1,5 +1,5 @@
-from rest_framework.exceptions import APIException
 from rest_framework import status
+from rest_framework.exceptions import APIException
 
 
 class NotFoundException(APIException):
@@ -22,6 +22,7 @@ class InfluxDBQueryException(APIException):
     status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
     default_detail = "Failed to retrieve sensor measurements due to an InfluxDB error."
     default_code = "influxdb_query_error"
+
 
 class InfluxDBWriteException(APIException):
     status_code = status.HTTP_500_INTERNAL_SERVER_ERROR

@@ -6,9 +6,11 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from farminsight_dashboard_backend.serializers import SensorSerializer, SensorDBSchemaSerializer
-from farminsight_dashboard_backend.services import is_member, send_request_to_fpf, get_organization_by_sensor_id, get_organization_by_fpf_id
+from farminsight_dashboard_backend.services import is_member, get_organization_by_sensor_id, \
+    get_organization_by_fpf_id, get_sensor_hardware_configuration, get_sensor_types, put_update_sensor, post_sensor
 from farminsight_dashboard_backend.services.sensor_services import get_sensor, create_sensor, update_sensor
 from farminsight_dashboard_backend.utils import get_logger
+
 
 logger = get_logger()
 
@@ -29,7 +31,7 @@ class SensorView(APIView):
 
         sensor = get_sensor(sensor_id)
 
-        fpf_sensor_info = send_request_to_fpf(sensor.FPF_id, 'get', f'/api/sensors/{sensor_id}')
+        fpf_sensor_info = get_sensor_hardware_configuration(sensor)
         # todo returns here interval, wich will be duplicated information in the response
         sensor_data = SensorSerializer(sensor).data
 
@@ -62,7 +64,7 @@ class SensorView(APIView):
         serializer = SensorDBSchemaSerializer(data=sensor, partial=True)
         serializer.is_valid(raise_exception=True)
 
-        fpf_sensor_config = {
+        sensor_config = {
             "id": sensor.get('id'),
             "intervalSeconds": sensor.get('intervalSeconds'),
             "sensorClassId": sensor.get('hardwareConfiguration', {}).get('sensorClassId', ''),
@@ -71,7 +73,7 @@ class SensorView(APIView):
         }
 
         try:
-            send_request_to_fpf(fpf_id, 'post', '/api/sensors', fpf_sensor_config)
+            post_sensor(fpf_id, sensor_config)
 
         except Exception as e:
             raise Exception(f"Unable to create sensor at FPF. {e}")
@@ -103,7 +105,7 @@ class SensorView(APIView):
             "isActive": data.get('isActive'),
         }
 
-        send_request_to_fpf(fpf_id, 'put', f'/api/sensors/{sensor_id}', update_fpf_payload)
+        put_update_sensor(fpf_id, sensor_id, update_fpf_payload)
 
         # Update sensor locally
         update_sensor_payload = {key: value for key, value in data.items() if key != "connection"}
@@ -125,5 +127,5 @@ def get_fpf_sensor_types(request, fpf_id):
     if not is_member(request.user, get_organization_by_fpf_id(fpf_id)):
         return Response(status=status.HTTP_403_FORBIDDEN)
 
-    sensor_types = send_request_to_fpf(fpf_id, 'get', '/api/sensors/types')
+    sensor_types = get_sensor_types(fpf_id)
     return Response(sensor_types, status=status.HTTP_200_OK)
