@@ -14,6 +14,7 @@ def create_action_trigger(action_trigger_data:dict) -> ActionTriggerSerializer.d
 
     return serializer.save()
 
+
 def get_action_trigger(action_trigger_id):
     return get_object_or_404(ActionTrigger, pk=action_trigger_id)
 
@@ -55,3 +56,19 @@ def get_all_active_auto_triggers(action_id=None):
         ).exclude(
             type='manual'
         )
+
+def update_action_trigger(actionTrigger_id, data) -> ActionTriggerSerializer:
+    """
+    Update the given organization with the given data if the user has sufficient permissions.
+    :param org_id: organization id to update
+    :param data: new organization data
+    :return:
+    """
+    actionTrigger = ActionTrigger.objects.get(id=actionTrigger_id)
+    data["actionId"] = actionTrigger.action_id#
+    data["id"] = actionTrigger_id
+    serializer = ActionTriggerSerializer(actionTrigger, data=data)
+
+    if serializer.is_valid(raise_exception=True):
+        serializer.save()
+        return serializer

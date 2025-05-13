@@ -1,3 +1,4 @@
+
 from farminsight_dashboard_backend.exceptions import NotFoundException
 from farminsight_dashboard_backend.models import ControllableAction, FPF
 from farminsight_dashboard_backend.serializers import ControllableActionSerializer
@@ -26,6 +27,7 @@ def get_controllable_action_by_id(controllable_action_id:str) -> ControllableAct
     :throws: NotFoundException
     """
     try:
+        print("Aber hier")
         return ControllableAction.objects.get(id=controllable_action_id)
     except ControllableAction.DoesNotExist:
         raise NotFoundException(f'Controllable action with id: {controllable_action_id} was not found.')
@@ -54,11 +56,13 @@ def update_controllable_action(controllable_action_id:str, controllable_action_d
     :param controllable_action_data: new controllable_action data
     :return: Updated controllable_action
     """
-    controllable_action = get_controllable_action_by_id(controllable_action_id)
-    for key, value in controllable_action_data.items():
-        setattr(controllable_action, key, value)
-    controllable_action.save()
-    return controllable_action
+    controllable_action = ControllableAction.objects.get(id=controllable_action_id)
+    serializer = ControllableActionSerializer(controllable_action, data=controllable_action_data, partial=True)
+
+    if serializer.is_valid(raise_exception=True):
+        serializer.save()
+    return serializer
+
 
 def delete_controllable_action(controllable_action: ControllableAction):
     """

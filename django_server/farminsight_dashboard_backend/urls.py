@@ -45,7 +45,7 @@ from farminsight_dashboard_backend.views import (
     ThresholdEditViews,
     get_available_action_script_types,
 )
-
+from farminsight_dashboard_backend.views.action_trigger import ActionTriggerView
 
 urlpatterns = [
     path('userprofiles', get_userprofile, name='get_userprofile'),
@@ -91,11 +91,14 @@ urlpatterns = [
     path('change-password', change_password_view, name='change_password_view'),
     path('log_messages', post_log_message, name='post_log_message'),
     path('log_messages/<str:resource_type>/<str:resource_id>', get_log_messages, name='get_log_messages'),
+
     path('controllable-actions', post_controllable_action, name='post_controllable_action'),
     path('controllable-actions/<str:controllable_action_id>', ControllableActionView.as_view(), name='controllable_action_operations'),
-    path('action-trigger', post_action_trigger,name='post_action_trigger'),
     path('execute-actions/<str:controllable_action_id>/<str:trigger_id>', execute_controllable_action, name='execute_controllable_action'),
     path('action-scripts/types', get_available_action_script_types, name='get_available_action_script_types'),
+
+    path('action-trigger', post_action_trigger,name='post_action_trigger'),
+    path('action-trigger/<str:actionTrigger_id>', ActionTriggerView.as_view(), name='actionTrigger_operations'),
 
     path('locations', post_location, name='post_location'),
     path('locations/<str:location_id>', LocationView.as_view(), name='location_operations'),
