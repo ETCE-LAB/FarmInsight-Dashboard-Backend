@@ -49,7 +49,6 @@ def get_active_state_of_hardware(hardware_id):
     :param hardware_id:
     :return:
     """
-    print(hardware_id)
     last_action = ActionQueue.objects.filter(
         action__hardware_id=hardware_id,
         endedAt__isnull=False,
@@ -107,7 +106,6 @@ def process_action_queue():
                 endedAt__isnull=False,
                 startedAt__isnull=False,
             ).order_by('-endedAt').first()
-            print(last_action)
             if last_action and last_action.endedAt > now():
                 logger.info(
                     f"Skipping action {action.id} because hardware {hardware} is busy until {last_action.endedAt}")
