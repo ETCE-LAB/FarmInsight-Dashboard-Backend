@@ -106,7 +106,7 @@ def process_action_queue():
                 action__hardware=hardware,
                 endedAt__isnull=False,
                 startedAt__isnull=False,
-            ).order_by('-endedAt').last()
+            ).order_by('-endedAt').first()
             print(last_action)
             if last_action and last_action.endedAt > now():
                 logger.info(
