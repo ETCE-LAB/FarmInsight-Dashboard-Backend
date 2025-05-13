@@ -2,7 +2,7 @@ from datetime import timedelta
 
 from django.utils.timezone import now
 
-from farminsight_dashboard_backend.models import ActionQueue
+from farminsight_dashboard_backend.models import ActionQueue, ControllableAction
 from farminsight_dashboard_backend.services import get_controllable_action_by_id
 
 from farminsight_dashboard_backend.services.action_trigger_services import get_all_active_auto_triggers
@@ -41,6 +41,22 @@ def get_active_state_of_action(controllable_action_id):
         return last_action
     else:
         return None
+
+def get_active_state_of_hardware(hardware_id):
+    """
+    Get the active state (trigger) for a hardware.
+    (Last executed action is the currently active action)
+    :param hardware_id:
+    :return:
+    """
+    print(hardware_id)
+    last_action = ActionQueue.objects.filter(
+        action__hardware_id=hardware_id,
+        endedAt__isnull=False,
+        startedAt__isnull=False,
+    ).order_by('createdAt').last()
+
+    return last_action
 
 def is_already_enqueued(trigger_id):
     """
@@ -88,9 +104,10 @@ def process_action_queue():
         if hardware is not None:
             last_action = ActionQueue.objects.filter(
                 action__hardware=hardware,
-                endedAt__isnull=False
+                endedAt__isnull=False,
+                startedAt__isnull=False,
             ).order_by('-endedAt').last()
-
+            print(last_action)
             if last_action and last_action.endedAt > now():
                 logger.info(
                     f"Skipping action {action.id} because hardware {hardware} is busy until {last_action.endedAt}")
@@ -125,7 +142,7 @@ def process_action_queue():
             script_class.run(trigger.actionValue)
 
             # Set endedAt with the given maximum duration of the action
-            queue_entry.endedAt = now() + timedelta(action.maximumDurationSeconds or 0)
+            queue_entry.endedAt = now() + timedelta(seconds=action.maximumDurationSeconds or 0)
             queue_entry.save()
             logger.info(f"Finished executing action {action.id}", extra={'resource_id': action.FPF_id })
 
@@ -162,10 +179,15 @@ def get_active_state(controllable_action_id: str):
 
 def is_new_action(action_id, trigger_id):
     """
-    Returns if the given trigger id is a new one for the action or not.
+    Returns if the given trigger id is a new one for the controllable action (or for the hardware) or not.
+    We call this function to prevent spamming the queue with the same action multiple times.
     :return:
     """
-    active_state = get_active_state_of_action(action_id)
+
+    if get_controllable_action_by_id(action_id).hardware is not None:
+        active_state = get_active_state_of_hardware(get_controllable_action_by_id(action_id).hardware.id)
+    else:
+        active_state = get_active_state_of_action(action_id)
     if active_state is None or active_state.trigger.id != trigger_id:
         return True
     return False

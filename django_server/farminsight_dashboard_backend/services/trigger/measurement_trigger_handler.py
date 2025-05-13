@@ -47,7 +47,7 @@ def create_measurement_auto_triggered_actions_in_queue(sensor_id, measurement_va
     :param sensor_id:
     :return:
     """
-    from farminsight_dashboard_backend.services.action_queue_services import is_new_action, process_action_queue
+    from farminsight_dashboard_backend.services.action_queue_services import is_new_action, process_action_queue, is_already_enqueued
     from farminsight_dashboard_backend.services.action_trigger_services import get_action_trigger
     from farminsight_dashboard_backend.services.trigger.trigger_handler_factory import TriggerHandlerFactory
     from farminsight_dashboard_backend.services.trigger.MeasurementTriggerManager import MeasurementTriggerManager
@@ -60,7 +60,7 @@ def create_measurement_auto_triggered_actions_in_queue(sensor_id, measurement_va
             # Trigger type logic to check for triggering && currently active trigger for the action must not be this trigger.
             handler = TriggerHandlerFactory.get_handler(trigger)
             if trigger.action.isAutomated and handler.should_trigger(measurement=measurement_value):
-                if is_new_action(trigger.action.id, trigger.id):
+                if is_new_action(trigger.action.id, trigger.id) and not is_already_enqueued(trigger_id):
                     serializer = ActionQueueSerializer(data={
                         "actionId": str(trigger.action.id),
                         "actionTriggerId": str(trigger.id),
