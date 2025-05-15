@@ -27,7 +27,6 @@ def get_controllable_action_by_id(controllable_action_id:str) -> ControllableAct
     :throws: NotFoundException
     """
     try:
-        print("Aber hier")
         return ControllableAction.objects.get(id=controllable_action_id)
     except ControllableAction.DoesNotExist:
         raise NotFoundException(f'Controllable action with id: {controllable_action_id} was not found.')

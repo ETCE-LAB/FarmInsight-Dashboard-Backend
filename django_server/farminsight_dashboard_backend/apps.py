@@ -8,7 +8,6 @@ from django.db.utils import OperationalError
 from django.db.migrations.executor import MigrationExecutor
 from django.db import connections
 
-
 from farminsight_dashboard_backend.utils import get_logger
 
 
@@ -33,7 +32,9 @@ class FarminsightDashboardBackendConfig(AppConfig):
                     time.sleep(retry_interval)
                     retry_count += 1
                 else:
-                    from farminsight_dashboard_backend.services import InfluxDBManager, CameraScheduler, DataRetentionScheduler, WeatherForecastScheduler, AutoTriggerScheduler, MeasurementTriggerManager
+                    from farminsight_dashboard_backend.services import InfluxDBManager, CameraScheduler, DataRetentionScheduler, WeatherForecastScheduler, AutoTriggerScheduler
+                    from farminsight_dashboard_backend.services.trigger.MeasurementTriggerManager import \
+                        MeasurementTriggerManager
 
                     InfluxDBManager.get_instance().initialize_connection()
                     CameraScheduler.get_instance().start()
