@@ -18,25 +18,6 @@ def create_action_trigger(action_trigger_data:dict) -> ActionTriggerSerializer.d
 def get_action_trigger(action_trigger_id):
     return get_object_or_404(ActionTrigger, pk=action_trigger_id)
 
-def get_all_auto_action_triggers(action_id):
-    """
-    Returns all active, not-manual triggers.
-    If an action_id is provided, return only the triggers of the action.
-    :return:
-    """
-    if not action_id:
-        return ActionTrigger.objects.filter(
-            isActive=True
-        ).exclude(
-            type='manual'
-        )
-    else:
-        return ActionTrigger.objects.filter(
-            isActive=True,
-            action_id=action_id
-        ).exclude(
-            type='manual'
-        )
 
 def get_all_auto_timeOfDay_action_triggers(action_id):
     """
@@ -54,6 +35,26 @@ def get_all_auto_timeOfDay_action_triggers(action_id):
             isActive=True,
             action_id=action_id,
             type='timeOfDay'
+        )
+
+def get_all_auto_interval_triggers(action_id=None):
+    if action_id:
+        return ActionTrigger.objects.filter(action__id=action_id, type="interval", isActive=True)
+    return ActionTrigger.objects.filter(type="interval", isActive=True)
+
+def get_all_active_auto_triggers(action_id=None):
+    if not action_id:
+        return ActionTrigger.objects.filter(
+            isActive=True
+        ).exclude(
+            type='manual'
+        )
+    else:
+        return ActionTrigger.objects.filter(
+            isActive=True,
+            action_id=action_id
+        ).exclude(
+            type='manual'
         )
 
 def update_action_trigger(actionTrigger_id, data) -> ActionTriggerSerializer:
