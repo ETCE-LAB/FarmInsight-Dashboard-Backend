@@ -13,6 +13,7 @@ class Sensor(models.Model):
     isActive = models.BooleanField(default=False)
     intervalSeconds = models.IntegerField()
     FPF = models.ForeignKey(FPF, related_name='sensors', on_delete=models.CASCADE)
+    aggregate = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.FPF.name}: {self.name} {self.modelNr}  {self.parameter} {self.unit}"

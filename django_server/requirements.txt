@@ -13,5 +13,4 @@ daphne~=4.1.2
 apscheduler~=3.10.4
 opencv-python~=4.10.0.84
 plugp100~=5.1.4
-git+https://github.com/almottier/TapoP100.git@main
 paho-mqtt~=2.1.0

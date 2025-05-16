@@ -22,6 +22,7 @@ class SensorSerializer(serializers.ModelSerializer):
             'isActive',
             'intervalSeconds',
             'thresholds',
+            'aggregate',
         ]
 
 
@@ -42,6 +43,7 @@ class SensorDataSerializer(serializers.ModelSerializer):
             'intervalSeconds',
             'measurements',
             'thresholds',
+            'aggregate',
         ]
 
     def get_measurements(self, obj):
@@ -76,6 +78,7 @@ class SensorLastValueSerializer(serializers.ModelSerializer):
             'intervalSeconds',
             'lastMeasurement',
             'thresholds',
+            'aggregate',
         ]
 
     def get_lastMeasurement(self, obj):
