@@ -5,7 +5,10 @@ from farminsight_dashboard_backend.utils import get_logger
 from farminsight_dashboard_backend.action_scripts.action_script_description import ActionScriptDescription, \
     FieldDescription, FieldType
 from farminsight_dashboard_backend.action_scripts.typed_action_script import TypedSensor
-from PyP100 import PyP100  # pip install git+https://github.com/almottier/TapoP100.git@main or via requirements.txt
+from plugp100.common.credentials import AuthCredential
+from plugp100.new.device_factory import connect, DeviceConnectConfiguration
+from plugp100.new.components.on_off_component import OnOffComponent
+
 
 logger = get_logger()
 
@@ -67,22 +70,26 @@ class TapoP100SmartPlugActionScriptWithDelay(TypedSensor):
                 logger.error(f"Invalid action value: {action_value}. Expected 'on' or 'off'.")
                 return
 
-            p100 = PyP100.P100(self.ip_address, self.tapo_account_email, self.tapo_account_password)
-            p100.handshake()
-            logger.info('handshook')
-            p100.login()
-            logger.info('logged in')
+            credentials = AuthCredential(self.tapo_account_email, self.tapo_account_password)
+
+            device_configuration = DeviceConnectConfiguration(
+                host=self.ip_address,
+                credentials=credentials,
+                device_type="SMART.TAPOPLUG",
+                encryption_type="klap",
+                encryption_version=2
+            )
+
+            device = await connect(device_configuration)
+            await device.update()
+
+            power = OnOffComponent(device.client)
+            await power.update(device.raw_state)
 
             if action_value == 'on':
-                p100.turnOn()
-                logger.info('turned')
-                if self.maximumDurationInSeconds > 0:
-                    p100.turnOffWithDelay(self.maximumDurationInSeconds)
-            else:
-                p100.turnOff()
-                logger.info('turned')
-                if self.maximumDurationInSeconds > 0:
-                    p100.turnOnWithDelay(self.maximumDurationInSeconds)
+                await power.turn_on()
+            elif action_value == 'off':
+                await power.turn_off()
 
         except Exception as e:
             logger.error(f"Failed to control smart plug with value '{action_value}': {e}")
