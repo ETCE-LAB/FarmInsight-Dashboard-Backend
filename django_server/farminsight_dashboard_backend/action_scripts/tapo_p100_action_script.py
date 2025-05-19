@@ -69,14 +69,18 @@ class TapoP100SmartPlugActionScriptWithDelay(TypedSensor):
 
             p100 = PyP100.P100(self.ip_address, self.tapo_account_email, self.tapo_account_password)
             p100.handshake()
+            logger.info('handshook')
             p100.login()
+            logger.info('logged in')
 
             if action_value == 'on':
                 p100.turnOn()
+                logger.info('turned')
                 if self.maximumDurationInSeconds > 0:
                     p100.turnOffWithDelay(self.maximumDurationInSeconds)
             else:
                 p100.turnOff()
+                logger.info('turned')
                 if self.maximumDurationInSeconds > 0:
                     p100.turnOnWithDelay(self.maximumDurationInSeconds)
 
