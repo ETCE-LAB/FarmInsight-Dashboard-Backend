@@ -15,6 +15,7 @@ class FPF(models.Model):
     apiKeyValidUntil = models.DateTimeField(null=True, blank=True)
     createdAt = models.DateTimeField(auto_now_add=True, null=True)
     location = models.ForeignKey(Location, blank=True, null=True, on_delete=models.SET_NULL)
+    orderIndex = models.IntegerField(default=0)
 
     class Meta:
         constraints = [

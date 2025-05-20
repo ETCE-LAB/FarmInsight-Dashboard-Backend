@@ -11,6 +11,7 @@ class GrowingCycle(models.Model):
     plants = models.CharField(max_length=256)
     note = models.CharField(max_length=256, blank=True)
     FPF = models.ForeignKey(FPF, related_name='growingCycles', on_delete=models.CASCADE)
+    orderIndex = models.IntegerField(default=0)
 
     def __str__(self):
         return f"{self.FPF.name}: {self.plants} {self.startDate}"
