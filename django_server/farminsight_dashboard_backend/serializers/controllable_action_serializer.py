@@ -39,7 +39,8 @@ class ControllableActionSerializer(serializers.ModelSerializer):
                   'hardwareId',
                   'hardware',
                   'trigger',
-                  'status'
+                  'status',
+                  'orderIndex',
                   ] #'sensorId',
 
     def get_status(self, obj):

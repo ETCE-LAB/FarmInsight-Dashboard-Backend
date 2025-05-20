@@ -14,6 +14,9 @@ class LogMessage(models.Model):
     logLevel = models.CharField(max_length=24)
     message = models.TextField()
 
+    class Meta:
+        ordering = ['-createdAt']
+
     def __str__(self):
         if self.relatedResourceId is not None:
             sensor = Sensor.objects.filter(id=self.relatedResourceId).first()

@@ -23,6 +23,7 @@ class SensorSerializer(serializers.ModelSerializer):
             'intervalSeconds',
             'thresholds',
             'aggregate',
+            'orderIndex',
         ]
 
 

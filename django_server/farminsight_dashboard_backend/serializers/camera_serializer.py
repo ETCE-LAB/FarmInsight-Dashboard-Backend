@@ -18,7 +18,8 @@ class CameraSerializer(serializers.ModelSerializer):
             'isActive',
             'intervalSeconds',
             'livestreamUrl',
-            'snapshotUrl'
+            'snapshotUrl',
+            'orderIndex'
         ]
 
     def validate_intervalSeconds(self, value):
@@ -41,6 +42,7 @@ class CameraImageSerializer(serializers.ModelSerializer):
             'intervalSeconds',
             'livestreamUrl',
             'snapshotUrl',
-            'images'
+            'images',
+            'orderIndex'
         ]
 
