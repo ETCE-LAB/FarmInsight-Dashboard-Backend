@@ -39,10 +39,8 @@ class TimeOfDayTriggerHandler(BaseTriggerHandler):
                 serializer = ActionQueueSerializer(data={
                     "actionId": str(self.trigger.action.id),
                     "actionTriggerId": str(self.trigger.id),
-                    "value": str(self.trigger.actionValue),
+                    "value": self.trigger.actionValue,
                 }, partial=True)
                 if serializer.is_valid(raise_exception=True):
                     serializer.save()
-                    logger.info(f"Queued timeOfDay trigger {self.trigger.id}", extra={'resource_id': self.trigger.action.FPF_id})
-
-
+                    logger.info(f"Queued by timeOfDay trigger {self.trigger.description} with value {self.trigger.actionValue}", extra={'resource_id': self.trigger.id})

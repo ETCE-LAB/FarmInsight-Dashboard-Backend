@@ -5,7 +5,7 @@ from farminsight_dashboard_backend.utils import get_logger
 from farminsight_dashboard_backend.action_scripts.action_script_description import ActionScriptDescription, \
     FieldDescription, FieldType
 from farminsight_dashboard_backend.action_scripts.typed_action_script import TypedSensor
-from PyP100 import PyP100  # pip install git+https://github.com/almottier/TapoP100.git@main or via requirements.txt
+from PyP100 import PyP100
 
 logger = get_logger()
 
@@ -64,7 +64,7 @@ class TapoP100SmartPlugActionScriptWithDelay(TypedSensor):
         try:
 
             if action_value not in ['on', 'off']:
-                logger.error(f"Invalid action value: {action_value}. Expected 'on' or 'off'.")
+                logger.error(f"Invalid action value: {action_value}. Expected 'on' or 'off'.", extra={'resource_id': self.controllable_action.id})
                 return
 
             p100 = PyP100.P100(self.ip_address, self.tapo_account_email, self.tapo_account_password)
@@ -81,10 +81,10 @@ class TapoP100SmartPlugActionScriptWithDelay(TypedSensor):
                     p100.turnOnWithDelay(self.maximumDurationInSeconds)
 
         except Exception as e:
-            logger.error(f"Failed to control smart plug with value '{action_value}': {e}")
+            logger.error(f"Failed to control smart plug with value '{action_value}': {e}", extra={'resource_id': self.controllable_action.id})
 
     def run(self, action_value):
         try:
             asyncio.run(self.control_smart_plug(action_value=str(action_value).strip().lower()))
         except Exception as e:
-            logger.error(f"Exception during smart plug control: {e}")
+            logger.error(f"Exception during smart plug control: {e}", extra={'resource_id': self.controllable_action.id})

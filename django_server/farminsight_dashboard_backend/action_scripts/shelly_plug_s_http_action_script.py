@@ -51,7 +51,7 @@ class ShellyPlugHttpActionScript(TypedSensor):
             # Try parsing JSON input
 
             if action_value not in ["on", "off"]:
-                logger.error(f"Invalid action value: {action_value}. Expected 'on' or 'off'.")
+                logger.error(f"Invalid action value: {action_value}. Expected 'on' or 'off'.", extra={'resource_id': self.controllable_action.id})
                 return
 
             # Build URL
@@ -65,18 +65,18 @@ class ShellyPlugHttpActionScript(TypedSensor):
             response = requests.get(url, params=params, timeout=5)
 
             if response.status_code == 200:
-                logger.info(f"Successfully sent '{action_value}' command to Shelly plug with delay={self.maximumDurationInSeconds}s.")
+                logger.info(f"Successfully sent '{action_value}' command to Shelly plug with delay={self.maximumDurationInSeconds}s.", extra={'resource_id': self.controllable_action.id})
             else:
-                logger.error(f"Failed to control Shelly plug. Status code: {response.status_code}")
+                logger.error(f"Failed to control Shelly plug. Status code: {response.status_code}", extra={'resource_id': self.controllable_action.id})
 
         except Exception as e:
-            logger.error(f"Exception during Shelly smart plug control: {e}")
+            logger.error(f"Exception during Shelly smart plug control: {e}", extra={'resource_id': self.controllable_action.id})
 
     def run(self, action_value):
         try:
             asyncio.run(self.control_smart_plug(action_value=str(action_value).strip().lower()))
         except Exception as e:
-            logger.error(f"Exception during smart plug control: {e}")
+            logger.error(f"Exception during smart plug control: {e}", extra={'resource_id': self.controllable_action.id})
 
 
 class ShellyPlugMqttActionScript(TypedSensor):
@@ -155,27 +155,27 @@ class ShellyPlugMqttActionScript(TypedSensor):
             client.disconnect()
 
             if result.rc == mqtt.MQTT_ERR_SUCCESS:
-                logger.info(f"Successfully sent '{payload}' to topic '{topic}'")
+                logger.debug(f"Successfully sent '{payload}' to topic '{topic}'", extra={'resource_id': self.controllable_action.id})
             else:
-                logger.error(f"Failed to publish message. MQTT return code: {result.rc}")
+                logger.error(f"Failed to publish message. MQTT return code: {result.rc}", extra={'resource_id': self.controllable_action.id})
         except Exception as e:
-            logger.error(f"Exception during MQTT communication: {e}")
+            logger.error(f"Exception during MQTT communication: {e}", extra={'resource_id': self.controllable_action.id})
 
     def control_smart_plug(self, action_value):
         try:
 
             if action_value not in ["on", "off"]:
-                logger.error(f"Invalid action value: {action_value}. Expected 'on' or 'off'.")
+                logger.error(f"Invalid action value: {action_value}. Expected 'on' or 'off'.", extra={'resource_id': self.controllable_action.id})
                 return
 
             self.send_mqtt_command(self.mqtt_topic, action_value)
 
             if self.maximumDurationInSeconds > 0:
-                logger.info(f"Delaying {self.maximumDurationInSeconds} seconds before sending 'off' command.")
+                logger.info(f"Delaying {self.maximumDurationInSeconds} seconds before sending 'off' command.", extra={'resource_id': self.controllable_action.id})
                 asyncio.run(self.delayed_off(self.maximumDurationInSeconds))
 
         except Exception as e:
-            logger.error(f"Exception during Shelly smart plug control: {e}")
+            logger.error(f"Exception during Shelly smart plug control: {e}", extra={'resource_id': self.controllable_action.id})
 
     async def delayed_off(self, delay_seconds: int):
         await asyncio.sleep(delay_seconds)
@@ -185,4 +185,4 @@ class ShellyPlugMqttActionScript(TypedSensor):
         try:
             self.control_smart_plug(action_value=str(action_value).strip().lower())
         except Exception as e:
-            logger.error(f"Exception during smart plug control: {e}")
+            logger.error(f"Exception during smart plug control: {e}", extra={'resource_id': self.controllable_action.id})

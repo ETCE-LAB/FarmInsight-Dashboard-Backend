@@ -39,10 +39,10 @@ class ControllableActionView(views.APIView):
             return Response(status=status.HTTP_403_FORBIDDEN)
 
         # Update the camera
-        controllable_action = update_controllable_action(controllable_action_id, request.data)
+        serializer = update_controllable_action(controllable_action_id, request.data)
         logger.info("Controllable Action updated successfully", extra={'resource_id': controllable_action_id})
 
-        return Response(request.data, status=status.HTTP_200_OK)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
     def delete(self, request, controllable_action_id):
@@ -113,13 +113,10 @@ def execute_controllable_action(request, controllable_action_id, trigger_id):
     if trigger_id == "auto": # The user set the controllable action to automatic
         set_is_automated(controllable_action_id, True)
         # Check if the trigger for the affected action can trigger and process the queue
-
         # get trigger type and refresh the creation
         create_auto_triggered_actions_in_queue(controllable_action_id)
 
-
     else: # The user activated a manual trigger
-
         # Check if the action is already on manual mode and the current active action is the same one.
         # In this case, the action goes back to auto mode as the user deactivated the manual trigger.
         # This gives room for all other auto triggers related to the same hardware to execute.

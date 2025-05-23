@@ -8,7 +8,8 @@ from rest_framework.response import Response
 from farminsight_dashboard_backend.serializers import DateRangeSerializer
 from farminsight_dashboard_backend.services import valid_api_key_for_sensor, valid_api_key_for_fpf, write_log_message, \
     is_member, get_organization_by_fpf_id, get_organization_by_sensor_id, get_log_messages_by_date, \
-    get_log_messages_by_amount, is_system_admin, get_organization_by_camera_id, get_organization_by_id
+    get_log_messages_by_amount, is_system_admin, get_organization_by_camera_id, get_organization_by_id, \
+    get_organization_by_controllable_action_id
 
 
 @api_view(['POST'])
@@ -51,6 +52,9 @@ def get_log_messages(request, resource_type, resource_id):
             return Response(status=status.HTTP_403_FORBIDDEN)
     elif resource_type == 'org':
         if not is_member(request.user, get_organization_by_id(resource_id)):
+            return Response(status=status.HTTP_403_FORBIDDEN)
+    elif resource_type == 'action':
+        if not is_member(request.user ,get_organization_by_controllable_action_id(resource_id)):
             return Response(status=status.HTTP_403_FORBIDDEN)
     elif resource_type == 'admin':
         if not is_system_admin(request.user):
