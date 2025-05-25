@@ -22,3 +22,8 @@ class ActionTriggerSerializer(serializers.ModelSerializer):
                   'description',
                   'actionId'
                   ]
+
+class ActionTriggerTechnicalKeySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ActionTrigger
+        fields = ['description', 'actionValueType', 'actionValue']

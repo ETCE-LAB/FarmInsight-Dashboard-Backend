@@ -44,7 +44,7 @@ from farminsight_dashboard_backend.views import (
     post_threshold,
     ThresholdEditViews,
     get_available_action_script_types,
-    get_direct_ping
+    get_direct_ping, get_action_queue
 )
 from farminsight_dashboard_backend.views.action_trigger import ActionTriggerView
 
@@ -100,6 +100,8 @@ urlpatterns = [
 
     path('action-trigger', post_action_trigger,name='post_action_trigger'),
     path('action-trigger/<str:actionTrigger_id>', ActionTriggerView.as_view(), name='actionTrigger_operations'),
+
+    path('action-queue/<str:fpf_id>', get_action_queue, name='get_action_queue'),
 
     path('locations', post_location, name='post_location'),
     path('locations/<str:location_id>', LocationView.as_view(), name='location_operations'),

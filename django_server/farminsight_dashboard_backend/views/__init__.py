@@ -12,7 +12,7 @@ from .harvest_views import post_harvest, HarvestEditViews, get_harvests
 from .log_views import post_log_message, get_log_messages
 from .location_views import LocationView, get_location, post_location
 from .controllable_views import post_controllable_action, ControllableActionView, execute_controllable_action
-from .action_script_views import typed_action_script_factory, get_available_action_script_types
+from .action_script_views import get_available_action_script_types, get_action_queue
 from .hardware_views import get_fpf_hardware
 from .action_trigger import post_action_trigger
 from .threshold_views import post_threshold, ThresholdEditViews

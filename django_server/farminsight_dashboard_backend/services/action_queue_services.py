@@ -2,7 +2,8 @@ from datetime import timedelta
 
 from django.utils.timezone import now
 
-from farminsight_dashboard_backend.models import ActionQueue, ControllableAction
+from farminsight_dashboard_backend.models import ActionQueue
+from farminsight_dashboard_backend.serializers import ActionQueueSerializerDescriptive
 from farminsight_dashboard_backend.services import get_controllable_action_by_id
 
 from farminsight_dashboard_backend.services.action_trigger_services import get_all_active_auto_triggers
@@ -184,3 +185,12 @@ def is_new_action(action_id, trigger_id):
     if active_state is None or active_state.trigger.id != trigger_id:
         return True
     return False
+
+
+def get_action_queue(fpf_id: str) -> ActionQueueSerializerDescriptive:
+    if fpf_id == 'None':
+        queue = ActionQueue.objects.all()
+    else:
+        queue = ActionQueue.objects.filter(action__FPF_id=fpf_id).all()
+
+    return ActionQueueSerializerDescriptive(queue, many=True)

@@ -1,6 +1,6 @@
 import threading
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from django.utils import timezone
@@ -8,7 +8,7 @@ from django.utils import timezone
 from django_server import settings
 
 from farminsight_dashboard_backend.utils import get_logger
-from farminsight_dashboard_backend.models import LogMessage
+from farminsight_dashboard_backend.models import LogMessage, ActionQueue
 
 
 class DataRetentionScheduler:
@@ -54,8 +54,12 @@ class DataRetentionScheduler:
 def cleanup_task(logger):
     logger.debug("Cleanup task triggered")
     try:
-        dt = datetime.now() - timedelta(days=settings.DB_LOG_RETENTION_DAYS)
+        dt = timezone.now() - timedelta(days=settings.DB_LOG_RETENTION_DAYS)
         LogMessage.objects.filter(createdAt__lt=dt).delete()
+
+        dt = timezone.now() - timedelta(days=settings.DB_QUEUE_RETENTION_DAYS)
+        ActionQueue.objects.filter(createdAt__lt=dt).delete()
+
         logger.debug("Cleanup task completed")
     except Exception as e:
         logger.error(f"Error during cleanup task: {e}")

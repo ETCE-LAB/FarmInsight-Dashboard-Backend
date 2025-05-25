@@ -48,8 +48,6 @@ class ShellyPlugHttpActionScript(TypedSensor):
         - JSON string: {"value": "on", "delay": 1800}
         """
         try:
-            # Try parsing JSON input
-
             if action_value not in ["on", "off"]:
                 logger.error(f"Invalid action value: {action_value}. Expected 'on' or 'off'.", extra={'resource_id': self.controllable_action.id})
                 return

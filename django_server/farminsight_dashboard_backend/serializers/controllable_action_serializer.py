@@ -4,7 +4,6 @@ from farminsight_dashboard_backend.serializers.hardware_serializer import Hardwa
 from farminsight_dashboard_backend.serializers.action_trigger_serializer import ActionTriggerSerializer
 
 
-
 class ControllableActionSerializer(serializers.ModelSerializer):
     """
     Provides data to the frontend rendering
@@ -63,3 +62,16 @@ class ControllableActionSerializer(serializers.ModelSerializer):
             return description.name
         except Exception as e:
             return f"Unknown ({str(e)})"
+
+
+class ControllableActionTechnicalKeySerializer(serializers.ModelSerializer):
+    hardware = HardwareSerializer(read_only=True)
+
+    class Meta:
+        model = ControllableAction
+        fields = [
+            'name',
+            'isActive',
+            'isAutomated',
+            'hardware',
+        ]

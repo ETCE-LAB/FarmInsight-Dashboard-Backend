@@ -37,9 +37,9 @@ def post_action_trigger(request):
 
     return Response(serialized.data, status=status.HTTP_201_CREATED)
 
+
 class ActionTriggerView(APIView):
     permission_classes = [IsAuthenticated]
-
 
     def put(self, request, actionTrigger_id):
         """
