@@ -24,8 +24,8 @@ class ActionQueueSerializer(serializers.ModelSerializer):
 # This serializer contains more of the data from trigger and action to show in the frontend
 class ActionQueueSerializerDescriptive(serializers.ModelSerializer):
     controllableAction = ControllableActionTechnicalKeySerializer(source='action')
-    trigger = ActionTriggerTechnicalKeySerializer(source='trigger')
+    actionTrigger = ActionTriggerTechnicalKeySerializer(source='trigger')
 
     class Meta:
         model = ActionQueue
-        fields = '__all__'
+        fields = ['id', 'createdAt', 'startedAt', 'endedAt', 'value', 'controllableAction', 'actionTrigger']

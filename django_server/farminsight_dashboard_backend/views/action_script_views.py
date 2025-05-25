@@ -5,7 +5,8 @@ from rest_framework.response import Response
 
 from farminsight_dashboard_backend.action_scripts.typed_action_script_factory import TypedActionScriptFactory
 from farminsight_dashboard_backend.serializers import ActionScriptDescriptionSerializer
-from farminsight_dashboard_backend.services import is_member, get_organization_by_fpf_id, is_system_admin
+from farminsight_dashboard_backend.services import is_member, get_organization_by_fpf_id, is_system_admin, \
+    get_action_queue_by_fpf_id
 from farminsight_dashboard_backend.utils import is_valid_uuid
 
 
@@ -30,5 +31,5 @@ def get_action_queue(request, fpf_id):
         if not is_system_admin(request.user):
             return Response(status=status.HTTP_403_FORBIDDEN)
 
-    serializer = get_action_queue(fpf_id)
+    serializer = get_action_queue_by_fpf_id(fpf_id)
     return Response(serializer.data, status=status.HTTP_200_OK)
