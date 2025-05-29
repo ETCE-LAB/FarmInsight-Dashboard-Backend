@@ -17,3 +17,4 @@ from .hardware_views import get_fpf_hardware
 from .action_trigger import post_action_trigger
 from .threshold_views import post_threshold, ThresholdEditViews
 from .utility_views import get_direct_ping
+from .admin_views import get_reset_userprofile_password

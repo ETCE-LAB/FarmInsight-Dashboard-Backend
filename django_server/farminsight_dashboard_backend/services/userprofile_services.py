@@ -1,3 +1,5 @@
+import secrets
+import string
 from django.db.models import QuerySet, Q
 
 from farminsight_dashboard_backend.exceptions import NotFoundException
@@ -22,3 +24,16 @@ def update_userprofile_name(userprofile_id, new_name):
         return user_profile
     except Userprofile.DoesNotExist:
         raise NotFoundException(f'Userprofile {userprofile_id} not found.')
+
+
+def set_password_to_random_password(userprofile_id: str) -> string:
+    """
+    This is a (hopefully temporary) measure for a sysadmin to forcefully change a users password should they forget it
+    and manually (safely) hand it over to said user.
+    This should be removed as soon as we can send out email for a "forgot password" feature
+    """
+    user_profile = Userprofile.objects.get(id=userprofile_id)
+    alphabet = string.ascii_letters + string.digits
+    password = ''.join(secrets.choice(alphabet) for i in range(10))
+    user_profile.set_password(password)
+    return password
