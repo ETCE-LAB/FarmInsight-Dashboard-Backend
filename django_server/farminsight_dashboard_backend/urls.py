@@ -45,7 +45,7 @@ from farminsight_dashboard_backend.views import (
     ThresholdEditViews,
     get_available_action_script_types,
     get_direct_ping, get_action_queue,
-    post_log_message_insecure, get_reset_userprofile_password
+    post_log_message_insecure, get_reset_userprofile_password, get_all_userprofiles
 )
 from farminsight_dashboard_backend.views.action_trigger import ActionTriggerView
 
@@ -118,4 +118,5 @@ urlpatterns = [
     path('util/direct-ping/<str:resource_type>/<str:resource_id>', get_direct_ping, name='get_direct_ping'),
 
     path('admin/password-reset/<str:userprofile_id>', get_reset_userprofile_password, name='get_reset_userprofile_password'),
+    path('admin/userprofiles-all', get_all_userprofiles, name='get_all_userprofiles'),
 ]

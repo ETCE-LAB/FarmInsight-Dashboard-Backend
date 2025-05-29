@@ -4,6 +4,7 @@ from django.db.models import QuerySet, Q
 
 from farminsight_dashboard_backend.exceptions import NotFoundException
 from farminsight_dashboard_backend.models import Userprofile
+from farminsight_dashboard_backend.serializers import UserprofileSerializer
 
 
 def search_userprofiles(search_string) -> QuerySet[Userprofile]:
@@ -37,3 +38,7 @@ def set_password_to_random_password(userprofile_id: str) -> string:
     password = ''.join(secrets.choice(alphabet) for i in range(10))
     user_profile.set_password(password)
     return password
+
+
+def all_userprofiles() -> UserprofileSerializer:
+    return UserprofileSerializer(Userprofile.objects.all(), many=True)
