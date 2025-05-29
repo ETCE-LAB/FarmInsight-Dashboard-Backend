@@ -79,3 +79,12 @@ def get_log_messages(request, resource_type, resource_id):
         return Response(status=status.HTTP_404_NOT_FOUND)
 
     return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+def post_log_message_insecure(request, resource_id, message):
+    '''
+    This is meant only temporary to help figure out issues with our arduinos network connection
+    '''
+    write_log_message('INFO', message, resource_id, None)
+    return Response({"message": "Log written successfully"}, status=status.HTTP_201_CREATED)

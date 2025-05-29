@@ -44,7 +44,8 @@ from farminsight_dashboard_backend.views import (
     post_threshold,
     ThresholdEditViews,
     get_available_action_script_types,
-    get_direct_ping, get_action_queue
+    get_direct_ping, get_action_queue,
+    post_log_message_insecure
 )
 from farminsight_dashboard_backend.views.action_trigger import ActionTriggerView
 
@@ -92,6 +93,7 @@ urlpatterns = [
     path('change-password', change_password_view, name='change_password_view'),
     path('log_messages', post_log_message, name='post_log_message'),
     path('log_messages/<str:resource_type>/<str:resource_id>', get_log_messages, name='get_log_messages'),
+    path('log-messages-insecure/<str:resource_id>/<str:message>', post_log_message_insecure, name='post_log_message_insecure'),
 
     path('controllable-actions', post_controllable_action, name='post_controllable_action'),
     path('controllable-actions/<str:controllable_action_id>', ControllableActionView.as_view(), name='controllable_action_operations'),
