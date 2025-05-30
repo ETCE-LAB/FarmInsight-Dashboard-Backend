@@ -2,7 +2,8 @@ from datetime import timedelta
 
 from django.utils.timezone import now
 
-from farminsight_dashboard_backend.models import ActionQueue, ControllableAction
+from farminsight_dashboard_backend.models import ActionQueue
+from farminsight_dashboard_backend.serializers import ActionQueueSerializerDescriptive
 from farminsight_dashboard_backend.services import get_controllable_action_by_id
 
 from farminsight_dashboard_backend.services.action_trigger_services import get_all_active_auto_triggers
@@ -88,13 +89,13 @@ def process_action_queue():
 
         # Don't execute actions for inactive controllable action
         if not action.isActive:
-            logger.info(f"Skipping action {action.id} because it is not active.")
+            logger.debug(f"Skipping action because it is not active.", extra={'resource_id':action.id})
             continue
 
         # Don't execute auto actions if manual action is active, cancel the auto action in the queue
         # New auto action would need to be triggered again
         if trigger.type != 'manual' and not action.isAutomated:
-            logger.info(f"Cancel auto action {action.id} because action is set to manual.")
+            logger.info(f"Cancel execution, because action is set to manual.", extra={'resource_id':action.id})
             queue_entry.endedAt = now()
             queue_entry.save()
             continue
@@ -107,8 +108,7 @@ def process_action_queue():
                 startedAt__isnull=False,
             ).order_by('-endedAt').first()
             if last_action and last_action.endedAt > now():
-                logger.info(
-                    f"Skipping action {action.id} because hardware {hardware} is busy until {last_action.endedAt}")
+                logger.info(f"Skipping execution, hardware {hardware} is busy until {last_action.endedAt}", extra={'resource_id':action.id})
                 continue
 
             # Don't execute if other actions with the same hardware are on Manual mode while this one is on auto.
@@ -124,15 +124,12 @@ def process_action_queue():
             # No other active manual action for the same hardware when the action is in manual mode
             # when this action is in auto mode
             if manual_action and not manual_action.action.isAutomated and action.isAutomated:
-                logger.info(
-                    f"Skipping action {action.id} because hardware {hardware} has another action in MANUAL mode, which is blocking this auto trigger.")
+                logger.info(f"Skipping execution, hardware {hardware} has another action in MANUAL mode, which is blocking this auto trigger.", extra={'resource_id':action.id})
                 continue
 
 
         # Execute the action
         try:
-
-            logger.info(f"Executing action {action.id} on hardware {hardware}", extra={'resource_id': action.FPF_id })
             queue_entry.startedAt = now()
 
             script = typed_action_script_factory.get_typed_action_script_class(str(action.actionClassId))
@@ -142,10 +139,9 @@ def process_action_queue():
             # Set endedAt with the given maximum duration of the action
             queue_entry.endedAt = now() + timedelta(seconds=action.maximumDurationSeconds or 0)
             queue_entry.save()
-            logger.info(f"Finished executing action {action.id}", extra={'resource_id': action.FPF_id })
-
+            logger.info(f"Executed successfully", extra={'resource_id': action.id})
         except Exception as e:
-            logger.error(f"Failed to execute action {action.id}: {str(e)}", extra={'resource_id': action.FPF_id })
+            logger.error(f"Failed to execute: {e}", extra={'resource_id': action.id})
 
 def create_auto_triggered_actions_in_queue(action_id=None):
     try:
@@ -158,7 +154,7 @@ def create_auto_triggered_actions_in_queue(action_id=None):
         process_action_queue()
 
     except Exception as e:
-        logger.error(f"Failed to add action {action_id}: {str(e)}")
+        logger.error(f"Failed to add: {e}", extra={'resource_id': action_id})
 
 
 def get_active_state(controllable_action_id: str):
@@ -189,3 +185,12 @@ def is_new_action(action_id, trigger_id):
     if active_state is None or active_state.trigger.id != trigger_id:
         return True
     return False
+
+
+def get_action_queue_by_fpf_id(fpf_id: str) -> ActionQueueSerializerDescriptive:
+    if fpf_id == 'None':
+        queue = ActionQueue.objects.all()
+    else:
+        queue = ActionQueue.objects.filter(action__FPF_id=fpf_id).all()
+
+    return ActionQueueSerializerDescriptive(queue, many=True)

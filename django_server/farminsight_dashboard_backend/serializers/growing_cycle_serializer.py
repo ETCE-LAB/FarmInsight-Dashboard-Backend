@@ -13,7 +13,7 @@ class GrowingCycleSerializer(serializers.ModelSerializer):
     class Meta:
         model = GrowingCycle
         read_only_fields = ('id',)
-        fields = ['id', 'startDate', 'endDate', 'plants', 'note', 'fpfId', 'harvests']
+        fields = ['id', 'startDate', 'endDate', 'plants', 'note', 'fpfId', 'harvests', 'orderIndex',]
 
     def validate(self, data):
         start_date = data.get('startDate')

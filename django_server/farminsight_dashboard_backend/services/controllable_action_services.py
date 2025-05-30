@@ -1,8 +1,8 @@
-
 from farminsight_dashboard_backend.exceptions import NotFoundException
 from farminsight_dashboard_backend.models import ControllableAction, FPF
 from farminsight_dashboard_backend.serializers import ControllableActionSerializer
 from django.shortcuts import get_object_or_404
+
 
 def get_active_controllable_action_by_id(controllable_action_id:str) -> ControllableAction:
     """
@@ -14,10 +14,10 @@ def get_active_controllable_action_by_id(controllable_action_id:str) -> Controll
     try:
         controllable_action =  ControllableAction.objects.get(id=controllable_action_id)
         if not controllable_action.isActive:
-            raise NotFoundException(f'Camera with id: {controllable_action_id} is not active.')
+            raise NotFoundException(f'Controllable Action is not active.')
         return controllable_action
     except ControllableAction.DoesNotExist:
-        raise NotFoundException(f'Camera with id: {controllable_action_id} was not found.')
+        raise NotFoundException(f'Controllable Action with id: {controllable_action_id} was not found.')
 
 def get_controllable_action_by_id(controllable_action_id:str) -> ControllableAction:
     """
@@ -48,7 +48,7 @@ def create_controllable_action(fpf_id:str, controllable_action_data:dict) -> Con
 
     return serializer.save(FPF=fpf)
 
-def update_controllable_action(controllable_action_id:str, controllable_action_data:any) -> ControllableAction:
+def update_controllable_action(controllable_action_id:str, controllable_action_data:any) -> ControllableActionSerializer:
     """
     Update controllable_action by id and controllable_action data
     :param controllable_action_id: controllable_action to update
@@ -71,7 +71,6 @@ def delete_controllable_action(controllable_action: ControllableAction):
     controllable_action.delete()
 
 def set_is_automated(controllable_action_id:str, is_automated:bool) -> ControllableAction:
-
     controllable_action = get_object_or_404(ControllableAction, id=controllable_action_id)
 
     controllable_action.isAutomated = is_automated

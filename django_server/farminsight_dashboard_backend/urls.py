@@ -44,7 +44,8 @@ from farminsight_dashboard_backend.views import (
     post_threshold,
     ThresholdEditViews,
     get_available_action_script_types,
-    get_direct_ping
+    get_direct_ping, get_action_queue,
+    post_log_message_insecure, get_reset_userprofile_password, get_all_userprofiles
 )
 from farminsight_dashboard_backend.views.action_trigger import ActionTriggerView
 
@@ -92,6 +93,7 @@ urlpatterns = [
     path('change-password', change_password_view, name='change_password_view'),
     path('log_messages', post_log_message, name='post_log_message'),
     path('log_messages/<str:resource_type>/<str:resource_id>', get_log_messages, name='get_log_messages'),
+    path('log-messages-insecure/<str:resource_id>/<str:message>', post_log_message_insecure, name='post_log_message_insecure'),
 
     path('controllable-actions', post_controllable_action, name='post_controllable_action'),
     path('controllable-actions/<str:controllable_action_id>', ControllableActionView.as_view(), name='controllable_action_operations'),
@@ -100,6 +102,8 @@ urlpatterns = [
 
     path('action-trigger', post_action_trigger,name='post_action_trigger'),
     path('action-trigger/<str:actionTrigger_id>', ActionTriggerView.as_view(), name='actionTrigger_operations'),
+
+    path('action-queue/<str:fpf_id>', get_action_queue, name='get_action_queue'),
 
     path('locations', post_location, name='post_location'),
     path('locations/<str:location_id>', LocationView.as_view(), name='location_operations'),
@@ -112,4 +116,7 @@ urlpatterns = [
     path('thresholds/<str:threshold_id>', ThresholdEditViews.as_view(), name='threshold_edits'),
 
     path('util/direct-ping/<str:resource_type>/<str:resource_id>', get_direct_ping, name='get_direct_ping'),
+
+    path('admin/password-reset/<str:userprofile_id>', get_reset_userprofile_password, name='get_reset_userprofile_password'),
+    path('admin/userprofiles-all', get_all_userprofiles, name='get_all_userprofiles'),
 ]

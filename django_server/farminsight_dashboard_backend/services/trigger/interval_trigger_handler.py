@@ -49,11 +49,8 @@ def enqueue_interval_action(trigger_id):
     trigger = get_action_trigger(trigger_id)
 
     if trigger and trigger.action.isAutomated:
-
-
-        # Only enqueue if the action is new (there must not be a created action in the queue, which is not not ended yet.)
+        # Only enqueue if the action is new (there must not be a created action by the same trigger in the queue, which has not ended yet.)
         if not is_already_enqueued(trigger_id):
-        
             serializer = ActionQueueSerializer(data={
                 "actionId": str(trigger.action.id),
                 "actionTriggerId": str(trigger.id),
@@ -62,6 +59,6 @@ def enqueue_interval_action(trigger_id):
 
             if serializer.is_valid(raise_exception=True):
                 serializer.save()
-                logger.info(f"[IntervalTrigger] Queued action {trigger.action.id}", extra={'resource_id': trigger.action.FPF_id})
+                logger.info(f"Queued by interval trigger {trigger.description} with value {trigger.actionValue}", extra={'resource_id': trigger.action.id})
 
             process_action_queue()

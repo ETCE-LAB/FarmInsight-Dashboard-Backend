@@ -8,7 +8,6 @@ from farminsight_dashboard_backend.serializers.sensor_serializer import SensorDa
 from farminsight_dashboard_backend.serializers.location_serializer import LocationSerializer
 
 
-
 class FPFSerializer(serializers.ModelSerializer):
     organizationId = serializers.PrimaryKeyRelatedField(
         source='organization',  # Maps this field to the 'organization' foreign key in the model
@@ -30,6 +29,7 @@ class FPFSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({"name":"This name is already taken for this organization"})
         return data
 
+
 class FPFFunctionalSerializer(serializers.ModelSerializer):
     locationId = serializers.PrimaryKeyRelatedField(
         source='location',  # Maps to the `location` field in the model
@@ -38,7 +38,8 @@ class FPFFunctionalSerializer(serializers.ModelSerializer):
     class Meta:
         model = FPF
         read_only_fields = ('id',)
-        fields = ('id', 'name', 'isPublic', 'sensorServiceIp', 'locationId')
+        fields = ('id', 'name', 'isPublic', 'sensorServiceIp', 'locationId', 'orderIndex')
+
 
 class FPFTechnicalKeySerializer(serializers.ModelSerializer):
     class Meta:
@@ -64,7 +65,8 @@ class FPFFullSerializer(serializers.ModelSerializer):
             'Cameras',
             'GrowingCycles',
             'Location',
-            'ControllableAction'
+            'ControllableAction',
+            'orderIndex',
         ]
 
 

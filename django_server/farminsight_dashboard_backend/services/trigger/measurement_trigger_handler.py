@@ -64,11 +64,11 @@ def create_measurement_auto_triggered_actions_in_queue(sensor_id, measurement_va
                     serializer = ActionQueueSerializer(data={
                         "actionId": str(trigger.action.id),
                         "actionTriggerId": str(trigger.id),
-                        "value": str(measurement_value)
+                        "value": trigger.actionValue
                     }, partial=True)
                     if serializer.is_valid(raise_exception=True):
                         serializer.save()
-                        logger.info(f"Queued auto sensor measurement trigger {trigger.id} for action {trigger.action.id}", extra={'resource_id': trigger.action.FPF_id})
+                        logger.info(f"Queued by measurement trigger {trigger.description} from value {measurement_value:.2f}", extra={'resource_id': trigger.action.id})
 
         process_action_queue()
 
