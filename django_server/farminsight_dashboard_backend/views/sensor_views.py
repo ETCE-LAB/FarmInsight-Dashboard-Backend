@@ -7,7 +7,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from farminsight_dashboard_backend.serializers import SensorSerializer, SensorDBSchemaSerializer
 from farminsight_dashboard_backend.services import is_member, get_organization_by_sensor_id, \
-    get_organization_by_fpf_id, get_sensor_hardware_configuration, get_sensor_types, put_update_sensor, post_sensor
+    get_organization_by_fpf_id, get_sensor_hardware_configuration, get_sensor_types, put_update_sensor, post_sensor, \
+    is_admin, set_sensor_order
 from farminsight_dashboard_backend.services.sensor_services import get_sensor, create_sensor, update_sensor
 from farminsight_dashboard_backend.utils import get_logger
 
@@ -129,3 +130,14 @@ def get_fpf_sensor_types(request, fpf_id):
 
     sensor_types = get_sensor_types(fpf_id)
     return Response(sensor_types, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def post_sensor_order(request, fpf_id):
+    if not is_admin(request.user, get_organization_by_fpf_id(fpf_id)):
+        return Response(status=status.HTTP_403_FORBIDDEN)
+
+    set_sensor_order(request.data)
+
+    return Response(status=status.HTTP_200_OK)

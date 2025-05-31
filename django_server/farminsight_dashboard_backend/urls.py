@@ -45,7 +45,7 @@ from farminsight_dashboard_backend.views import (
     ThresholdEditViews,
     get_available_action_script_types,
     get_direct_ping, get_action_queue,
-    post_log_message_insecure, get_reset_userprofile_password, get_all_userprofiles
+    post_log_message_insecure, get_reset_userprofile_password, get_all_userprofiles, post_sensor_order
 )
 from farminsight_dashboard_backend.views.action_trigger import ActionTriggerView
 
@@ -69,6 +69,7 @@ urlpatterns = [
     path('sensors', SensorView.as_view(), name='post_sensor'),
     path('sensors/<str:sensor_id>', SensorView.as_view(), name='sensor_operations'),
     path('sensors/types/available/<str:fpf_id>', get_fpf_sensor_types, name='get_fpf_sensor_types'),
+    path('sensors/sort-order/<str:fpf_id>', post_sensor_order, name='post_sensor_order'),
 
     path('measurements/<str:sensor_id>', MeasurementView.as_view(), name='sensor-measurements'),
 
