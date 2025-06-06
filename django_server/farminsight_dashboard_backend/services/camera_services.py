@@ -103,3 +103,11 @@ def delete_camera(camera: Camera):
 
 def get_active_camera_count():
     return len(Camera.objects.filter(isActive=True).all())
+
+
+def set_camera_order(ids: list[str]):
+    items = Camera.objects.filter(id__in=ids)
+    for item in items:
+        item.orderIndex = ids.index(str(item.id))
+
+    Camera.objects.bulk_update(items, ['orderIndex'])

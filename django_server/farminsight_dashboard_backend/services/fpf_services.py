@@ -95,3 +95,10 @@ def get_visible_fpf_preview(user: Userprofile=None) -> FPFPreviewSerializer:
     serializer = FPFPreviewSerializer(fpfs, many=True)
     return serializer
 
+
+def set_fpf_order(ids: list[str]):
+    items = FPF.objects.filter(id__in=ids)
+    for item in items:
+        item.orderIndex = ids.index(str(item.id))
+
+    FPF.objects.bulk_update(items, ['orderIndex'])

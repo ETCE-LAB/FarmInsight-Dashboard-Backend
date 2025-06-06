@@ -26,3 +26,10 @@ def remove_growing_cycle(growing_cycle_id:str, deleting_user: Userprofile):
 def get_growing_cycles_by_fpf_id(fpf_id: str) -> GrowingCycleSerializer:
     fpf = get_fpf_by_id(fpf_id)
     return GrowingCycleSerializer(fpf.growingCycles, many=True)
+
+def set_growing_cycle_order(ids: list[str]):
+    items = GrowingCycle.objects.filter(id__in=ids)
+    for item in items:
+        item.orderIndex = ids.index(str(item.id))
+
+    GrowingCycle.objects.bulk_update(items, ['orderIndex'])

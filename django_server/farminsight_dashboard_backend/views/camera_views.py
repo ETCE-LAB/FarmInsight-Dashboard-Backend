@@ -9,7 +9,7 @@ from oauth2_provider.models import AccessToken
 from farminsight_dashboard_backend.serializers.camera_serializer import CameraSerializer
 from farminsight_dashboard_backend.services import get_active_camera_by_id, update_camera, delete_camera, \
     get_fpf_by_id, create_camera, is_member, get_camera_by_id, get_organization_by_camera_id, \
-    get_organization_by_fpf_id, is_admin
+    get_organization_by_fpf_id, is_admin, set_camera_order
 from farminsight_dashboard_backend.services.fpf_streaming_services import rtsp_stream, http_stream
 from farminsight_dashboard_backend.utils import get_logger
 
@@ -156,3 +156,14 @@ def get_camera_livestream(request, camera_id):
             {"error": f"Unsupported protocol: {scheme}"},
             status=400
         )
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def post_camera_order(request, fpf_id):
+    if not is_admin(request.user, get_organization_by_fpf_id(fpf_id)):
+        return Response(status=status.HTTP_403_FORBIDDEN)
+
+    set_camera_order(request.data)
+
+    return Response(status=status.HTTP_200_OK)
