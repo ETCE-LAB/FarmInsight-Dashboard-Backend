@@ -1,5 +1,3 @@
-from functools import partial
-
 from rest_framework import views
 from rest_framework.response import Response
 from rest_framework import status
@@ -16,9 +14,7 @@ from farminsight_dashboard_backend.services import get_fpf_by_id, \
     get_organization_by_fpf_id, is_admin, create_controllable_action, delete_controllable_action, \
     get_controllable_action_by_id, get_organization_by_controllable_action_id, \
     set_is_automated, create_auto_triggered_actions_in_queue, is_member, \
-    update_controllable_action, create_hardware, get_action_trigger
-
-
+    update_controllable_action, create_hardware, set_controllable_action_order
 
 logger = get_logger()
 
@@ -137,5 +133,16 @@ def execute_controllable_action(request, controllable_action_id, trigger_id):
         else:
             set_is_automated(controllable_action_id, False)
             create_manual_triggered_action_in_queue(controllable_action_id, trigger_id)
+
+    return Response(status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def post_controllable_action_order(request, fpf_id):
+    if not is_admin(request.user, get_organization_by_fpf_id(fpf_id)):
+        return Response(status=status.HTTP_403_FORBIDDEN)
+
+    set_controllable_action_order(request.data)
 
     return Response(status=status.HTTP_200_OK)

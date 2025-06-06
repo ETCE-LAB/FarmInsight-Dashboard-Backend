@@ -57,3 +57,11 @@ def create_sensor(sensor):
         new_sensor.save()
 
     return serializer.data
+
+
+def set_sensor_order(ids: list[str]):
+    sensors = Sensor.objects.filter(id__in=ids)
+    for sensor in sensors:
+        sensor.orderIndex = ids.index(str(sensor.id))
+
+    Sensor.objects.bulk_update(sensors, ['orderIndex'])

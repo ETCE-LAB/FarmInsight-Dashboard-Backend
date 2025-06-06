@@ -56,9 +56,11 @@ def get_organization_by_harvest_id(harvest_id) -> Organization:
     org = Harvest.objects.select_related('growingCycle__FPF__organization').get(id=harvest_id).growingCycle.FPF.organization
     return org
 
+
 def get_organization_by_controllable_action_id(controllable_action_id) -> Organization:
     org = ControllableAction.objects.select_related('FPF__organization').get(id=controllable_action_id).FPF.organization
     return org
+
 
 def update_organization(org_id, data) -> OrganizationSerializer:
     """
@@ -72,3 +74,11 @@ def update_organization(org_id, data) -> OrganizationSerializer:
     if serializer.is_valid(raise_exception=True):
         serializer.save()
         return serializer
+
+
+def set_organization_order(ids: list[str]):
+    items = Organization.objects.filter(id__in=ids)
+    for item in items:
+        item.orderIndex = ids.index(str(item.id))
+
+    Organization.objects.bulk_update(items, ['orderIndex'])

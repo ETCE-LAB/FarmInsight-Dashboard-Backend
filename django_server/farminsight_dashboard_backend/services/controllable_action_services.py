@@ -19,6 +19,7 @@ def get_active_controllable_action_by_id(controllable_action_id:str) -> Controll
     except ControllableAction.DoesNotExist:
         raise NotFoundException(f'Controllable Action with id: {controllable_action_id} was not found.')
 
+
 def get_controllable_action_by_id(controllable_action_id:str) -> ControllableAction:
     """
     Get controllable_action by id
@@ -30,6 +31,7 @@ def get_controllable_action_by_id(controllable_action_id:str) -> ControllableAct
         return ControllableAction.objects.get(id=controllable_action_id)
     except ControllableAction.DoesNotExist:
         raise NotFoundException(f'Controllable action with id: {controllable_action_id} was not found.')
+
 
 def create_controllable_action(fpf_id:str, controllable_action_data:dict) -> ControllableAction:
     """
@@ -47,6 +49,7 @@ def create_controllable_action(fpf_id:str, controllable_action_data:dict) -> Con
     serializer.is_valid(raise_exception=True)
 
     return serializer.save(FPF=fpf)
+
 
 def update_controllable_action(controllable_action_id:str, controllable_action_data:any) -> ControllableActionSerializer:
     """
@@ -70,6 +73,7 @@ def delete_controllable_action(controllable_action: ControllableAction):
     """
     controllable_action.delete()
 
+
 def set_is_automated(controllable_action_id:str, is_automated:bool) -> ControllableAction:
     controllable_action = get_object_or_404(ControllableAction, id=controllable_action_id)
 
@@ -77,3 +81,11 @@ def set_is_automated(controllable_action_id:str, is_automated:bool) -> Controlla
     controllable_action.save()
 
     return controllable_action
+
+
+def set_controllable_action_order(ids: list[str]):
+    items = ControllableAction.objects.filter(id__in=ids)
+    for item in items:
+        item.orderIndex = ids.index(str(item.id))
+
+    ControllableAction.objects.bulk_update(items, ['orderIndex'])
