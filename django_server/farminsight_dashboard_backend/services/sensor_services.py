@@ -1,11 +1,14 @@
+from channels.db import database_sync_to_async
+
 from farminsight_dashboard_backend.exceptions import NotFoundException
 from farminsight_dashboard_backend.models import Sensor
 from farminsight_dashboard_backend.serializers.sensor_serializer import SensorSerializer, SensorDBSchemaSerializer
 
 
-async def sensor_exists_async(sensor_id) -> bool:
+@database_sync_to_async
+def sensor_exists(sensor_id) -> bool:
     try:
-        await Sensor.objects.aget(id=sensor_id)
+        Sensor.objects.get(id=sensor_id)
         return True
     except Sensor.DoesNotExist:
         return False
