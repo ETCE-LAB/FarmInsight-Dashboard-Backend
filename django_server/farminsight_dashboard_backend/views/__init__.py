@@ -13,7 +13,7 @@ from .log_views import post_log_message, get_log_messages, post_log_message_inse
 from .location_views import LocationView, get_location, post_location
 from .controllable_views import post_controllable_action, ControllableActionView, execute_controllable_action, post_controllable_action_order
 from .action_script_views import get_available_action_script_types, get_action_queue
-from .hardware_views import get_fpf_hardware, post_hardware_order
+from .hardware_views import get_fpf_hardware, post_hardware_order, HardwareEditViews
 from .action_trigger import post_action_trigger
 from .threshold_views import post_threshold, ThresholdEditViews
 from .utility_views import get_direct_ping

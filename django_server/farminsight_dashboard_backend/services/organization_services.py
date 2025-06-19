@@ -1,5 +1,5 @@
 from farminsight_dashboard_backend.models import Organization, GrowingCycle, Harvest, Threshold, ControllableAction, \
-    ActionTrigger
+    ActionTrigger, Hardware
 from farminsight_dashboard_backend.models import Membership, MembershipRole, FPF, Sensor, Camera
 from farminsight_dashboard_backend.serializers import OrganizationSerializer
 
@@ -59,6 +59,11 @@ def get_organization_by_harvest_id(harvest_id) -> Organization:
 
 def get_organization_by_controllable_action_id(controllable_action_id) -> Organization:
     org = ControllableAction.objects.select_related('FPF__organization').get(id=controllable_action_id).FPF.organization
+    return org
+
+
+def get_organization_by_hardware_id(hardware_id: str) -> Organization:
+    org = Hardware.objects.select_related('FPF__organization').get(id=hardware_id).FPF.organization
     return org
 
 

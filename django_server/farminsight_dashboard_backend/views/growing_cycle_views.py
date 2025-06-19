@@ -26,14 +26,14 @@ class GrowingCycleEditViews(APIView):
         if not is_member(request.user, get_organization_by_growing_cycle_id(growing_cycle_id)):
             return Response(status=status.HTTP_403_FORBIDDEN)
 
-        growing_cycle = update_growing_cycle(growing_cycle_id, request.data, request.user)
+        growing_cycle = update_growing_cycle(growing_cycle_id, request.data)
         return Response(growing_cycle.data, status=status.HTTP_200_OK)
 
     def delete(self, request, growing_cycle_id):
         if not is_member(request.user, get_organization_by_growing_cycle_id(growing_cycle_id)):
             return Response(status=status.HTTP_403_FORBIDDEN)
 
-        remove_growing_cycle(growing_cycle_id, request.user)
+        remove_growing_cycle(growing_cycle_id)
         return Response(status=status.HTTP_200_OK)
 
 

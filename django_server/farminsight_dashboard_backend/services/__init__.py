@@ -3,7 +3,7 @@ from .fpf_services import create_fpf, update_fpf, get_fpf_by_id, update_fpf_api_
 from .organization_services import create_organization, get_organization_by_id, get_organization_by_fpf_id, \
     get_organization_by_sensor_id, get_organization_by_camera_id, update_organization, \
     get_organization_by_growing_cycle_id, get_organization_by_controllable_action_id, get_organization_by_threshold_id, \
-    set_organization_order
+    set_organization_order, get_organization_by_hardware_id
 from .measurement_services import store_measurements_in_influx
 from .membership_services import create_membership, get_memberships, update_membership, remove_membership, is_member, \
     is_admin, is_system_admin, get_memberships_by_organization
@@ -24,7 +24,7 @@ from .location_services import create_location, update_location, remove_location
 from .weather_forcast_scheduler_services import WeatherForecastScheduler
 from .controllable_action_services import get_active_controllable_action_by_id, create_controllable_action, update_controllable_action, delete_controllable_action, get_controllable_action_by_id, set_is_automated, set_controllable_action_order
 from .action_queue_services import is_new_action, create_auto_triggered_actions_in_queue, process_action_queue, get_active_state, is_already_enqueued, get_action_queue_by_fpf_id
-from .hardware_services import get_hardware_for_fpf, create_hardware, set_hardware_order
+from .hardware_services import get_hardware_for_fpf, create_hardware, set_hardware_order, update_hardware, remove_hardware
 from .threshold_services import create_threshold, remove_threshold, update_threshold
 from .action_trigger_services import create_action_trigger, get_action_trigger, get_all_auto_timeOfDay_action_triggers, get_all_auto_interval_triggers, get_all_active_auto_triggers
 from .auto_trigger_scheduler_services import AutoTriggerScheduler

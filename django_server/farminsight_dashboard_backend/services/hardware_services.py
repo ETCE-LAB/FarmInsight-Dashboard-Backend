@@ -1,4 +1,6 @@
 from farminsight_dashboard_backend.models import Hardware
+from farminsight_dashboard_backend.serializers import HardwareSerializer
+
 
 def get_hardware_for_fpf(fpf_id):
     """
@@ -38,3 +40,16 @@ def set_hardware_order(ids: list[str]):
         item.orderIndex = ids.index(str(item.id))
 
     Hardware.objects.bulk_update(items, ['orderIndex'])
+
+
+def update_hardware(hardware_id:str, data) -> HardwareSerializer:
+    hardware = Hardware.objects.get(id=hardware_id)
+    serializer = HardwareSerializer(hardware, data=data)
+    if serializer.is_valid(raise_exception=True):
+        serializer.save()
+        return serializer
+
+
+def remove_hardware(hardware_id:str):
+    hardware = Hardware.objects.get(id=hardware_id)
+    hardware.delete()
