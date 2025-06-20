@@ -8,7 +8,7 @@ from farminsight_dashboard_backend.utils import get_logger
 from farminsight_dashboard_backend.serializers import HardwareSerializer
 from farminsight_dashboard_backend.services import is_member, get_organization_by_fpf_id, \
     get_hardware_for_fpf, is_admin, set_hardware_order, get_organization_by_hardware_id, update_hardware, \
-    remove_hardware
+    remove_hardware, create_hardware
 
 logger = get_logger()
 
@@ -54,3 +54,13 @@ class HardwareEditViews(APIView):
 
         remove_hardware(hardware_id)
         return Response(status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def post_hardware(request):
+    if not is_member(request.user, get_organization_by_fpf_id(request.data['fpfId'])):
+        return Response(status=status.HTTP_403_FORBIDDEN)
+
+    harvest = create_hardware(request.data)
+    return Response(harvest.data, status=status.HTTP_201_CREATED)

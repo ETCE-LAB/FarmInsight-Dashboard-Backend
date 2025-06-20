@@ -47,7 +47,7 @@ from farminsight_dashboard_backend.views import (
     get_direct_ping, get_action_queue,
     post_log_message_insecure, get_reset_userprofile_password, get_all_userprofiles, post_sensor_order,
     post_growing_cycle_order, post_camera_order, post_controllable_action_order, post_organization_order,
-    post_hardware_order, HardwareEditViews
+    post_hardware_order, HardwareEditViews, post_hardware
 )
 from farminsight_dashboard_backend.views.action_trigger import ActionTriggerView
 from farminsight_dashboard_backend.views.fpf_views import post_fpf_order
@@ -124,6 +124,7 @@ urlpatterns = [
     path('thresholds', post_threshold, name='post_threshold'),
     path('thresholds/<str:threshold_id>', ThresholdEditViews.as_view(), name='threshold_edits'),
 
+    path('hardwares', post_hardware, name='post_hardware'),
     path('hardwares/sort-order/<str:fpf_id>', post_hardware_order, name='post_hardware_order'),
     path('hardwares/<str:hardware_id>', HardwareEditViews.as_view(), name='hardware_edits'),
 

@@ -14,7 +14,7 @@ from farminsight_dashboard_backend.services import get_fpf_by_id, \
     get_organization_by_fpf_id, is_admin, create_controllable_action, delete_controllable_action, \
     get_controllable_action_by_id, get_organization_by_controllable_action_id, \
     set_is_automated, create_auto_triggered_actions_in_queue, is_member, \
-    update_controllable_action, create_hardware, set_controllable_action_order
+    update_controllable_action, get_or_create_hardware, set_controllable_action_order
 
 logger = get_logger()
 
@@ -80,7 +80,7 @@ def post_controllable_action(request):
     get_fpf_by_id(fpf_id)
 
     if request.data.get('hardware').get('name'):
-        hardware = create_hardware(request.data.get('hardware').get('name'), fpf_id)
+        hardware = get_or_create_hardware(request.data.get('hardware').get('name'), fpf_id)
         request.data['hardwareId'] = hardware.id
 
     controllable_action = ControllableActionSerializer(create_controllable_action(fpf_id, request.data), partial=True).data
