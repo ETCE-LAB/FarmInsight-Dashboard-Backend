@@ -59,7 +59,7 @@ class HardwareEditViews(APIView):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def post_hardware(request):
-    if not is_member(request.user, get_organization_by_fpf_id(request.data['fpfId'])):
+    if not is_member(request.user, get_organization_by_fpf_id(request.data['FPF'])):
         return Response(status=status.HTTP_403_FORBIDDEN)
 
     harvest = create_hardware(request.data)
