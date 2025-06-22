@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from farminsight_dashboard_backend.models import ActionTrigger, ControllableAction
+from farminsight_dashboard_backend.models import ActionTrigger, ControllableAction, ActionQueue
 
 
 class ActionTriggerSerializer(serializers.ModelSerializer):
@@ -7,6 +7,7 @@ class ActionTriggerSerializer(serializers.ModelSerializer):
         source='action',
         queryset=ControllableAction.objects.all()
     )
+    lastTriggered = serializers.SerializerMethodField()
 
     class Meta:
         model = ActionTrigger
@@ -20,5 +21,22 @@ class ActionTriggerSerializer(serializers.ModelSerializer):
                   'triggerLogic',
                   'isActive',
                   'description',
-                  'actionId'
+                  'actionId',
+                  'lastTriggered'
                   ]
+
+    def get_lastTriggered(self, obj):
+        latest_entry = ActionQueue.objects.filter(
+            trigger__id=obj.id
+        ).order_by('-createdAt').first()
+
+        if latest_entry:
+            return latest_entry.createdAt
+
+        return None
+
+
+class ActionTriggerTechnicalKeySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ActionTrigger
+        fields = ['description', 'actionValueType', 'actionValue']

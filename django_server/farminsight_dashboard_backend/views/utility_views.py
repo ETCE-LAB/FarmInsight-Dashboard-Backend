@@ -25,10 +25,12 @@ def get_direct_ping(request, resource_type, resource_id):
 
         url = hardware_configuration['additionalInformation']['http']
 
+        response_raw = ''
         try:
-            response = requests.get(url, timeout=10).json()
+            response_raw = requests.get(url, timeout=10)
+            response = response_raw.json()
         except JSONDecodeError:
-            return Response(data={'warning': 'Got aResponse. But no valid json.'}, status=HTTP_200_OK)
+            response = {'return': response_raw.text}
         except Exception as e:
             return Response(data={'error': f'{e}'}, status=HTTP_200_OK)
     else:

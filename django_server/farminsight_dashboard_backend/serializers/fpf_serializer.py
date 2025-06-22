@@ -1,12 +1,11 @@
 from rest_framework import serializers
 from farminsight_dashboard_backend.models import FPF, Organization, Location
-from farminsight_dashboard_backend.models import FPF, Organization
-from farminsight_dashboard_backend.serializers.controllable_action_serializer import ControllableActionSerializer
-from farminsight_dashboard_backend.serializers.camera_serializer import CameraImageSerializer, CameraSerializer
-from farminsight_dashboard_backend.serializers.growing_cycle_serializer import GrowingCycleSerializer
-from farminsight_dashboard_backend.serializers.sensor_serializer import SensorDataSerializer, SensorLastValueSerializer
-from farminsight_dashboard_backend.serializers.location_serializer import LocationSerializer
-
+from .hardware_serializer import HardwareSerializer
+from .controllable_action_serializer import ControllableActionSerializer
+from .camera_serializer import CameraImageSerializer, CameraSerializer
+from .growing_cycle_serializer import GrowingCycleSerializer
+from .sensor_serializer import SensorDataSerializer, SensorLastValueSerializer
+from .location_serializer import LocationSerializer
 
 
 class FPFSerializer(serializers.ModelSerializer):
@@ -30,6 +29,7 @@ class FPFSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({"name":"This name is already taken for this organization"})
         return data
 
+
 class FPFFunctionalSerializer(serializers.ModelSerializer):
     locationId = serializers.PrimaryKeyRelatedField(
         source='location',  # Maps to the `location` field in the model
@@ -38,7 +38,8 @@ class FPFFunctionalSerializer(serializers.ModelSerializer):
     class Meta:
         model = FPF
         read_only_fields = ('id',)
-        fields = ('id', 'name', 'isPublic', 'sensorServiceIp', 'locationId')
+        fields = ('id', 'name', 'isPublic', 'sensorServiceIp', 'locationId', 'orderIndex')
+
 
 class FPFTechnicalKeySerializer(serializers.ModelSerializer):
     class Meta:
@@ -52,6 +53,7 @@ class FPFFullSerializer(serializers.ModelSerializer):
     GrowingCycles = GrowingCycleSerializer(many=True, source='growingCycles')
     Location = LocationSerializer(many=False, source='location')
     ControllableAction = ControllableActionSerializer(many=True, source='actions')
+    Hardware = HardwareSerializer(many=True, source='hardware')
 
     class Meta:
         model = FPF
@@ -64,7 +66,9 @@ class FPFFullSerializer(serializers.ModelSerializer):
             'Cameras',
             'GrowingCycles',
             'Location',
-            'ControllableAction'
+            'ControllableAction',
+            'orderIndex',
+            'Hardware',
         ]
 
 
