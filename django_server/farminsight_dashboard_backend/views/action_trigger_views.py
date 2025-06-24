@@ -28,12 +28,10 @@ def post_action_trigger(request):
     if not is_admin(request.user, get_organization_by_fpf_id(fpf_id)):
         return Response(status=status.HTTP_403_FORBIDDEN)
 
-    get_fpf_by_id(fpf_id)
-
     trigger = create_action_trigger(request.data)
     serialized = ActionTriggerSerializer(trigger)
 
-    logger.info("Action trigger created successfully", extra={'resource_id': fpf_id})
+    logger.info(f"Action trigger {request.data['description']} created successfully", extra={'resource_id': request.data['actionId']})
 
     return Response(serialized.data, status=status.HTTP_201_CREATED)
 
@@ -53,7 +51,7 @@ class ActionTriggerView(APIView):
             return Response(status=status.HTTP_403_FORBIDDEN)
 
         actionTrigger = update_action_trigger(actionTrigger_id, request.data)
-        logger.info('actionTrigger updated', extra={'resource_id': actionTrigger_id})
+        logger.info(f'Action trigger {request.data['description']} updated', extra={'resource_id': request.data['actionId']})
         return Response(actionTrigger.data, status=status.HTTP_200_OK)
 
 
