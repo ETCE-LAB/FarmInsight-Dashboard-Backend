@@ -105,6 +105,7 @@ def post_camera(request):
     return Response(camera, status=status.HTTP_201_CREATED)
 
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def get_camera_livestream(request, camera_id):
     """
     Authenticated via Query Param Bearer token
@@ -114,29 +115,11 @@ def get_camera_livestream(request, camera_id):
     :param camera_id:
     :return:
     """
-    # TODO: shouldn't this work? Asked Marius as to why this construct exists, hopefully can streamline - js
-    #if not is_member(request.user, get_organization_by_camera_id(camera_id)):
-    #    return Response(status=status.HTTP_403_FORBIDDEN)
-
-    token = request.GET.get('token')
-
-    if not token:
-        return Response({"error": "Token is required"}, status=status.HTTP_401_UNAUTHORIZED)
-
-    try:
-        access_token = AccessToken.objects.get(token=token)
-
-        if access_token.is_expired():
-            return Response({"error": "Token has expired"}, status=status.HTTP_401_UNAUTHORIZED)
-
-    except AccessToken.DoesNotExist:
-        return Response({"error": "Token not found"}, status=status.HTTP_401_UNAUTHORIZED)
+    if not is_member(request.user, get_organization_by_camera_id(camera_id)):
+        return Response(status=status.HTTP_403_FORBIDDEN)
 
     camera = get_active_camera_by_id(camera_id)
     livestream_url = camera.livestreamUrl
-
-    if not is_member(access_token.user, get_organization_by_camera_id(camera_id)):
-        return Response(status=status.HTTP_403_FORBIDDEN)
 
     parsed_url = urlparse(livestream_url)
     scheme = parsed_url.scheme.lower()
