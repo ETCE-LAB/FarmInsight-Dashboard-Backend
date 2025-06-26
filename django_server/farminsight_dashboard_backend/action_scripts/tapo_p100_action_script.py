@@ -67,8 +67,8 @@ class TapoP100SmartPlugActionScriptWithDelay(TypedSensor):
         try:
 
             if action_value not in ['on', 'off']:
-                logger.error(f"Invalid action value: {action_value}. Expected 'on' or 'off'.", extra={'resource_id': self.controllable_action.id})
-                return
+                raise RuntimeError(f"Invalid action value: {action_value}. Expected 'on' or 'off'.")
+
 
             credentials = AuthCredential(self.tapo_account_email, self.tapo_account_password)
 
@@ -92,10 +92,10 @@ class TapoP100SmartPlugActionScriptWithDelay(TypedSensor):
                 await power.turn_off()
 
         except Exception as e:
-            logger.error(f"Failed to control smart plug with value '{action_value}': {e}", extra={'resource_id': self.controllable_action.id})
+            raise RuntimeError(f"Failed to control smart plug with value '{action_value}': {e}")
 
     def run(self, action_value):
         try:
             asyncio.run(self.control_smart_plug(action_value=str(action_value).strip().lower()))
         except Exception as e:
-            logger.error(f"Exception during smart plug control: {e}", extra={'resource_id': self.controllable_action.id})
+            raise RuntimeError(f"Exception during smart plug control: {e}")

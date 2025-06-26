@@ -1,6 +1,6 @@
 from .userprofile_views import UserprofileView, get_userprofile
 from .organization_views import post_organization, get_own_organizations, OrganizationView, post_organization_order
-from .fpf_views import FpfView, get_fpf_api_key, get_visible_fpf
+from .fpf_views import FpfView, get_fpf_api_key, get_visible_fpf, post_fpf_order
 from .measurement_views import MeasurementView
 from .data_views import get_fpf_data, get_sensor_data, get_camera_images, get_weather_forecasts
 from .membership_views import MembershipView
@@ -13,8 +13,8 @@ from .log_views import post_log_message, get_log_messages, post_log_message_inse
 from .location_views import LocationView, get_location, post_location
 from .controllable_views import post_controllable_action, ControllableActionView, execute_controllable_action, post_controllable_action_order
 from .action_script_views import get_available_action_script_types, get_action_queue
-from .hardware_views import get_fpf_hardware, post_hardware_order
-from .action_trigger import post_action_trigger
+from .hardware_views import get_fpf_hardware, post_hardware_order, HardwareEditViews, post_hardware
+from .action_trigger_views import post_action_trigger, ActionTriggerView
 from .threshold_views import post_threshold, ThresholdEditViews
 from .utility_views import get_direct_ping
 from .admin_views import get_reset_userprofile_password, get_all_userprofiles

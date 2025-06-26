@@ -146,7 +146,7 @@ LOGGING = {
             'formatter': 'simple',
         },
         'db_handler': {
-            'level': 'DEBUG',
+            'level': 'INFO',
             'class': 'django_server.custom_logger.DatabaseLogHandler',
         },
     },

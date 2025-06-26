@@ -1,11 +1,11 @@
 from rest_framework import serializers
 
-from django_server import settings
-from farminsight_dashboard_backend.models import Camera, FPF
+from farminsight_dashboard_backend.models import Camera, Image
 from farminsight_dashboard_backend.serializers.image_serializer import ImageURLSerializer
 
 
 class CameraSerializer(serializers.ModelSerializer):
+    lastImageAt = serializers.SerializerMethodField()
 
     class Meta:
         model = Camera
@@ -19,8 +19,16 @@ class CameraSerializer(serializers.ModelSerializer):
             'intervalSeconds',
             'livestreamUrl',
             'snapshotUrl',
-            'orderIndex'
+            'orderIndex',
+            'lastImageAt',
         ]
+
+    def get_lastImageAt(self, obj: Camera):
+        last_image = Image.objects.filter(camera_id=obj.id).order_by('-measuredAt').first()
+        if last_image:
+            return last_image.measuredAt
+
+        return None
 
     def validate_intervalSeconds(self, value):
         if value <= 0:
@@ -45,4 +53,3 @@ class CameraImageSerializer(serializers.ModelSerializer):
             'images',
             'orderIndex'
         ]
-

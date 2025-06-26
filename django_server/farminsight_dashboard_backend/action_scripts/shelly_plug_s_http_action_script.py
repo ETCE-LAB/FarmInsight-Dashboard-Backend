@@ -155,16 +155,15 @@ class ShellyPlugMqttActionScript(TypedSensor):
             if result.rc == mqtt.MQTT_ERR_SUCCESS:
                 logger.debug(f"Successfully sent '{payload}' to topic '{topic}'", extra={'resource_id': self.controllable_action.id})
             else:
-                logger.error(f"Failed to publish message. MQTT return code: {result.rc}", extra={'resource_id': self.controllable_action.id})
+                raise RuntimeError(f"Failed to publish message. MQTT return code: {result.rc}")
         except Exception as e:
-            logger.error(f"Exception during MQTT communication: {e}", extra={'resource_id': self.controllable_action.id})
+            raise RuntimeError(f"Exception during MQTT communication: {e}")
 
     def control_smart_plug(self, action_value):
         try:
 
             if action_value not in ["on", "off"]:
-                logger.error(f"Invalid action value: {action_value}. Expected 'on' or 'off'.", extra={'resource_id': self.controllable_action.id})
-                return
+                raise ValueError(f"Invalid action value: {action_value}. Expected 'on' or 'off'.")
 
             self.send_mqtt_command(self.mqtt_topic, action_value)
 
@@ -173,7 +172,7 @@ class ShellyPlugMqttActionScript(TypedSensor):
                 asyncio.run(self.delayed_off(self.maximumDurationInSeconds))
 
         except Exception as e:
-            logger.error(f"Exception during Shelly smart plug control: {e}", extra={'resource_id': self.controllable_action.id})
+            raise RuntimeError(f"Exception during Shelly smart plug control: {e}") from e
 
     async def delayed_off(self, delay_seconds: int):
         await asyncio.sleep(delay_seconds)
@@ -183,4 +182,4 @@ class ShellyPlugMqttActionScript(TypedSensor):
         try:
             self.control_smart_plug(action_value=str(action_value).strip().lower())
         except Exception as e:
-            logger.error(f"Exception during smart plug control: {e}", extra={'resource_id': self.controllable_action.id})
+            raise RuntimeError(f"Exception during smart plug control: {e}")

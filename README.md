@@ -50,6 +50,8 @@ Key features include:
 accessible through the web application.
 * Harvest Documentation: Log and track harvests for each plant directly from the frontend interface.
 * Data Visualization: Visualize sensor data with intuitive graphs and charts.
+* Controllable Action: To control the FPF you can add controllable actions which can perform actions on hardware which is reachable via network.
+* Weather forecast: You can configure a location for your FPF for which a weather forecast will be gathered.
 * Media Display: View and manage captured images and livestreams for real-time monitoring.
 
 
@@ -81,13 +83,31 @@ Sensor configurations are partially stored in the SQLite database, while hardwar
 Sensor measurements are sent from the FPF Backend to the Dashboard Backend at configured intervals via REST APIs.
 All sensor data is stored in InfluxDB, organized by FPF into buckets for efficient access.
 
-
 ### Cameras
 Users can configure cameras to:
 - Capture images at specified intervals.
 - Stream live video via supported protocols, including HTTP and RTSP.
 
 Camera setup and editing require the user to be a member of the organization, and the FPF must be accessible by the Dashboard Backend.
+
+### Controllable actions
+Controllable actions control the FPF where specified action scripts are running based on configured triggers.
+When a trigger triggers, the action script calls the hardware (e.g. via HTTP) to trigger the desired action.
+The hardware can for example be a smart plug, or other network capable devices.
+
+If a controllable action is triggered, an appropriate entry will be created in an internal action queue. 
+A queue worker will process the open entries in this queue. There additional logic will be performed to check if this action is executable on the specific hardware.
+
+#### Adding a new action (script)
+Custom Action scripts can be added easily by following the existing convention.
+Just add a class on the package django_server/farminsight_dashboard_backend/action_scripts
+See for example the existing http_action_scripts.py and take it as a template.
+Give your new class the desired logic and add a new UUID as the action_script_class_id.
+Make sure to export the new class in the package '__init__' file.
+
+### Weather forecast
+Locations can be added for a FPF and one location can be marked for the weather data forecast gathering.
+With an external API, the weather forecast for the upcoming 16 days will be gathered and stored in the Influx DB.
 
 ### User Authentication
 The backend uses standard Django user authentication.

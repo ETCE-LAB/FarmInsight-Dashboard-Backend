@@ -37,6 +37,7 @@ def set_password_to_random_password(userprofile_id: str) -> string:
     alphabet = string.ascii_letters + string.digits
     password = ''.join(secrets.choice(alphabet) for i in range(10))
     user_profile.set_password(password)
+    user_profile.save()
     return password
 
 
