@@ -36,6 +36,8 @@ All FarmInsight Repositories:
 * <a href="https://github.com/ETCE-LAB/FarmInsight-Dashboard-Backend">Dashboard-Backend</a>
 * <a href="https://github.com/ETCE-LAB/FarmInsight-FPF-Backend">FPF-Backend</a>
 
+Link to our productive System:<a href="https://farminsight.etce.isse.tu-clausthal.de"> FarmInsight.etce.isse.tu-clausthal.de</a>
+
 ### Core vision
 
 <img src="/.documentation/FarmInsightOverview.jpg">
@@ -112,6 +114,10 @@ With an external API, the weather forecast for the upcoming 16 days will be gath
 ### User Authentication
 The backend uses standard Django user authentication.
 Users can register and log in through the frontend.
+
+### Weatehr Forecast
+For the Weather Forecast we are using the public api https://open-meteo.com. The Backend is gathering every day at 6 a.m. the forecast for all Locations, where the Settings is activated.
+16 Days of Data are stored, but in the frontend only 3 days are visible.
 
 ## Development Setup
 
