@@ -107,15 +107,14 @@ See for example the existing http_action_scripts.py and take it as a template.
 Give your new class the desired logic and add a new UUID as the action_script_class_id.
 Make sure to export the new class in the package '__init__' file.
 
-### Weather forecast
-Locations can be added for a FPF and one location can be marked for the weather data forecast gathering.
-With an external API, the weather forecast for the upcoming 16 days will be gathered and stored in the Influx DB.
-
 ### User Authentication
 The backend uses standard Django user authentication.
 Users can register and log in through the frontend.
 
-### Weatehr Forecast
+### Weather Forecast
+Locations can be added for a FPF and one location can be marked for the weather data forecast gathering.
+With an external API, the weather forecast for the upcoming 16 days will be gathered and stored in the Influx DB.
+
 For the Weather Forecast we are using the public api https://open-meteo.com. The Backend is gathering every day at 6 a.m. the forecast for all Locations, where the Settings is activated.
 16 Days of Data are stored, but in the frontend only 3 days are visible.
 
