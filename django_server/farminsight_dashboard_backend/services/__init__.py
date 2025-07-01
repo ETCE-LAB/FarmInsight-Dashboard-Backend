@@ -7,7 +7,7 @@ from .organization_services import create_organization, get_organization_by_id, 
 from .measurement_services import store_measurements_in_influx
 from .membership_services import create_membership, get_memberships, update_membership, remove_membership, is_member, \
     is_admin, is_system_admin, get_memberships_by_organization
-from .userprofile_services import search_userprofiles, update_userprofile_name, set_password_to_random_password, all_userprofiles
+from .userprofile_services import search_userprofiles, update_userprofile_name, set_password_to_random_password, all_userprofiles, set_active_status
 from .data_services import get_all_fpf_data, get_all_sensor_data
 from .influx_services import InfluxDBManager
 from .sensor_services import get_sensor, update_sensor, create_sensor, sensor_exists, set_sensor_order
