@@ -43,3 +43,10 @@ def set_password_to_random_password(userprofile_id: str) -> string:
 
 def all_userprofiles() -> UserprofileSerializer:
     return UserprofileSerializer(Userprofile.objects.all(), many=True)
+
+
+def set_active_status(user_profile_id: str, active: bool) -> UserprofileSerializer:
+    user_profile = Userprofile.objects.get(id=user_profile_id)
+    user_profile.is_active = active
+    user_profile.save()
+    return UserprofileSerializer(user_profile)

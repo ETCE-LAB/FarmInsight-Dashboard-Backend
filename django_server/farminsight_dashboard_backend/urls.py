@@ -46,7 +46,8 @@ from farminsight_dashboard_backend.views import (
     get_direct_ping, get_action_queue,
     post_log_message_insecure, get_reset_userprofile_password, get_all_userprofiles, post_sensor_order,
     post_growing_cycle_order, post_camera_order, post_controllable_action_order, post_organization_order,
-    post_hardware_order, HardwareEditViews, post_hardware, ActionTriggerView, post_fpf_order
+    post_hardware_order, HardwareEditViews, post_hardware, ActionTriggerView, post_fpf_order,
+    post_userprofile_active_status
 )
 
 urlpatterns = [
@@ -129,4 +130,5 @@ urlpatterns = [
 
     path('admin/password-reset/<str:userprofile_id>', get_reset_userprofile_password, name='get_reset_userprofile_password'),
     path('admin/userprofiles-all', get_all_userprofiles, name='get_all_userprofiles'),
+    path('admin/set-active/<str:userprofile_id>', post_userprofile_active_status, name='post_userprofile_active_status'),
 ]

@@ -3,10 +3,12 @@ from farminsight_dashboard_backend.models import Userprofile
 
 
 class UserprofileSerializer(serializers.ModelSerializer):
+    isActive = serializers.BooleanField(read_only=True, source='is_active')
+
     class Meta:
         model = Userprofile
         read_only_fields = ('id', 'systemRole')
-        fields = ('id', 'name', 'email', 'systemRole')
+        fields = ('id', 'name', 'email', 'systemRole', 'isActive')
 
     def __init__(self, *args, **kwargs):
         # Don't pass the 'fields' arg up to the superclass
