@@ -260,7 +260,15 @@ If there is no admin account with adequate rights you need to create a superuser
 python manage.py createsuperuser
 ```
 
-## Contributing
+## 🔄 Contribute to FarmInsight
+We welcome contributions! Please follow these steps:
+1. Fork the repository.
+2. Create a new branch: `git checkout -b feature/your-feature`
+3. Make your changes and commit them: `git commit -m 'Add new feature'`
+4. Push the branch: `git push origin feature/your-feature`
+5. Create a pull request.
+
+## Past/Present Contributors
 
 This project was developed as part of the Digitalisierungsprojekt at DigitalTechnologies WS24/25 by:
 * Tom Luca Heering
@@ -276,8 +284,7 @@ Project supervision:
 Many thanks to Anant for the deployment!
 
 ## License
-
-
+This project is licensed under the [AGPL-3.0](https://www.gnu.org/licenses/agpl-3.0.html) license.
 
 <!-- MARKDOWN LINKS & IMAGES -->
 [Python-img]: https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54
