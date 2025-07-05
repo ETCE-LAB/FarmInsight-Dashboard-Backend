@@ -147,6 +147,6 @@ def post_camera_order(request, fpf_id):
     if not is_admin(request.user, get_organization_by_fpf_id(fpf_id)):
         return Response(status=status.HTTP_403_FORBIDDEN)
 
-    set_camera_order(request.data)
+    serializer = set_camera_order(request.data)
 
-    return Response(status=status.HTTP_200_OK)
+    return Response(data=serializer.data, status=status.HTTP_200_OK)

@@ -28,9 +28,11 @@ def get_growing_cycles_by_fpf_id(fpf_id: str) -> GrowingCycleSerializer:
     return GrowingCycleSerializer(fpf.growingCycles, many=True)
 
 
-def set_growing_cycle_order(ids: list[str]):
+def set_growing_cycle_order(ids: list[str]) -> GrowingCycleSerializer:
     items = GrowingCycle.objects.filter(id__in=ids)
     for item in items:
         item.orderIndex = ids.index(str(item.id))
 
     GrowingCycle.objects.bulk_update(items, ['orderIndex'])
+
+    return GrowingCycleSerializer(items, many=True)

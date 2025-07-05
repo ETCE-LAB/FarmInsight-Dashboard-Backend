@@ -33,6 +33,6 @@ def post_userprofile_active_status(request, userprofile_id: str):
         Response(status=status.HTTP_403_FORBIDDEN)
 
     active = request.data['active']
-    set_active_status(userprofile_id, active)
+    serializer = set_active_status(userprofile_id, active)
 
-    return Response(status=status.HTTP_200_OK)
+    return Response(data=serializer.data, status=status.HTTP_200_OK)

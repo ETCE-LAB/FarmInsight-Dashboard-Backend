@@ -73,6 +73,6 @@ def post_organization_order(request):
     if not is_system_admin(request.user):
         return Response(status=status.HTTP_403_FORBIDDEN)
 
-    set_organization_order(request.data)
+    serializer = set_organization_order(request.data)
 
-    return Response(status=status.HTTP_200_OK)
+    return Response(data=serializer.data, status=status.HTTP_200_OK)

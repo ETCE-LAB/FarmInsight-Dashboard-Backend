@@ -34,10 +34,9 @@ class MembershipView(APIView):
             return Response(status=status.HTTP_403_FORBIDDEN)
 
         membership_role = request.data.get('membershipRole')
-        if not update_membership(membership_id, membership_role, request.user):
-            return Response(status=status.HTTP_403_FORBIDDEN)
+        serializer = update_membership(membership_id, membership_role, request.user)
 
-        return Response(status=status.HTTP_200_OK)
+        return Response(data=serializer.data, status=status.HTTP_200_OK)
 
     def delete(self, request, membership_id):
         """

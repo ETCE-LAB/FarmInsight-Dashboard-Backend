@@ -81,9 +81,11 @@ def update_organization(org_id, data) -> OrganizationSerializer:
         return serializer
 
 
-def set_organization_order(ids: list[str]):
+def set_organization_order(ids: list[str]) -> OrganizationSerializer:
     items = Organization.objects.filter(id__in=ids)
     for item in items:
         item.orderIndex = ids.index(str(item.id))
 
     Organization.objects.bulk_update(items, ['orderIndex'])
+
+    return OrganizationSerializer(items, many=True)
