@@ -2,6 +2,7 @@ import datetime
 
 from django.conf import settings
 from django.utils import timezone
+from rest_framework.exceptions import ValidationError
 
 from farminsight_dashboard_backend.exceptions import NotFoundException
 from farminsight_dashboard_backend.models import FPF, Userprofile
@@ -22,8 +23,7 @@ def create_fpf(data) -> FPFSerializer:
     from farminsight_dashboard_backend.services import InfluxDBManager, post_fpf_id
 
     serializer = FPFSerializer(data=data, partial=True)
-
-    if serializer.is_valid(raise_exception=True):
+    if serializer.is_valid():
         serializer.save()
         fpf_id = serializer.data.get('id')
         try:
@@ -36,6 +36,9 @@ def create_fpf(data) -> FPFSerializer:
             raise api_error
 
         InfluxDBManager.get_instance().sync_fpf_buckets()
+    else:
+        print(serializer.errors)
+        raise ValidationError(serializer.errors)
 
     return serializer
 
