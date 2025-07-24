@@ -1,21 +1,10 @@
 from django.conf import settings
 from django.contrib.auth.forms import PasswordChangeForm
-from rest_framework import status
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
-
-from farminsight_dashboard_backend.services import create_single_use_token
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, authenticate, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from farminsight_dashboard_backend.forms import SignUpForm, LoginForm
-
-
-@api_view(['GET'])
-def get_websocket_token(request):
-    token = create_single_use_token()
-    return Response({'token': token}, status=status.HTTP_200_OK)
 
 
 def signup_view(request):

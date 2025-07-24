@@ -6,7 +6,7 @@ from .data_views import get_fpf_data, get_sensor_data, get_camera_images, get_we
 from .membership_views import MembershipView
 from .growing_cycle_views import post_growing_cycle, GrowingCycleEditViews, get_growing_cycles, post_growing_cycle_order
 from .sensor_views import SensorView, get_fpf_sensor_types, post_sensor_order
-from .auth_views import get_websocket_token, login_view, signup_view, logout_view, change_password_view
+from .auth_views import login_view, signup_view, logout_view, change_password_view
 from .camera_views import CameraView, post_camera, get_camera_livestream, post_camera_order
 from .harvest_views import post_harvest, HarvestEditViews, get_harvests
 from .log_views import post_log_message, get_log_messages, post_log_message_insecure
