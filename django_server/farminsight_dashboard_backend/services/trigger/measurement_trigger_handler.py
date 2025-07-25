@@ -34,7 +34,6 @@ class MeasurementTriggerHandler(BaseTriggerHandler):
                 return False
 
         except Exception as e:
-            print(f"[MeasurementTriggerHandler] Error parsing trigger logic: {e}")
             return False
 
     def enqueue_if_needed(self):

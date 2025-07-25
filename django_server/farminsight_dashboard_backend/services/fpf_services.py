@@ -37,7 +37,6 @@ def create_fpf(data) -> FPFSerializer:
 
         InfluxDBManager.get_instance().sync_fpf_buckets()
     else:
-        print(serializer.errors)
         raise ValidationError(serializer.errors)
 
     return serializer

@@ -28,4 +28,4 @@ from .hardware_services import get_hardware_for_fpf, get_or_create_hardware, set
 from .threshold_services import create_threshold, remove_threshold, update_threshold
 from .action_trigger_services import create_action_trigger, get_action_trigger, get_all_auto_timeOfDay_action_triggers, get_all_auto_interval_triggers, get_all_active_auto_triggers
 from .auto_trigger_scheduler_services import AutoTriggerScheduler
-
+from .email_services import send_html_email

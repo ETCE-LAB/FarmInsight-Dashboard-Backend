@@ -9,12 +9,19 @@
 </form>
 
 <p>Don't have an account? <a id="signup-link" href="#">Sign up here</a></p>
+<p><a id="forgot-password-link" href="#">Forgot your password?</a></p>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        var signupLink = document.getElementById('signup-link');
-        var currentParams = new URLSearchParams(window.location.search);
+        const signupLink = document.getElementById('signup-link');
+        const currentParams = new URLSearchParams(window.location.search);
         signupLink.href = "{% url 'signup_view' %}?" + currentParams.toString();
+    });
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        const signupLink = document.getElementById('forgot-password-link');
+        const currentParams = new URLSearchParams(window.location.search);
+        signupLink.href = "{% url 'forgot_password_view' %}?" + currentParams.toString();
     });
 </script>
 {% endblock %}

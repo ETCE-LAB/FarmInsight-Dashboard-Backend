@@ -47,7 +47,7 @@ from farminsight_dashboard_backend.views import (
     post_log_message_insecure, get_reset_userprofile_password, get_all_userprofiles, post_sensor_order,
     post_growing_cycle_order, post_camera_order, post_controllable_action_order, post_organization_order,
     post_hardware_order, HardwareEditViews, post_hardware, ActionTriggerView, post_fpf_order,
-    post_userprofile_active_status
+    post_userprofile_active_status, forgot_password_view, reset_password_view
 )
 
 urlpatterns = [
@@ -97,6 +97,9 @@ urlpatterns = [
     path('signup/', signup_view, name='signup_view'),
     path('logout', logout_view, name='logout_view'),
     path('change-password', change_password_view, name='change_password_view'),
+    path('forgot-password', forgot_password_view, name='forgot_password_view'),
+    path('reset-password', reset_password_view, name='reset_password_view'),
+
     path('log_messages', post_log_message, name='post_log_message'),
     path('log_messages/<str:resource_type>/<str:resource_id>', get_log_messages, name='get_log_messages'),
     path('log-messages-insecure/<str:resource_id>/<str:message>', post_log_message_insecure, name='post_log_message_insecure'),

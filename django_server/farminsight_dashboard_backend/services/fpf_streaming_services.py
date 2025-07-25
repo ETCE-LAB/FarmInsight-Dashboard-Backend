@@ -7,7 +7,6 @@ async def http_stream(livestream_url: str):
     """
     camera = cv2.VideoCapture(livestream_url)
     if not camera.isOpened():
-        print("Could not open the camera or stream.")
         yield b"Error: Could not open the camera or stream.\r\n"
         return
 
@@ -22,7 +21,6 @@ async def http_stream(livestream_url: str):
             # Capture frame, even if we are skipping it (to keep the stream going)
             success, frame = camera.read()
             if not success:
-                print("Failed to grab frame.")
                 break
 
             # Skip this frame if not enough time has passed (less than 200ms since the last frame)
@@ -33,7 +31,6 @@ async def http_stream(livestream_url: str):
             # If enough time has passed, process and send this frame
             ret, buffer = cv2.imencode('.jpg', frame)
             if not ret:
-                print("Failed to encode frame.")
                 continue
 
             # Update the last frame time after successfully sending the frame
@@ -44,7 +41,6 @@ async def http_stream(livestream_url: str):
 
     finally:
         camera.release()
-        print("Camera released.")
 
 
 async def rtsp_stream(livestream_url:str):
@@ -81,4 +77,3 @@ async def rtsp_stream(livestream_url:str):
 
     finally:
         cap.release()
-        print("Camera released.")

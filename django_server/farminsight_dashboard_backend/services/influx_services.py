@@ -292,7 +292,6 @@ class InfluxDBManager:
                         try:
                             fetch_date = datetime.fromisoformat(fetch_date)
                         except Exception as e:
-                            print(f"Fehler beim Parsen von fetchDate: {e}")
                             fetch_date = datetime.now()
 
                     wf = dict(
