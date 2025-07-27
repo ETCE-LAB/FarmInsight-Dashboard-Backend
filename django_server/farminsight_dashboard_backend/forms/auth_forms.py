@@ -33,6 +33,3 @@ class LoginForm(forms.Form):
 
 class ForgotPasswordForm(forms.Form):
     email = forms.EmailField()
-
-class ResetPasswordForm(forms.Form):
-    password = forms.CharField(widget=forms.PasswordInput)

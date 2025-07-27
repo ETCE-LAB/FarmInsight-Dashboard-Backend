@@ -1,15 +1,15 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<h2>Login</h2>
+<h2>{% if lc == 'de' %}Anmeldung{% else %}Login{% endif %}</h2>
 <form method="post">
     {% csrf_token %}
     {{ form.as_p }}
-    <button type="submit">Login</button>
+    <button type="submit">{% if lc == 'de' %}Anmelden{% else %}Login{% endif %}</button>
 </form>
 
-<p>Don't have an account? <a id="signup-link" href="#">Sign up here</a></p>
-<p><a id="forgot-password-link" href="#">Forgot your password?</a></p>
+<p>{% if lc == 'de' %}Sie haben keinen Account?{% else %}Don't have an account?{% endif %} <a id="signup-link" href="#">{% if lc == 'de' %}Melden Sie sich hier an{% else %}Sign up here{% endif %}</a></p>
+<p><a id="forgot-password-link" href="#">{% if lc == 'de' %}Sie haben ihr Passwort vergessen?{% else %}Forgot your password?{% endif %}</a></p>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {

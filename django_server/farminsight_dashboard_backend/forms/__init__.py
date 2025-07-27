@@ -1,1 +1,1 @@
-from .auth_forms import SignUpForm, LoginForm, ForgotPasswordForm, ResetPasswordForm
+from .auth_forms import SignUpForm, LoginForm, ForgotPasswordForm
