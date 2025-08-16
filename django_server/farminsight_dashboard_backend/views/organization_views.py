@@ -6,7 +6,7 @@ from rest_framework.views import APIView
 
 from farminsight_dashboard_backend.serializers import OrganizationFullSerializer
 from farminsight_dashboard_backend.services import create_organization, get_memberships, get_organization_by_id, \
-    update_organization, is_member, is_system_admin, set_organization_order
+    update_organization, is_member, is_system_admin, set_organization_order, all_organizations
 from farminsight_dashboard_backend.utils import get_logger
 
 
@@ -42,7 +42,6 @@ class OrganizationView(APIView):
         return Response(organization.data, status=status.HTTP_200_OK)
 
 
-
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def post_organization(request):
@@ -65,6 +64,17 @@ def get_own_organizations(request):
             }
         })
     return Response(data)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_all_organizations(request):
+    if not is_system_admin(request.user):
+        return Response(status=status.HTTP_403_FORBIDDEN)
+
+    serializer = all_organizations()
+
+    return Response(data=serializer.data, status=status.HTTP_200_OK)
 
 
 @api_view(['POST'])

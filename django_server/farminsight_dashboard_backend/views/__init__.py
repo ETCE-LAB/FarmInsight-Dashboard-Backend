@@ -1,5 +1,5 @@
 from .userprofile_views import UserprofileView, get_userprofile
-from .organization_views import post_organization, get_own_organizations, OrganizationView, post_organization_order
+from .organization_views import post_organization, get_own_organizations, OrganizationView, post_organization_order, get_all_organizations
 from .fpf_views import FpfView, get_fpf_api_key, get_visible_fpf, post_fpf_order
 from .measurement_views import MeasurementView
 from .data_views import get_fpf_data, get_sensor_data, get_camera_images, get_weather_forecasts
