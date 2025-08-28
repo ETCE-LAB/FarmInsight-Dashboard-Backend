@@ -5,7 +5,7 @@ from channels.db import database_sync_to_async
 from decouple import config
 from django.utils import timezone
 
-from farminsight_dashboard_backend.models import Sensor, FPF, SingleUseToken, Userprofile
+from farminsight_dashboard_backend.models import Sensor, FPF, SingleUseToken, Userprofile, Camera
 from farminsight_dashboard_backend.utils import generate_random_token
 
 
@@ -42,6 +42,14 @@ def valid_api_key_for_sensor(api_key: str, sensor_id: str) -> bool:
     if sensor.FPF.apiKeyValidUntil is None:
         return sensor.FPF.apiKey == api_key
     return sensor.FPF.apiKey == api_key and sensor.FPF.apiKeyValidUntil > timezone.now()
+
+
+def valid_api_key_for_camera(api_key: str, camera_id: str) -> bool:
+    camera = Camera.objects.get(id=camera_id)
+    if camera.FPF.apiKeyValidUntil is None:
+        return camera.FPF.apiKey == api_key
+    return camera.FPF.apiKey == api_key and camera.FPF.apiKeyValidUntil > timezone.now()
+
 
 
 def create_single_use_token(user: Userprofile, duration_minutes: int = 1) -> str:

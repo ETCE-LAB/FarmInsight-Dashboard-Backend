@@ -43,7 +43,7 @@ def get_active_camera_by_id(camera_id:str) -> Camera:
     :throws: NotFoundException
     """
     try:
-        camera =  Camera.objects.get(id=camera_id)
+        camera = Camera.objects.get(id=camera_id)
         if not camera.isActive:
             raise NotFoundException(f'Camera with id: {camera_id} is not active.')
         return camera

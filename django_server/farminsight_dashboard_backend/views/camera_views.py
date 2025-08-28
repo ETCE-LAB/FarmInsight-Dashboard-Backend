@@ -1,14 +1,16 @@
 from urllib.parse import urlparse
 from django.http import StreamingHttpResponse
+from django.utils.dateparse import parse_datetime
 from rest_framework import views
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
+
 from farminsight_dashboard_backend.serializers.camera_serializer import CameraSerializer
 from farminsight_dashboard_backend.services import get_active_camera_by_id, update_camera, delete_camera, \
     get_fpf_by_id, create_camera, is_member, get_camera_by_id, get_organization_by_camera_id, \
-    get_organization_by_fpf_id, is_admin, set_camera_order
+    get_organization_by_fpf_id, is_admin, set_camera_order, save_image, valid_api_key_for_camera
 from farminsight_dashboard_backend.services.fpf_streaming_services import rtsp_stream, http_stream
 from farminsight_dashboard_backend.utils import get_logger
 
@@ -102,6 +104,7 @@ def post_camera(request):
 
     return Response(camera, status=status.HTTP_201_CREATED)
 
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_camera_livestream(request, camera_id):
@@ -146,5 +149,24 @@ def post_camera_order(request, fpf_id):
         return Response(status=status.HTTP_403_FORBIDDEN)
 
     serializer = set_camera_order(request.data)
+
+    return Response(data=serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+def post_image(request, camera_id):
+    if not 'Authorization' in request.headers:
+        return Response(status=status.HTTP_403_FORBIDDEN)
+
+    auth = request.headers['Authorization']
+    if not auth.startswith('ApiKey'):
+        return Response(status=status.HTTP_403_FORBIDDEN)
+
+    api_key = auth.split(' ')[1]
+    if not (valid_api_key_for_camera(api_key, camera_id)):
+        return Response(status=status.HTTP_403_FORBIDDEN)
+
+    created_at = parse_datetime(request.data.get('created_at'))
+    serializer = save_image(request.data.get('image'), camera_id, created_at)
 
     return Response(data=serializer.data, status=status.HTTP_200_OK)

@@ -47,7 +47,7 @@ from farminsight_dashboard_backend.views import (
     post_log_message_insecure, get_reset_userprofile_password, get_all_userprofiles, post_sensor_order,
     post_growing_cycle_order, post_camera_order, post_controllable_action_order, post_organization_order,
     post_hardware_order, HardwareEditViews, post_hardware, ActionTriggerView, post_fpf_order,
-    post_userprofile_active_status, forgot_password_view, reset_password_view, get_all_organizations
+    post_userprofile_active_status, forgot_password_view, reset_password_view, get_all_organizations, post_image
 )
 
 urlpatterns = [
@@ -89,6 +89,8 @@ urlpatterns = [
     path('cameras/<str:camera_id>/livestream', get_camera_livestream, name='get_camera_livestream'),
     path('cameras/<str:camera_id>/images', get_camera_images, name='get_camera_snapshots'),
     path('cameras/sort-order/<str:fpf_id>', post_camera_order, name='post_camera_order'),
+
+    path('images/<str:camera_id>', post_image, name='post_image'),
 
     path('harvests', post_harvest, name='post_harvest'),
     path('harvests/<str:harvest_id>', HarvestEditViews.as_view(), name='harvest_edits'),

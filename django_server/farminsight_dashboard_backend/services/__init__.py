@@ -13,9 +13,9 @@ from .influx_services import InfluxDBManager
 from .sensor_services import get_sensor, update_sensor, create_sensor, sensor_exists, set_sensor_order
 from .growing_cycle_services import update_growing_cycle, create_growing_cycle, remove_growing_cycle, get_growing_cycles_by_fpf_id, set_growing_cycle_order
 from .fpf_connection_services import get_sensor_hardware_configuration, post_fpf_id, post_fpf_api_key, get_sensor_types, put_update_sensor, post_sensor
-from .auth_services import get_auth_token, valid_api_key_for_sensor, create_single_use_token, valid_api_key_for_fpf
+from .auth_services import get_auth_token, valid_api_key_for_sensor, create_single_use_token, valid_api_key_for_fpf, valid_api_key_for_camera
 from .camera_services import get_active_camera_by_id, create_camera, update_camera, delete_camera, get_camera_by_id, get_active_camera_count, fetch_camera_snapshot, set_camera_order
-from .image_services import get_images_by_camera
+from .image_services import get_images_by_camera, save_image
 from .camera_scheduler_services import CameraScheduler
 from .harvest_services import create_harvest, remove_harvest, update_harvest, get_harvests_by_growing_cycle_id
 from .log_message_services import write_log_message, get_log_messages_by_amount, get_log_messages_by_date
