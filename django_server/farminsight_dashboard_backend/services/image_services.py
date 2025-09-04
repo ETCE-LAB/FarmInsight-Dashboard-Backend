@@ -1,4 +1,5 @@
 import base64
+import io
 import uuid
 from datetime import datetime
 
@@ -26,10 +27,11 @@ def get_images_by_camera(camera_id, from_date, to_date=None) -> ImageURLSerializ
 
 def save_image(image_b64: str, camera_id: str, created_at: datetime = timezone.now()) -> ImageURLSerializer:
     filename = f"{str(uuid.uuid4())}.jpg"
-    img = Image.objects.create(
-        camera_id=camera_id,
-        image=File(base64.b64decode(image_b64), name=filename),
-        measuredAt=created_at
-    )
+    with io.BytesIO(base64.b64decode(image_b64)) as stream:
+        img = Image.objects.create(
+            camera_id=camera_id,
+            image=File(stream, name=filename),
+            measuredAt=created_at
+        )
 
     return ImageURLSerializer(img)

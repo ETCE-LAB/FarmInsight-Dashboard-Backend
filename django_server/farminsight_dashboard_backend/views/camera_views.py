@@ -166,7 +166,7 @@ def post_image(request, camera_id):
     if not (valid_api_key_for_camera(api_key, camera_id)):
         return Response(status=status.HTTP_403_FORBIDDEN)
 
-    created_at = parse_datetime(request.data.get('created_at'))
+    created_at = parse_datetime(request.data.get('measuredAt'))
     serializer = save_image(request.data.get('image'), camera_id, created_at)
 
-    return Response(data=serializer.data, status=status.HTTP_200_OK)
+    return Response(data=serializer.data, status=status.HTTP_201_CREATED)
