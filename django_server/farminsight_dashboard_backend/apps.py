@@ -37,7 +37,7 @@ class FarminsightDashboardBackendConfig(AppConfig):
                         MeasurementTriggerManager
 
                     InfluxDBManager.get_instance().initialize_connection()
-                    CameraScheduler.get_instance().start()
+                    #CameraScheduler.get_instance().start()
                     DataRetentionScheduler.get_instance().start()
                     WeatherForecastScheduler.get_instance().start()
                     AutoTriggerScheduler.get_instance().start()
