@@ -1,14 +1,12 @@
-import uuid
-
 from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from farminsight_dashboard_backend.serializers import SensorSerializer, SensorDBSchemaSerializer
+
+from farminsight_dashboard_backend.serializers import SensorSerializer
 from farminsight_dashboard_backend.services import is_member, get_organization_by_sensor_id, \
-    get_organization_by_fpf_id, get_sensor_hardware_configuration, get_sensor_types, put_update_sensor, post_sensor, \
-    is_admin, set_sensor_order
+    get_organization_by_fpf_id, get_sensor_hardware_configuration, get_sensor_types, is_admin, set_sensor_order
 from farminsight_dashboard_backend.services.sensor_services import get_sensor, create_sensor, update_sensor
 from farminsight_dashboard_backend.utils import get_logger
 
@@ -52,34 +50,8 @@ class SensorView(APIView):
         if not is_member(request.user, get_organization_by_fpf_id(fpf_id)):
             return Response(status=status.HTTP_403_FORBIDDEN)
 
-        sensor = request.data
-
-        # Generate a new UUID for the sensor
-        new_uuid = uuid.uuid4()
-
-        # Build new sensor object
-        sensor["id"] = str(new_uuid)
-        sensor['FPF'] = fpf_id
-
-        # Validate the sensor object before sending it to the FPF
-        serializer = SensorDBSchemaSerializer(data=sensor, partial=True)
-        serializer.is_valid(raise_exception=True)
-
-        sensor_config = {
-            "id": sensor.get('id'),
-            "intervalSeconds": sensor.get('intervalSeconds'),
-            "sensorClassId": sensor.get('hardwareConfiguration', {}).get('sensorClassId', ''),
-            "additionalInformation": sensor.get('hardwareConfiguration', {}).get('additionalInformation', {}),
-            "isActive": sensor.get('isActive'),
-        }
-
-        try:
-            post_sensor(fpf_id, sensor_config)
-
-        except Exception as e:
-            raise Exception(f"Unable to create sensor at FPF. {e}")
-
-        return Response(create_sensor(sensor), status=status.HTTP_200_OK)
+        serializer = create_sensor(fpf_id, request.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def put(self, request, sensor_id):
         """
@@ -95,26 +67,11 @@ class SensorView(APIView):
         if not is_member(request.user, get_organization_by_sensor_id(sensor_id)):
             return Response(status=status.HTTP_403_FORBIDDEN)
 
-        data = request.data
-        fpf_id = get_sensor(sensor_id).FPF_id
+        serializer = update_sensor(sensor_id, request.data)
 
-        # Update sensor on FPF
-        update_fpf_payload = {
-            "intervalSeconds": data.get('intervalSeconds'),
-            "sensorClassId": data.get('hardwareConfiguration', {}).get('sensorClassId', ''),
-            "additionalInformation": data.get('hardwareConfiguration', {}).get('additionalInformation', {}),
-            "isActive": data.get('isActive'),
-        }
+        logger.info('Sensor updated successfully', extra={'resource_id': sensor_id})
 
-        put_update_sensor(fpf_id, sensor_id, update_fpf_payload)
-
-        # Update sensor locally
-        update_sensor_payload = {key: value for key, value in data.items() if key != "connection"}
-        update_sensor(sensor_id, update_sensor_payload)
-
-        logger.info('sensor updated successfully', extra={'resource_id': sensor_id})
-
-        return Response(data, status=status.HTTP_200_OK)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 @api_view(['GET'])

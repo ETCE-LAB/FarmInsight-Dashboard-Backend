@@ -29,12 +29,10 @@ def send_request_to_fpf(fpf_id, method, endpoint, data=None, params=None):
         #response = requests.request(method, url, json=data, params=params, timeout=10)
         response.raise_for_status()
         return response.json()
-
     except JSONDecodeError as e:
         return None
     except RequestException as e:
         raise Exception(f"Cannot reach the FPF service at {url}: {str(e)}")
-
     except ValueError:
         raise Exception("Invalid JSON response from the FPF service.")
 
@@ -56,6 +54,10 @@ def post_sensor(fpf_id: str, sensor_config: dict):
 
 def put_update_sensor(fpf_id: str, sensor_id: str, update_fpf_payload: dict):
     return send_request_to_fpf(fpf_id, 'put', f'/api/sensors/{sensor_id}', update_fpf_payload)
+
+def delete_sensor(fpf_id: str, sensor_id: str):
+    return send_request_to_fpf(fpf_id, 'delete', f'/api/sensors/{sensor_id}')
+
 
 def build_fpf_url(fpf_address, endpoint):
     """

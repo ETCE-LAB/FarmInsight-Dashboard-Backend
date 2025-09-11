@@ -1,8 +1,11 @@
+import uuid
+
 from channels.db import database_sync_to_async
 
 from farminsight_dashboard_backend.exceptions import NotFoundException
 from farminsight_dashboard_backend.models import Sensor
 from farminsight_dashboard_backend.serializers.sensor_serializer import SensorSerializer, SensorDBSchemaSerializer
+from .fpf_connection_services import post_sensor, put_update_sensor
 
 
 @database_sync_to_async
@@ -28,38 +31,67 @@ def get_sensor(sensor_id) -> Sensor:
     return sensor
 
 
-def update_sensor(sensor_id, new_sensor):
+def update_sensor(sensor_id: str, data: dict) -> SensorSerializer:
     """
     Update the sensor by sensor id and a new sensor object
     :param sensor_id:
-    :param new_sensor:
+    :param data:
     :return:
     """
-    try:
-        sensor = Sensor.objects.get(id=sensor_id)
-    except Sensor.DoesNotExist:
-        raise NotFoundException(f"Sensor {sensor_id} not found.")
+    sensor = get_sensor(sensor_id)
 
-    serializer = SensorSerializer(sensor, data=new_sensor, partial=True)
+    # Update sensor on FPF
+    update_fpf_payload = {
+        "intervalSeconds": data.get('intervalSeconds'),
+        "sensorClassId": data.get('hardwareConfiguration', {}).get('sensorClassId', ''),
+        "additionalInformation": data.get('hardwareConfiguration', {}).get('additionalInformation', {}),
+        "isActive": data.get('isActive'),
+        'sensorType': 'sensor',
+    }
+
+    put_update_sensor(str(sensor.FPF_id), sensor_id, update_fpf_payload)
+
+    # Update sensor locally
+    update_sensor_payload = {key: value for key, value in data.items() if key != "connection"}
+    serializer = SensorSerializer(sensor, data=update_sensor_payload, partial=True)
 
     if serializer.is_valid(raise_exception=True):
         serializer.save()
 
-    return serializer.data
+    return serializer
 
 
-def create_sensor(sensor):
+def create_sensor(fpf_id: str, sensor_data:dict) -> SensorDBSchemaSerializer:
     """
-    Create a new Sensor in the database.
+    Create a new Sensor in the database and on the FPF backend.
     :return:
     """
-    serializer = SensorDBSchemaSerializer(data=sensor, partial=True)
-    if serializer.is_valid(raise_exception=True):
-        new_sensor = Sensor(**serializer.validated_data)
-        new_sensor.id = sensor['id']
-        new_sensor.save()
+    sensor = sensor_data
+    sensor["id"] = str(uuid.uuid4())
+    sensor['FPF'] = fpf_id
 
-    return serializer.data
+    # Validate the sensor object before sending it to the FPF
+    serializer = SensorDBSchemaSerializer(data=sensor, partial=True)
+    serializer.is_valid(raise_exception=True)
+
+    sensor_config = {
+        "id": sensor.get('id'),
+        "intervalSeconds": sensor.get('intervalSeconds'),
+        "sensorClassId": sensor.get('hardwareConfiguration', {}).get('sensorClassId', ''),
+        "additionalInformation": sensor.get('hardwareConfiguration', {}).get('additionalInformation', {}),
+        "isActive": sensor.get('isActive'),
+        "sensorType": 'sensor',
+    }
+
+    try:
+        post_sensor(fpf_id, sensor_config)
+    except Exception as e:
+        raise Exception(f"Unable to create sensor at FPF. {e}")
+
+    new_sensor = Sensor(**serializer.validated_data)
+    new_sensor.id = sensor['id']
+    new_sensor.save()
+    return serializer
 
 
 def set_sensor_order(ids: list[str]) -> SensorSerializer:

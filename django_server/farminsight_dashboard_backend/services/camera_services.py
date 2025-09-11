@@ -4,9 +4,10 @@ import requests
 from django.core.files import File
 
 from farminsight_dashboard_backend.exceptions import NotFoundException
-from farminsight_dashboard_backend.models import Camera, FPF
-from farminsight_dashboard_backend.serializers import CameraSerializer
+from farminsight_dashboard_backend.models import Camera
+from farminsight_dashboard_backend.serializers import CameraSerializer, CameraDBSchemaSerializer
 from farminsight_dashboard_backend.models import Image
+from .fpf_connection_services import post_sensor, put_update_sensor, delete_sensor
 from farminsight_dashboard_backend.utils import get_logger
 
 
@@ -35,6 +36,7 @@ def fetch_camera_snapshot(camera_id, snapshot_url):
     except Exception as e:
         logger.error(f"Error fetching snapshot for Camera: {e}", extra={'resource_id': camera_id})
 
+
 def get_active_camera_by_id(camera_id:str) -> Camera:
     """
     Get active camera by id
@@ -50,6 +52,7 @@ def get_active_camera_by_id(camera_id:str) -> Camera:
     except Camera.DoesNotExist:
         raise NotFoundException(f'Camera with id: {camera_id} was not found.')
 
+
 def get_camera_by_id(camera_id:str) -> Camera:
     """
     Get camera by id
@@ -62,36 +65,71 @@ def get_camera_by_id(camera_id:str) -> Camera:
     except Camera.DoesNotExist:
         raise NotFoundException(f'Camera with id: {camera_id} was not found.')
 
-def create_camera(fpf_id:str, camera_data:dict) -> Camera:
-    """
-    Create a new camera by FPF ID and camera data.
-    :param fpf_id: ID of the camera's FPF
-    :param camera_data: Camera data
-    :return: Newly created Camera instance
-    """
-    try:
-        fpf = FPF.objects.get(id=fpf_id)
-    except FPF.DoesNotExist:
-        raise ValueError("FPF with the given ID does not exist")
 
-    serializer = CameraSerializer(data=camera_data, partial=True)
+def create_camera(fpf_id: str, camera_data: dict) -> CameraDBSchemaSerializer:
+    """
+    Create a new Camera in the database and on the FPF backend.
+    :return:
+    """
+    camera = camera_data
+    camera['id'] = str(uuid.uuid4())
+    camera['FPF'] = fpf_id
+
+    serializer = CameraDBSchemaSerializer(data=camera, partial=True)
     serializer.is_valid(raise_exception=True)
 
-    return serializer.save(FPF=fpf)
+    camera_config = {
+        "id": camera.get('id'),
+        "intervalSeconds": camera.get('intervalSeconds'),
+        "sensorClassId": 'cacacaca-caca-caca-caca-cacacacacaca',
+        "additionalInformation": {
+            'snapshotUrl': camera.get('snapshotUrl'),
+            'livestreamUrl': camera.get('livestreamUrl'),
+        },
+        "isActive": camera.get('isActive'),
+        "sensorType": 'camera',
+    }
+
+    try:
+        post_sensor(fpf_id, camera_config)
+    except Exception as e:
+        raise Exception(f"Unable to create camera at FPF. {e}")
+
+    new_camera = Camera(**serializer.validated_data)
+    new_camera.id = camera.get('id')
+    new_camera.save()
+    return serializer
 
 
-def update_camera(camera_id:str, data:any) -> CameraSerializer:
+def update_camera(camera_id: str, data: dict) -> CameraSerializer:
     """
     Update camera by id and camera data
     :param camera_id: camera to update
-    :param camera_data: new camera data
+    :param data: new camera data
     :return: Updated Camera
     """
     camera = get_camera_by_id(camera_id)
-    serializer = CameraSerializer(camera, data=data)
+
+    # Update camera on FPF
+    update_fpf_payload = {
+        "intervalSeconds": data.get('intervalSeconds'),
+        "sensorClassId": 'cacacaca-caca-caca-caca-cacacacacaca',
+        "additionalInformation": {
+            'snapshotUrl': data.get('snapshotUrl'),
+            'livestreamUrl': data.get('livestreamUrl'),
+        },
+        "isActive": data.get('isActive'),
+        'sensorType': 'camera',
+    }
+
+    put_update_sensor(str(camera.FPF_id), camera_id, update_fpf_payload)
+
+    # Update sensor locally
+    serializer = CameraSerializer(camera, data=data, partial=True)
+
     if serializer.is_valid(raise_exception=True):
         serializer.save()
-        return serializer
+    return serializer
 
 
 def delete_camera(camera: Camera):
@@ -99,6 +137,7 @@ def delete_camera(camera: Camera):
     Delete camera
     :param camera: camera to delete
     """
+    delete_sensor(str(camera.FPF_id), str(camera.id))
     camera.delete()
 
 

@@ -35,6 +35,7 @@ class CameraSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Interval must be a positive number.")
         return value
 
+
 class CameraImageSerializer(serializers.ModelSerializer):
     images = ImageURLSerializer(many=True)
 
@@ -53,3 +54,9 @@ class CameraImageSerializer(serializers.ModelSerializer):
             'images',
             'orderIndex'
         ]
+
+
+class CameraDBSchemaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Camera
+        fields = '__all__'

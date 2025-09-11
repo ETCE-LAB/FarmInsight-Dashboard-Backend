@@ -16,7 +16,6 @@ from farminsight_dashboard_backend.views import (
     FpfView,
     get_fpf_api_key,
     get_visible_fpf,
-    post_camera,
     CameraView,
     get_camera_images,
     get_camera_livestream,
@@ -84,7 +83,7 @@ urlpatterns = [
     path('growing-cycles/list/<str:fpf_id>', get_growing_cycles, name='get_growing_cycles'),
     path('growing-cycles/sort-order/<str:fpf_id>', post_growing_cycle_order, name='post_growing_cycle_order'),
 
-    path('cameras', post_camera, name='post_camera'),
+    path('cameras', CameraView.as_view(), name='post_camera'),
     path('cameras/<str:camera_id>', CameraView.as_view(), name='camera_operations'),
     path('cameras/<str:camera_id>/livestream', get_camera_livestream, name='get_camera_livestream'),
     path('cameras/<str:camera_id>/images', get_camera_images, name='get_camera_snapshots'),
