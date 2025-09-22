@@ -7,6 +7,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 
+from farminsight_dashboard_backend.exceptions import NotFoundException
 from farminsight_dashboard_backend.serializers.camera_serializer import CameraSerializer
 from farminsight_dashboard_backend.services import get_active_camera_by_id, update_camera, delete_camera, \
     create_camera, is_member, get_camera_by_id, get_organization_by_camera_id, \

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from farminsight_dashboard_backend.models import ControllableAction, Sensor, Hardware, ActionQueue
+from farminsight_dashboard_backend.models import ControllableAction, Hardware, ActionQueue
 from farminsight_dashboard_backend.serializers.hardware_serializer import HardwareSerializer
 from farminsight_dashboard_backend.serializers.action_trigger_serializer import ActionTriggerSerializer
 
@@ -8,11 +8,6 @@ class ControllableActionSerializer(serializers.ModelSerializer):
     """
     Provides data to the frontend rendering
     """
-    #sensorId = serializers.PrimaryKeyRelatedField(
-    #    source='sensor',
-    #    queryset=Sensor.objects.all()
-    #)
-
     hardwareId = serializers.PrimaryKeyRelatedField(
         source='hardware',
         queryset=Hardware.objects.all(),

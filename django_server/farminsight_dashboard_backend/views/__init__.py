@@ -11,7 +11,7 @@ from .camera_views import CameraView, get_camera_livestream, post_camera_order, 
 from .harvest_views import post_harvest, HarvestEditViews, get_harvests
 from .log_views import post_log_message, get_log_messages, post_log_message_insecure
 from .location_views import LocationView, get_location, post_location
-from .controllable_views import post_controllable_action, ControllableActionView, execute_controllable_action, post_controllable_action_order
+from .controllable_views import ControllableActionView, execute_controllable_action, post_controllable_action_order
 from .action_script_views import get_available_action_script_types, get_action_queue
 from .hardware_views import get_fpf_hardware, post_hardware_order, HardwareEditViews, post_hardware
 from .action_trigger_views import post_action_trigger, ActionTriggerView

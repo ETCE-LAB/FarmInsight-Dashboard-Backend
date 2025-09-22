@@ -34,7 +34,6 @@ from farminsight_dashboard_backend.views import (
     get_location,
     post_location,
     get_weather_forecasts,
-    post_controllable_action,
     ControllableActionView,
     execute_controllable_action,
     get_fpf_hardware,
@@ -106,7 +105,7 @@ urlpatterns = [
     path('log_messages/<str:resource_type>/<str:resource_id>', get_log_messages, name='get_log_messages'),
     path('log-messages-insecure/<str:resource_id>/<str:message>', post_log_message_insecure, name='post_log_message_insecure'),
 
-    path('controllable-actions', post_controllable_action, name='post_controllable_action'),
+    path('controllable-actions', ControllableActionView.as_view(), name='post_controllable_action'),
     path('controllable-actions/<str:controllable_action_id>', ControllableActionView.as_view(), name='controllable_action_operations'),
     path('execute-actions/<str:controllable_action_id>/<str:trigger_id>', execute_controllable_action, name='execute_controllable_action'),
     path('action-scripts/types', get_available_action_script_types, name='get_available_action_script_types'),

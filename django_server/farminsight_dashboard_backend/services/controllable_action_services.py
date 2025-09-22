@@ -33,7 +33,7 @@ def get_controllable_action_by_id(controllable_action_id:str) -> ControllableAct
         raise NotFoundException(f'Controllable action with id: {controllable_action_id} was not found.')
 
 
-def create_controllable_action(fpf_id:str, controllable_action_data:dict) -> ControllableAction:
+def create_controllable_action(fpf_id:str, controllable_action_data:dict) -> ControllableActionSerializer:
     """
     Create a new controllable_action by FPF ID and controllable_action data.
     :param fpf_id: ID of the controllable_action's FPF
@@ -46,9 +46,9 @@ def create_controllable_action(fpf_id:str, controllable_action_data:dict) -> Con
         raise ValueError("FPF with the given ID does not exist")
 
     serializer = ControllableActionSerializer(data=controllable_action_data, partial=True)
-    serializer.is_valid(raise_exception=True)
-
-    return serializer.save(FPF=fpf)
+    if serializer.is_valid(raise_exception=True):
+        serializer.save(FPF=fpf)
+    return serializer
 
 
 def update_controllable_action(controllable_action_id:str, controllable_action_data:any) -> ControllableActionSerializer:

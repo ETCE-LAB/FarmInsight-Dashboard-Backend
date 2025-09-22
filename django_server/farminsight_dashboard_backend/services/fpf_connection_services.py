@@ -1,6 +1,11 @@
 from json import JSONDecodeError
 import requests
 from requests import RequestException
+from rest_framework import status
+from rest_framework.decorators import action
+from rest_framework.exceptions import ValidationError
+
+from farminsight_dashboard_backend.exceptions import NotFoundException
 from farminsight_dashboard_backend.models import Sensor
 
 
@@ -26,7 +31,12 @@ def send_request_to_fpf(fpf_id, method, endpoint, data=None, params=None):
 
     try:
         response = requests.request(method, url, json=data, params=params, headers=headers, timeout=10)
-        #response = requests.request(method, url, json=data, params=params, timeout=10)
+        if response.status_code == status.HTTP_400_BAD_REQUEST: # actually send fpf errors to frontend
+            error = response.json()
+            raise ValidationError(error)
+        if response.status_code == status.HTTP_404_NOT_FOUND:
+            raise NotFoundException()
+
         response.raise_for_status()
         return response.json()
     except JSONDecodeError as e:
@@ -58,6 +68,47 @@ def put_update_sensor(fpf_id: str, sensor_id: str, update_fpf_payload: dict):
 def delete_sensor(fpf_id: str, sensor_id: str):
     return send_request_to_fpf(fpf_id, 'delete', f'/api/sensors/{sensor_id}')
 
+def post_action(fpf_id: str, data: dict):
+    return send_request_to_fpf(fpf_id, 'post', '/api/actions', data)
+
+def put_action(fpf_id: str, action_id: str, data: dict):
+    return send_request_to_fpf(fpf_id, 'put', f'/api/actions/{action_id}', data)
+
+def delete_action(fpf_id: str, action_id: str):
+    return send_request_to_fpf(fpf_id, 'delete', f'/api/actions/{action_id}')
+
+def post_actions_sort_order(fpf_id: str, data: dict):
+    return send_request_to_fpf(fpf_id, 'post', '/api/actions/sort-order', data)
+
+def execute_action(fpf_id: str, action_id: str, trigger_id: str):
+    return send_request_to_fpf(fpf_id, 'post', f'/api/execute-actions/{action_id}/{trigger_id}')
+
+def get_action_scripts(fpf_id: str):
+    return send_request_to_fpf(fpf_id, 'get', '/api/action-scripts/types')
+
+def post_action_trigger(fpf_id: str, data: dict):
+    return send_request_to_fpf(fpf_id, 'post', '/api/action-triggers', data)
+
+def put_action_trigger(fpf_id: str, trigger_id: str, data: dict):
+    return send_request_to_fpf(fpf_id, 'put', f'/api/action-triggers/{trigger_id}', data)
+
+def delete_action_trigger(fpf_id: str, trigger_id: str):
+    return send_request_to_fpf(fpf_id, 'delete', f'/api/action-triggers/{trigger_id}')
+
+def get_action_queue(fpf_id: str):
+    return send_request_to_fpf(fpf_id, 'get', '/api/action-queues')
+
+def post_hardware(fpf_id: str, data: dict):
+    return send_request_to_fpf(fpf_id, 'post', '/api/hardwares', data)
+
+def put_hardware(fpf_id: str, hardware_id: str, data: dict):
+    return send_request_to_fpf(fpf_id, 'put', f'/api/hardwares/{hardware_id}', data)
+
+def delete_hardware(fpf_id: str, hardware_id: str):
+    return send_request_to_fpf(fpf_id, 'delete', f'/api/hardwares/{hardware_id}')
+
+def post_hardware_sort_order(fpf_id: str, data: dict):
+    return send_request_to_fpf(fpf_id, 'post', '/api/hardwares/sort-order', data)
 
 def build_fpf_url(fpf_address, endpoint):
     """

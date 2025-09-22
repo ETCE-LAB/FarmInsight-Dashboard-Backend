@@ -66,18 +66,7 @@ def get_camera_by_id(camera_id:str) -> Camera:
         raise NotFoundException(f'Camera with id: {camera_id} was not found.')
 
 
-def create_camera(fpf_id: str, camera_data: dict) -> CameraDBSchemaSerializer:
-    """
-    Create a new Camera in the database and on the FPF backend.
-    :return:
-    """
-    camera = camera_data
-    camera['id'] = str(uuid.uuid4())
-    camera['FPF'] = fpf_id
-
-    serializer = CameraDBSchemaSerializer(data=camera, partial=True)
-    serializer.is_valid(raise_exception=True)
-
+def create_camera_at_fpf(fpf_id: str, camera: dict):
     camera_config = {
         "id": camera.get('id'),
         "intervalSeconds": camera.get('intervalSeconds'),
@@ -95,6 +84,21 @@ def create_camera(fpf_id: str, camera_data: dict) -> CameraDBSchemaSerializer:
     except Exception as e:
         raise Exception(f"Unable to create camera at FPF. {e}")
 
+
+def create_camera(fpf_id: str, camera_data: dict) -> CameraDBSchemaSerializer:
+    """
+    Create a new Camera in the database and on the FPF backend.
+    :return:
+    """
+    camera = camera_data
+    camera['id'] = str(uuid.uuid4())
+    camera['FPF'] = fpf_id
+
+    serializer = CameraDBSchemaSerializer(data=camera, partial=True)
+    serializer.is_valid(raise_exception=True)
+
+    create_camera_at_fpf(fpf_id, camera)
+
     new_camera = Camera(**serializer.validated_data)
     new_camera.id = camera.get('id')
     new_camera.save()
@@ -110,6 +114,9 @@ def update_camera(camera_id: str, data: dict) -> CameraSerializer:
     """
     camera = get_camera_by_id(camera_id)
 
+    serializer = CameraSerializer(camera, data=data, partial=True)
+    serializer.is_valid(raise_exception=True)
+
     # Update camera on FPF
     update_fpf_payload = {
         "intervalSeconds": data.get('intervalSeconds'),
@@ -122,13 +129,14 @@ def update_camera(camera_id: str, data: dict) -> CameraSerializer:
         'sensorType': 'camera',
     }
 
-    put_update_sensor(str(camera.FPF_id), camera_id, update_fpf_payload)
 
-    # Update sensor locally
-    serializer = CameraSerializer(camera, data=data, partial=True)
+    try:
+        put_update_sensor(str(camera.FPF_id), camera_id, update_fpf_payload)
+    except NotFoundException:
+        # TODO: TEMPORARY - should only be used for a time when rolling out energy saving, to auto post the camera to the fpf
+        create_camera_at_fpf(data.get('fpfId'), data)
 
-    if serializer.is_valid(raise_exception=True):
-        serializer.save()
+    serializer.save()
     return serializer
 
 

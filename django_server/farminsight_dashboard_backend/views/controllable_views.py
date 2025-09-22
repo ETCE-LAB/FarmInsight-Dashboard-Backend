@@ -1,25 +1,45 @@
-from rest_framework import views
+from rest_framework import views, status
 from rest_framework.response import Response
-from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 
-from farminsight_dashboard_backend.serializers.controllable_action_serializer import ControllableActionSerializer
-from farminsight_dashboard_backend.services.action_queue_services import get_active_state_of_action, \
-    process_action_queue
-from farminsight_dashboard_backend.services.trigger import create_manual_triggered_action_in_queue
-
 from farminsight_dashboard_backend.utils import get_logger
-from farminsight_dashboard_backend.services import get_fpf_by_id, \
-    get_organization_by_fpf_id, is_admin, create_controllable_action, delete_controllable_action, \
-    get_controllable_action_by_id, get_organization_by_controllable_action_id, \
-    set_is_automated, create_auto_triggered_actions_in_queue, is_member, \
-    update_controllable_action, get_or_create_hardware, set_controllable_action_order
+from farminsight_dashboard_backend.services.action_queue_services import get_active_state_of_action, process_action_queue
+from farminsight_dashboard_backend.services.trigger import create_manual_triggered_action_in_queue
+from farminsight_dashboard_backend.services import get_fpf_by_id, get_organization_by_fpf_id, is_admin, create_controllable_action, \
+    delete_controllable_action, get_controllable_action_by_id, get_organization_by_controllable_action_id, \
+    set_is_automated, create_auto_triggered_actions_in_queue, is_member, update_controllable_action, get_or_create_hardware, \
+    set_controllable_action_order
+
 
 logger = get_logger()
 
+
 class ControllableActionView(views.APIView):
     permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        """
+        An admin creates a new controllable action
+        :param request:
+        :return:
+        """
+        fpf_id = request.data.get('fpfId')
+
+        if not is_admin(request.user, get_organization_by_fpf_id(fpf_id)):
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+        get_fpf_by_id(fpf_id)
+
+        if request.data.get('hardware').get('name'):
+            hardware = get_or_create_hardware(request.data.get('hardware').get('name'), fpf_id)
+            request.data['hardwareId'] = hardware.id
+
+        controllable_action = create_controllable_action(fpf_id, request.data)
+
+        logger.info("Controllable action created successfully", extra={'resource_id': fpf_id})
+
+        return Response(controllable_action, status=status.HTTP_201_CREATED)
 
     def put(self, request, controllable_action_id):
         """
@@ -29,8 +49,6 @@ class ControllableActionView(views.APIView):
         :param request:
         :return:
         """
-        pass
-
         if not is_member(request.user, get_organization_by_controllable_action_id(controllable_action_id)):
             return Response(status=status.HTTP_403_FORBIDDEN)
 
@@ -39,7 +57,6 @@ class ControllableActionView(views.APIView):
         logger.info("Controllable Action updated successfully", extra={'resource_id': controllable_action_id})
 
         return Response(serializer.data, status=status.HTTP_200_OK)
-
 
     def delete(self, request, controllable_action_id):
         """
@@ -66,33 +83,6 @@ class ControllableActionView(views.APIView):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def post_controllable_action(request):
-    """
-    An admin creates a new controllable action
-    :param request:
-    :return:
-    """
-    fpf_id = request.data.get('fpfId')
-
-    if not is_admin(request.user, get_organization_by_fpf_id(fpf_id)):
-        return Response(status=status.HTTP_403_FORBIDDEN)
-
-    get_fpf_by_id(fpf_id)
-
-    if request.data.get('hardware').get('name'):
-        hardware = get_or_create_hardware(request.data.get('hardware').get('name'), fpf_id)
-        request.data['hardwareId'] = hardware.id
-
-    controllable_action = ControllableActionSerializer(create_controllable_action(fpf_id, request.data), partial=True).data
-
-    logger.info("Controllable action created successfully", extra={'resource_id': fpf_id})
-
-    return Response(controllable_action, status=status.HTTP_201_CREATED)
-
-
-
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
 def execute_controllable_action(request, controllable_action_id, trigger_id):
     """
     An admin executes a controllable action trigger
@@ -102,7 +92,6 @@ def execute_controllable_action(request, controllable_action_id, trigger_id):
     :param request:
     :return:
     """
-
     if not is_admin(request.user, get_organization_by_controllable_action_id(controllable_action_id)):
         return Response(status=status.HTTP_403_FORBIDDEN)
 
