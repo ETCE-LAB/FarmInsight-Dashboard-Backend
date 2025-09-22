@@ -1,5 +1,6 @@
 from farminsight_dashboard_backend.models import Hardware
 from farminsight_dashboard_backend.serializers import HardwareSerializer
+from farminsight_dashboard_backend.exceptions import NotFoundException
 from .fpf_connection_services import post_hardware, put_hardware, delete_hardware
 
 
@@ -68,7 +69,7 @@ def update_hardware(hardware_id: str, data) -> HardwareSerializer:
     if serializer.is_valid(raise_exception=True):
         try:
             put_hardware(str(hardware.FPF_id), hardware, data)
-        except Exception as e:
+        except NotFoundException:
             # TODO: TEMPORARY - should only be used for a time when rolling out energy saving
             create_hardware_at_fpf(str(hardware.FPF_id), data.get('name'))
 

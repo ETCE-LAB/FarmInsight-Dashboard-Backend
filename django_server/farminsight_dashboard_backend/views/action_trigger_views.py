@@ -51,7 +51,7 @@ class ActionTriggerView(APIView):
             return Response(status=status.HTTP_403_FORBIDDEN)
 
         actionTrigger = update_action_trigger(actionTrigger_id, request.data)
-        logger.info(f'Action trigger {request.data['description']} updated', extra={'resource_id': request.data['actionId']})
+        logger.info(f'Action trigger {request.data["description"]} updated', extra={'resource_id': request.data['actionId']})
         return Response(actionTrigger.data, status=status.HTTP_200_OK)
 
 

@@ -83,7 +83,7 @@ def post_actions_sort_order(fpf_id: str, data: dict):
 def execute_action(fpf_id: str, action_id: str, trigger_id: str):
     return send_request_to_fpf(fpf_id, 'post', f'/api/execute-actions/{action_id}/{trigger_id}')
 
-def get_action_scripts(fpf_id: str):
+def get_available_action_script_types_by_fpf_id(fpf_id: str):
     return send_request_to_fpf(fpf_id, 'get', '/api/action-scripts/types')
 
 def post_action_trigger(fpf_id: str, data: dict):
@@ -95,7 +95,7 @@ def put_action_trigger(fpf_id: str, trigger_id: str, data: dict):
 def delete_action_trigger(fpf_id: str, trigger_id: str):
     return send_request_to_fpf(fpf_id, 'delete', f'/api/action-triggers/{trigger_id}')
 
-def get_action_queue(fpf_id: str):
+def get_action_queue_by_fpf_id(fpf_id: str):
     return send_request_to_fpf(fpf_id, 'get', '/api/action-queues')
 
 def post_hardware(fpf_id: str, data: dict):
@@ -109,6 +109,7 @@ def delete_hardware(fpf_id: str, hardware_id: str):
 
 def post_hardware_sort_order(fpf_id: str, data: dict):
     return send_request_to_fpf(fpf_id, 'post', '/api/hardwares/sort-order', data)
+
 
 def build_fpf_url(fpf_address, endpoint):
     """

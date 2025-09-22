@@ -1,7 +1,8 @@
+from django.shortcuts import get_object_or_404
+
 from farminsight_dashboard_backend.exceptions import NotFoundException
 from farminsight_dashboard_backend.models import ControllableAction, FPF
 from farminsight_dashboard_backend.serializers import ControllableActionSerializer
-from django.shortcuts import get_object_or_404
 
 
 def get_active_controllable_action_by_id(controllable_action_id:str) -> ControllableAction:

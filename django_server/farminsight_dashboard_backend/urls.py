@@ -108,7 +108,7 @@ urlpatterns = [
     path('controllable-actions', ControllableActionView.as_view(), name='post_controllable_action'),
     path('controllable-actions/<str:controllable_action_id>', ControllableActionView.as_view(), name='controllable_action_operations'),
     path('execute-actions/<str:controllable_action_id>/<str:trigger_id>', execute_controllable_action, name='execute_controllable_action'),
-    path('action-scripts/types', get_available_action_script_types, name='get_available_action_script_types'),
+    path('action-scripts/types/<str:fpf_id>', get_available_action_script_types, name='get_available_action_script_types'),
     path('controllable-actions/sort-order/<str:fpf_id>', post_controllable_action_order, name='post_controllable_action_order'),
 
     path('action-trigger', post_action_trigger,name='post_action_trigger'),

@@ -3,12 +3,12 @@ import requests
 
 from django.core.files import File
 
-from farminsight_dashboard_backend.exceptions import NotFoundException
-from farminsight_dashboard_backend.models import Camera
-from farminsight_dashboard_backend.serializers import CameraSerializer, CameraDBSchemaSerializer
-from farminsight_dashboard_backend.models import Image
-from .fpf_connection_services import post_sensor, put_update_sensor, delete_sensor
 from farminsight_dashboard_backend.utils import get_logger
+from farminsight_dashboard_backend.models import Image
+from farminsight_dashboard_backend.models import Camera
+from farminsight_dashboard_backend.exceptions import NotFoundException
+from farminsight_dashboard_backend.serializers import CameraSerializer, CameraDBSchemaSerializer
+from .fpf_connection_services import post_sensor, put_update_sensor, delete_sensor
 
 
 logger = get_logger()
@@ -128,7 +128,6 @@ def update_camera(camera_id: str, data: dict) -> CameraSerializer:
         "isActive": data.get('isActive'),
         'sensorType': 'camera',
     }
-
 
     try:
         put_update_sensor(str(camera.FPF_id), camera_id, update_fpf_payload)
