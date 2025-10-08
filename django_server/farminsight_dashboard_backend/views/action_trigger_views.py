@@ -28,40 +28,35 @@ def post_action_trigger(request):
     if not is_admin(request.user, get_organization_by_fpf_id(fpf_id)):
         return Response(status=status.HTTP_403_FORBIDDEN)
 
-    trigger = create_action_trigger(request.data)
-    serialized = ActionTriggerSerializer(trigger)
+    serializer = create_action_trigger(request.data)
 
     logger.info(f"Action trigger {request.data['description']} created successfully", extra={'resource_id': request.data['actionId']})
 
-    return Response(serialized.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 class ActionTriggerView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def put(self, request, actionTrigger_id):
+    def put(self, request, action_trigger_id):
         """
         The user must be authenticated and an admin of the organization (or a systemAdmin) to edit it.
         :param request:
-        :param actionTrigger_id:
+        :param action_trigger_id:
         :return:
         """
-
         if not is_member(request.user, get_organization_by_controllable_action_id(request.data['actionId'])):
             return Response(status=status.HTTP_403_FORBIDDEN)
 
-        actionTrigger = update_action_trigger(actionTrigger_id, request.data)
+        action_trigger = update_action_trigger(action_trigger_id, request.data)
         logger.info(f'Action trigger {request.data["description"]} updated', extra={'resource_id': request.data['actionId']})
-        return Response(actionTrigger.data, status=status.HTTP_200_OK)
+        return Response(action_trigger.data, status=status.HTTP_200_OK)
 
 
-    def get(self, request, actionTrigger_id):
-        actionTrigger = get_action_trigger(actionTrigger_id)
+    def get(self, request, action_trigger_id):
+        action_trigger = get_action_trigger(action_trigger_id)
 
-        if actionTrigger is None:
+        if action_trigger is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        return Response(ActionTriggerSerializer(actionTrigger).data)
-
-
-
+        return Response(ActionTriggerSerializer(action_trigger).data)

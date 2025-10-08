@@ -39,7 +39,7 @@ class ControllableActionView(views.APIView):
 
         logger.info("Controllable action created successfully", extra={'resource_id': fpf_id})
 
-        return Response(controllable_action, status=status.HTTP_201_CREATED)
+        return Response(controllable_action.data, status=status.HTTP_201_CREATED)
 
     def put(self, request, controllable_action_id):
         """

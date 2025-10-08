@@ -1,3 +1,5 @@
+import uuid
+
 from farminsight_dashboard_backend.models import Hardware
 from farminsight_dashboard_backend.serializers import HardwareSerializer
 from farminsight_dashboard_backend.exceptions import NotFoundException
@@ -11,12 +13,12 @@ def get_hardware_for_fpf(fpf_id):
     return Hardware.objects.filter(FPF__id=fpf_id).distinct()
 
 
-def create_hardware_at_fpf(fpf_id: str, hardware_name: str):
-    data = {'name': hardware_name, }
+def create_hardware_at_fpf(fpf_id: str, hardware_id: str, hardware_name: str):
+    data = {'name': hardware_name, 'id': hardware_id }
     try:
         post_hardware(fpf_id, data)
     except Exception as e:
-        raise Exception(f"Unable ot create Hardware at FPF. {e}")
+        raise Exception(f"Unable to create Hardware at FPF. {e}")
 
 
 def get_or_create_hardware(hardware_name, fpf_id):
@@ -34,10 +36,12 @@ def get_or_create_hardware(hardware_name, fpf_id):
     if existing_hardware:
         return existing_hardware
 
-    create_hardware_at_fpf(fpf_id, hardware_name)
+    hardware_id = uuid.uuid4()
+    create_hardware_at_fpf(fpf_id, str(hardware_id), hardware_name)
 
     try:
         hardware = Hardware.objects.create(
+            id=hardware_id,
             name=hardware_name,
             FPF_id=fpf_id
         )
@@ -49,9 +53,14 @@ def get_or_create_hardware(hardware_name, fpf_id):
 def create_hardware(data) -> HardwareSerializer:
     serializer = HardwareSerializer(data=data)
     if serializer.is_valid(raise_exception=True):
-        create_hardware_at_fpf(data['FPF'], data['name'])
-        serializer.save()
-    return serializer
+        hardware_id = uuid.uuid4()
+        create_hardware_at_fpf(data['FPF'], str(hardware_id), data['name'])
+
+        hardware = Hardware(**serializer.validated_data)
+        hardware.id = hardware_id
+        hardware.save()
+        return HardwareSerializer(hardware) # when trying to return a serializer that hasn't used save
+        # it creates an exception on serializing it back in the response
 
 
 def set_hardware_order(ids: list[str]) -> HardwareSerializer:
@@ -68,10 +77,10 @@ def update_hardware(hardware_id: str, data) -> HardwareSerializer:
     serializer = HardwareSerializer(hardware, data=data)
     if serializer.is_valid(raise_exception=True):
         try:
-            put_hardware(str(hardware.FPF_id), hardware, data)
+            put_hardware(str(hardware.FPF_id), hardware_id, data)
         except NotFoundException:
             # TODO: TEMPORARY - should only be used for a time when rolling out energy saving
-            create_hardware_at_fpf(str(hardware.FPF_id), data.get('name'))
+            create_hardware_at_fpf(str(hardware.FPF_id), hardware_id, data.get('name'))
 
         serializer.save()
     return serializer
@@ -79,5 +88,5 @@ def update_hardware(hardware_id: str, data) -> HardwareSerializer:
 
 def remove_hardware(hardware_id: str):
     hardware = Hardware.objects.get(id=hardware_id)
-    delete_hardware(str(hardware.FPF_id), hardware)
+    delete_hardware(str(hardware.FPF_id), hardware_id)
     hardware.delete()

@@ -112,7 +112,7 @@ urlpatterns = [
     path('controllable-actions/sort-order/<str:fpf_id>', post_controllable_action_order, name='post_controllable_action_order'),
 
     path('action-trigger', post_action_trigger,name='post_action_trigger'),
-    path('action-trigger/<str:actionTrigger_id>', ActionTriggerView.as_view(), name='actionTrigger_operations'),
+    path('action-trigger/<str:action_trigger_id>', ActionTriggerView.as_view(), name='actionTrigger_operations'),
 
     path('action-queue/<str:fpf_id>', get_action_queue, name='get_action_queue'),
 

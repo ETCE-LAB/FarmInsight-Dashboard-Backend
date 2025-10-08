@@ -1,8 +1,11 @@
+import uuid
+
 from django.shortcuts import get_object_or_404
 
 from farminsight_dashboard_backend.exceptions import NotFoundException
 from farminsight_dashboard_backend.models import ControllableAction, FPF
 from farminsight_dashboard_backend.serializers import ControllableActionSerializer
+from .fpf_connection_services import post_action, put_action, delete_action
 
 
 def get_active_controllable_action_by_id(controllable_action_id:str) -> ControllableAction:
@@ -34,7 +37,7 @@ def get_controllable_action_by_id(controllable_action_id:str) -> ControllableAct
         raise NotFoundException(f'Controllable action with id: {controllable_action_id} was not found.')
 
 
-def create_controllable_action(fpf_id:str, controllable_action_data:dict) -> ControllableActionSerializer:
+def create_controllable_action(fpf_id: str, controllable_action_data: dict) -> ControllableActionSerializer:
     """
     Create a new controllable_action by FPF ID and controllable_action data.
     :param fpf_id: ID of the controllable_action's FPF
@@ -48,11 +51,19 @@ def create_controllable_action(fpf_id:str, controllable_action_data:dict) -> Con
 
     serializer = ControllableActionSerializer(data=controllable_action_data, partial=True)
     if serializer.is_valid(raise_exception=True):
-        serializer.save(FPF=fpf)
-    return serializer
+        action_id = uuid.uuid4()
+
+        controllable_action_data['id'] = str(action_id)
+        post_action(fpf_id, controllable_action_data)
+
+        action = ControllableAction(**serializer.validated_data)
+        action.id = action_id
+        action.FPF = fpf
+        action.save()
+        return ControllableActionSerializer(action)
 
 
-def update_controllable_action(controllable_action_id:str, controllable_action_data:any) -> ControllableActionSerializer:
+def update_controllable_action(controllable_action_id: str, controllable_action_data: any) -> ControllableActionSerializer:
     """
     Update controllable_action by id and controllable_action data
     :param controllable_action_id: controllable_action to update
@@ -63,6 +74,10 @@ def update_controllable_action(controllable_action_id:str, controllable_action_d
     serializer = ControllableActionSerializer(controllable_action, data=controllable_action_data, partial=True)
 
     if serializer.is_valid(raise_exception=True):
+        try:
+            put_action(controllable_action.FPF_id, controllable_action_id, controllable_action_data)
+        except NotFoundException:
+            post_action(controllable_action.FPF_id, controllable_action_data)
         serializer.save()
     return serializer
 
@@ -72,6 +87,7 @@ def delete_controllable_action(controllable_action: ControllableAction):
     Delete controllable_action
     :param controllable_action: controllable_action to delete
     """
+    delete_action(str(controllable_action.FPF_id), str(controllable_action.id))
     controllable_action.delete()
 
 
