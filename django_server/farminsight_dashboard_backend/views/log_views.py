@@ -9,7 +9,7 @@ from farminsight_dashboard_backend.serializers import DateRangeSerializer
 from farminsight_dashboard_backend.services import valid_api_key_for_sensor, valid_api_key_for_fpf, write_log_message, \
     is_member, get_organization_by_fpf_id, get_organization_by_sensor_id, get_log_messages_by_date, \
     get_log_messages_by_amount, is_system_admin, get_organization_by_camera_id, get_organization_by_id, \
-    get_organization_by_controllable_action_id, valid_api_key_for_camera
+    get_organization_by_controllable_action_id, valid_api_key_for_camera, valid_api_key_for_action
 
 
 @api_view(['POST'])
@@ -35,6 +35,10 @@ def post_log_message(request):
     elif 'fpfId' in request.data:
         related_resource_id = request.data['fpfId']
         if not valid_api_key_for_fpf(api_key, related_resource_id):
+            return Response(status=status.HTTP_403_FORBIDDEN)
+    elif 'actionId' in request.data:
+        related_resource_id = request.data['actionId']
+        if not valid_api_key_for_action(api_key, related_resource_id):
             return Response(status=status.HTTP_403_FORBIDDEN)
 
     created_at = datetime.fromisoformat(request.data['createdAt']) if 'createdAt' in request.data else None
