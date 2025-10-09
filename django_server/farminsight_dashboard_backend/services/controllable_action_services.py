@@ -77,6 +77,7 @@ def update_controllable_action(controllable_action_id: str, controllable_action_
         try:
             put_action(controllable_action.FPF_id, controllable_action_id, controllable_action_data)
         except NotFoundException:
+            # TODO: TEMPORARY - should only be used for a time when rolling out energy saving, to auto post the camera to the fpf
             post_action(controllable_action.FPF_id, controllable_action_data)
         serializer.save()
     return serializer

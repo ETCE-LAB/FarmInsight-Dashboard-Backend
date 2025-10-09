@@ -34,8 +34,10 @@ def send_request_to_fpf(fpf_id, method, endpoint, data=None, params=None):
         if response.status_code == status.HTTP_400_BAD_REQUEST: # actually send fpf errors to frontend
             error = response.json()
             raise ValidationError(error)
-        if response.status_code == status.HTTP_404_NOT_FOUND:
+        elif response.status_code == status.HTTP_404_NOT_FOUND:
             raise NotFoundException()
+        elif response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR:
+            raise Exception(f"Internal FPF server error at {url}")
 
         response.raise_for_status()
         return response.json()

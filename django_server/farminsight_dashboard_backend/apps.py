@@ -33,15 +33,17 @@ class FarminsightDashboardBackendConfig(AppConfig):
                     retry_count += 1
                 else:
                     from farminsight_dashboard_backend.services import InfluxDBManager, CameraScheduler, DataRetentionScheduler, WeatherForecastScheduler, AutoTriggerScheduler
-                    from farminsight_dashboard_backend.services.trigger.MeasurementTriggerManager import \
-                        MeasurementTriggerManager
+                    from farminsight_dashboard_backend.services.trigger.MeasurementTriggerManager import MeasurementTriggerManager
 
                     InfluxDBManager.get_instance().initialize_connection()
-                    #CameraScheduler.get_instance().start()
                     DataRetentionScheduler.get_instance().start()
                     WeatherForecastScheduler.get_instance().start()
-                    AutoTriggerScheduler.get_instance().start()
-                    MeasurementTriggerManager.build_trigger_mapping()
+
+                    # Disabled because these got moved to the FPF service directly, but decided not to remove them
+                    # since they might be used here again later
+                    #CameraScheduler.get_instance().start()
+                    #AutoTriggerScheduler.get_instance().start()
+                    #MeasurementTriggerManager.build_trigger_mapping()
                     self.log.info("Started successfully.")
                     break
             except OperationalError as e:
