@@ -29,8 +29,6 @@ def post_location(request):
     return Response(location.data, status=status.HTTP_201_CREATED)
 
 class LocationView(APIView):
-
-
     def put(self, request, location_id):
         """
         Only an Admin or a SysAdmin can update a Location

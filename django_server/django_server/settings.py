@@ -253,3 +253,11 @@ API_KEY_VALIDATION_DURATION_DAYS = env('API_KEY_VALIDATION_DURATION_DAYS', defau
 # How long until log messages and queue entries get deleted from the DB to avoid unnecessary bloat
 DB_LOG_RETENTION_DAYS = env('DB_LOG_RETENTION_DAYS', default=7)
 DB_QUEUE_RETENTION_DAYS = env('DB_QUEUE_RETENTION_DAYS', default=7)
+
+
+# To send emails from the backend to notify users there needs to be a configured mail account
+# on a smtp server that accepts pw authentication
+# for gmail this means creating an app password
+SMTP_SERVER_ADDRESS = env('SMTP_SERVER_ADDRESS', default='smtp.gmail.com')
+SMTP_SENDER_MAIL = env('SMTP_SENDER_MAIL', default='')
+SMTP_SENDER_PASSWORD = env('SMTP_SENDER_PASSWORD', default='')

@@ -4,7 +4,6 @@ from django.core.exceptions import PermissionDenied
 from farminsight_dashboard_backend.exceptions import NotFoundException
 from farminsight_dashboard_backend.serializers import MembershipSerializer
 from farminsight_dashboard_backend.models import Userprofile, Membership, MembershipRole, SystemRole, Organization
-from farminsight_dashboard_backend.services.fpf_streaming_services import http_stream
 
 
 def get_memberships(user: Userprofile) -> QuerySet[Membership]:
@@ -19,7 +18,7 @@ def create_membership(data: dict) -> MembershipSerializer:
     return membership_serializer
 
 
-def update_membership(membership_id: str, new_membership_role: str, requesting_user: Userprofile) -> bool:
+def update_membership(membership_id: str, new_membership_role: str, requesting_user: Userprofile) -> MembershipSerializer:
     """
     An Admin of the Organization, or System Admin of the Backend can promote a user.
     :param membership_id:
@@ -42,9 +41,9 @@ def update_membership(membership_id: str, new_membership_role: str, requesting_u
     if can_update:
         membership.membershipRole = new_membership_role
         membership.save()
-        return True
+        return MembershipSerializer(membership)
 
-    return False
+    raise PermissionDenied()
 
 
 def remove_membership(membership_id) -> bool:

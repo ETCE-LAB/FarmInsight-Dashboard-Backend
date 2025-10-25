@@ -1,4 +1,3 @@
-import time
 from json import JSONDecodeError
 
 import requests
@@ -13,7 +12,6 @@ from farminsight_dashboard_backend.services import get_sensor, is_member, get_or
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_direct_ping(request, resource_type, resource_id):
-    response = None
     if resource_type == 'sensor':
         if not is_member(request.user, get_organization_by_sensor_id(resource_id)):
             return Response(status=HTTP_403_FORBIDDEN)

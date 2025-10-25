@@ -1,8 +1,7 @@
 import secrets
 import string
 from django.db.models import QuerySet, Q
-from oauth2_provider.models import AccessToken, RefreshToken
-from oauthlib.oauth2 import OAuth2Token
+from oauth2_provider.models import AccessToken, RefreshToken, IDToken
 
 from farminsight_dashboard_backend.exceptions import NotFoundException
 from farminsight_dashboard_backend.models import Userprofile
@@ -53,4 +52,5 @@ def set_active_status(user_profile_id: str, active: bool) -> UserprofileSerializ
     user_profile.save()
     AccessToken.objects.filter(user_id=user_profile_id).delete()
     RefreshToken.objects.filter(user_id=user_profile_id).delete()
+    IDToken.objects.filter(user_id=user_profile_id).delete()
     return UserprofileSerializer(user_profile)

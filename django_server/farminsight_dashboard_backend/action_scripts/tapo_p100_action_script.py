@@ -31,7 +31,7 @@ class TapoP100SmartPlugActionScriptWithDelay(TypedSensor):
         return ActionScriptDescription(
             action_script_class_id='dc83813b-1541-4aac-8caa-ba448a6bbdda',
             name='Tapo Smart Plug (HTTP)',
-            description="Turns a Tapo Smart Plug via HTTP calls on and off. MaximumDurationInSeconds adds a delay (optional) to reset the command after the specified time.;Kontrolliert einen Tapo Smart Plug via HTTP-Anfrage. MaximumDurationInSeconds kann optional genutzt werden um den Befehl nach angegebener Zeit zurückzusetzen.",
+            description="Turns a Tapo Smart Plug via HTTP calls on and off. MaximumDurationInSeconds adds a delay (optional) to reset the command after the specified time.;Kontrolliert einen Tapo Smart Plug via HTTP-Anfrage. Maximale Dauer in Sekunden kann optional genutzt werden um den Befehl nach angegebener Zeit zurückzusetzen.",
             action_values=['On', 'Off'],
             fields=[
                 FieldDescription(

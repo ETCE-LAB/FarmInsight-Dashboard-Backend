@@ -3,26 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FarmInsight Dashboard Backend</title>
+    <title>FarmInsight Dashboard</title>
     <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --body-bg: #242424;
+                --card-bg: #2e2e2e;
+                --heading-color: #c9c9c9;
+                --dimmed-color: #828282;
+                --input-bg: #2e2e2e;
+                --input-border: #424242;
+                --link-color: #199ff4;
+                --form-border: #424242;
+            }
+        }
+
+        @media (prefers-color-scheme: light) {
+            :root {
+                --body-bg: #fff;
+                --card-bg: #fff;
+                --heading-color: #000;
+                --dimmed-color: #868e96;
+                --input-bg: #fff;
+                --input-border: #ced4da;
+                --link-color: #199ff4;
+                --form-border: #dee2e6;
+            }
+        }
+
+        body {
+            background-color: var(--body-bg);
+        }
         h2 {
-            text-align: center; font-family: Arial, sans-serif; color: #4A4A4A;
+            text-align: center; font-family: Arial, sans-serif; color: var(--heading-color);
         }
         label, li {
             font-family: Arial, sans-serif;
             display: block;
             font-weight: bold;
             margin-bottom: 5px;
-            color: #333;
+            color: var(--heading-color);
         }
         .helptext {
+            color: var(--dimmed-color);
             font-family: Arial, sans-serif;
             font-size: 0.9rem;
         }
-        form, ul { max-width: 400px; margin: 0 auto; padding: 20px; background-color: #f9f9f9; border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); }
-
-        .errorlist {
-            color: red;
+        form, ul {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--form-border);
         }
 
         input[type="text"],
@@ -34,9 +68,11 @@
             width: 100%;
             padding: 8px;
             margin-bottom: 10px;
-            border: 1px solid #ccc;
+            border: 1px solid var(--input-border);
             border-radius: 4px;
             box-sizing: border-box;
+            color: var(--heading-color);
+            background-color: var(--input-bg);
         }
 
         input:focus,
@@ -60,8 +96,8 @@
         button:hover {
             background-color: #0056b3;
         }
-        p { text-align: center; font-family: Arial, sans-serif; color: #199ff4; margin-top: 20px; }
-        a { font-family: Arial, sans-serif;}
+        p { text-align: center; font-family: Arial, sans-serif; color: var(--dimmed-color); margin-top: 20px; }
+        a { font-family: Arial, sans-serif; color: var(--link-color); }
     </style>
 </head>
 <body>

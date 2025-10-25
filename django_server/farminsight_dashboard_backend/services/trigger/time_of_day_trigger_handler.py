@@ -27,9 +27,7 @@ class TimeOfDayTriggerHandler(BaseTriggerHandler):
                 in_range = now >= from_time or now <= to_time
 
             return in_range
-
         except Exception as e:
-            print(f"[TimeOfDayTriggerHandler] Error parsing trigger logic: {e}")
             return False
 
     def enqueue_if_needed(self):

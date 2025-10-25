@@ -134,7 +134,7 @@ def execute_controllable_action(request, controllable_action_id, trigger_id):
             set_is_automated(controllable_action_id, False)
             create_manual_triggered_action_in_queue(controllable_action_id, trigger_id)
 
-    return Response(status=status.HTTP_200_OK)
+    return Response(data={'success': ''}, status=status.HTTP_200_OK)
 
 
 @api_view(['POST'])
@@ -145,4 +145,4 @@ def post_controllable_action_order(request, fpf_id):
 
     set_controllable_action_order(request.data)
 
-    return Response(status=status.HTTP_200_OK)
+    return Response(data={'success': ''}, status=status.HTTP_200_OK)

@@ -5,7 +5,6 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
-from oauth2_provider.models import AccessToken
 from farminsight_dashboard_backend.serializers.camera_serializer import CameraSerializer
 from farminsight_dashboard_backend.services import get_active_camera_by_id, update_camera, delete_camera, \
     get_fpf_by_id, create_camera, is_member, get_camera_by_id, get_organization_by_camera_id, \
@@ -39,23 +38,22 @@ class CameraView(views.APIView):
         if not is_member(request.user, get_organization_by_camera_id(camera_id)):
             return Response(status=status.HTTP_403_FORBIDDEN)
 
-        from farminsight_dashboard_backend.services import CameraScheduler
-        serializer = CameraSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        old_interval = get_camera_by_id(camera_id).intervalSeconds
-        old_is_active = get_camera_by_id(camera_id).isActive
+        camera = get_camera_by_id(camera_id)
+        old_interval = camera.intervalSeconds
+        old_is_active = camera.isActive
 
         # Update the camera
-        camera = update_camera(camera_id, serializer.data)
+        serializer = update_camera(camera_id, request.data)
 
         logger.info("Camera updated successfully", extra={'resource_id': camera_id})
 
         # Update the scheduler
+        camera = get_camera_by_id(camera_id)
         if camera.intervalSeconds != old_interval or camera.isActive != old_is_active:
+            from farminsight_dashboard_backend.services import CameraScheduler
             CameraScheduler.get_instance().reschedule_camera_job(camera.id, camera.intervalSeconds)
 
-        return Response(CameraSerializer(camera).data, status=status.HTTP_200_OK)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     def delete(self, request, camera_id):
         """
@@ -147,6 +145,6 @@ def post_camera_order(request, fpf_id):
     if not is_admin(request.user, get_organization_by_fpf_id(fpf_id)):
         return Response(status=status.HTTP_403_FORBIDDEN)
 
-    set_camera_order(request.data)
+    serializer = set_camera_order(request.data)
 
-    return Response(status=status.HTTP_200_OK)
+    return Response(data=serializer.data, status=status.HTTP_200_OK)

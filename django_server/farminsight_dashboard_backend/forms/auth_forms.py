@@ -29,3 +29,7 @@ class SignUpForm(UserCreationForm):
 class LoginForm(forms.Form):
     email = forms.CharField()
     password = forms.CharField(widget=forms.PasswordInput)
+
+
+class ForgotPasswordForm(forms.Form):
+    email = forms.EmailField()

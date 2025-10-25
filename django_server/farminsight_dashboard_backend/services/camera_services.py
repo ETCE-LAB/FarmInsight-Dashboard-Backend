@@ -2,6 +2,7 @@ import uuid
 import requests
 
 from django.core.files import File
+
 from farminsight_dashboard_backend.exceptions import NotFoundException
 from farminsight_dashboard_backend.models import Camera, FPF
 from farminsight_dashboard_backend.serializers import CameraSerializer
@@ -79,7 +80,7 @@ def create_camera(fpf_id:str, camera_data:dict) -> Camera:
     return serializer.save(FPF=fpf)
 
 
-def update_camera(camera_id:str, camera_data:any) -> Camera:
+def update_camera(camera_id:str, data:any) -> CameraSerializer:
     """
     Update camera by id and camera data
     :param camera_id: camera to update
@@ -87,10 +88,10 @@ def update_camera(camera_id:str, camera_data:any) -> Camera:
     :return: Updated Camera
     """
     camera = get_camera_by_id(camera_id)
-    for key, value in camera_data.items():
-        setattr(camera, key, value)
-    camera.save()
-    return camera
+    serializer = CameraSerializer(camera, data=data)
+    if serializer.is_valid(raise_exception=True):
+        serializer.save()
+        return serializer
 
 
 def delete_camera(camera: Camera):
@@ -105,9 +106,11 @@ def get_active_camera_count():
     return len(Camera.objects.filter(isActive=True).all())
 
 
-def set_camera_order(ids: list[str]):
+def set_camera_order(ids: list[str]) -> CameraSerializer:
     items = Camera.objects.filter(id__in=ids)
     for item in items:
         item.orderIndex = ids.index(str(item.id))
 
     Camera.objects.bulk_update(items, ['orderIndex'])
+
+    return CameraSerializer(items, many=True)

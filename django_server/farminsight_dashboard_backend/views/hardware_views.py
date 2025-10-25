@@ -33,9 +33,9 @@ def post_hardware_order(request, fpf_id):
     if not is_admin(request.user, get_organization_by_fpf_id(fpf_id)):
         return Response(status=status.HTTP_403_FORBIDDEN)
 
-    set_hardware_order(request.data)
+    serializer = set_hardware_order(request.data)
 
-    return Response(status=status.HTTP_200_OK)
+    return Response(data=serializer.data, status=status.HTTP_200_OK)
 
 
 class HardwareEditViews(APIView):
@@ -62,5 +62,5 @@ def post_hardware(request):
     if not is_member(request.user, get_organization_by_fpf_id(request.data['FPF'])):
         return Response(status=status.HTTP_403_FORBIDDEN)
 
-    harvest = create_hardware(request.data)
-    return Response(harvest.data, status=status.HTTP_201_CREATED)
+    serializer = create_hardware(request.data)
+    return Response(serializer.data, status=status.HTTP_201_CREATED)

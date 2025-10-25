@@ -42,12 +42,14 @@ def create_hardware(data) -> HardwareSerializer:
         return serializer
 
 
-def set_hardware_order(ids: list[str]):
+def set_hardware_order(ids: list[str]) -> HardwareSerializer:
     items = Hardware.objects.filter(id__in=ids)
     for item in items:
         item.orderIndex = ids.index(str(item.id))
 
     Hardware.objects.bulk_update(items, ['orderIndex'])
+
+    return HardwareSerializer(items, many=True)
 
 
 def update_hardware(hardware_id:str, data) -> HardwareSerializer:

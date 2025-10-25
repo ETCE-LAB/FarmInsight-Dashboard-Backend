@@ -25,13 +25,14 @@ class ShellyPlugHttpActionScript(TypedSensor):
         return ActionScriptDescription(
             action_script_class_id='baa6ef9a-58dc-4e28-b429-d525dfef0941',
             name='Shelly Plug S (HTTP)',
-            description="Turns a Shelly Plug S via HTTP calls on and off. MaximumDurationInSeconds adds a delay (optional) to reset the command after the specified time.",
+            description=("Turns a Shelly Plug S via HTTP calls on and off. Maximum duration in seconds adds an optional delay to reset the command after the specified time."
+                         ";Steuert einen Shelly Plug S über HTTP. Maximale Dauer in Sekunden fügt eine optionale Wartezeit hinzu die das Kommando nach der angegebenen Dauer umkehrt."),
             action_values=['On', 'Off'],
             fields=[
                 FieldDescription(
                     id='http',
                     name='Http endpoint;HTTP Endpunkt',
-                    description="HTTP endpoint of the Shelly plug.",
+                    description="HTTP endpoint of the Shelly plug.;HTTP Endpunkt des Shelly Steckers.",
                     type=FieldType.STRING,
                     rules=[
                         ValidHttpEndpointRule(),
@@ -99,7 +100,8 @@ class ShellyPlugMqttActionScript(TypedSensor):
         return ActionScriptDescription(
             action_script_class_id='d821e939-3f67-4ac9-bb3c-274ac0a2056e',
             name='Shelly Plug S (MQTT)',
-            description="Turns a Shelly Plug S via MQTT communication on and off. MaximumDurationInSeconds adds a delay (optional) to reset the command after the specified time.;Steuert einen Shelly Plug S via MQTT. MaximumDurationInSeconds kann optional genutzt werden um den Befehl nach angegebener Zeit zurückzusetzen.",
+            description=("Turns a Shelly Plug S via MQTT communication on and off. MaximumDurationInSeconds adds a delay (optional) to reset the command after the specified time."
+                         ";Steuert einen Shelly Plug S über MQTT. Maximale Dauer in Sekunden fügt eine optionale Wartezeit hinzu die das Kommando nach der angegebenen Dauer umkehrt."),
             action_values=['On', 'Off'],
             fields=[
                 FieldDescription(
