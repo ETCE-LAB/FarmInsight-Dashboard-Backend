@@ -324,6 +324,73 @@ class InfluxDBManager:
         return forecasts
 
     @_retry_connection
+    def fetch_all_weather_forecasts(self, orga_id: str, location_id: str, from_date: str, to_date: str):
+        try:
+            query_api = self.client.query_api()
+
+            # Construct the query
+            query = (
+                f'from(bucket: "{orga_id}") '
+                f'|> range(start: {from_date}, stop: {to_date}) '
+                f'|> filter(fn: (r) => r["_measurement"] == "WeatherForecast" and r["locationId"] == "{str(location_id)}") '
+                f'|> sort(columns: ["_time"], desc: false) '
+            )
+
+            # Execute the query
+            result = query_api.query(org=self.influxdb_settings['org'], query=query)
+
+            forecasts = []
+
+            # Loop through the results (tables and records)
+            for table in result:
+                for record in table.records:
+                    values = record.values
+
+                    # One Field to rule them all
+                    data = json.loads(values.get('_value'))
+
+                    forecast_date = datetime.strptime(data["ForecastDate"], "%Y-%m-%d")
+
+                    sunrise_date = datetime.strptime(data["sunrise"], "%Y-%m-%dT%H:%M")
+                    sunset_date = datetime.strptime(data["sunset"], "%Y-%m-%dT%H:%M")
+
+                    fetch_date = values.get('_time')
+                    if not isinstance(fetch_date, datetime):
+                        try:
+                            fetch_date = datetime.fromisoformat(fetch_date)
+                        except Exception as e:
+                            fetch_date = datetime.now()
+
+                    wf = dict(
+                        fetchDate=fetch_date,
+                        forecastDate=forecast_date,
+                        rainMM=str(data.get("rain_sum", 0)),
+                        sunshineDurationSeconds=str(data.get("sunshine_duration", 0)),
+                        weatherCode=str(data.get("weather_code", "")),
+                        windSpeedMax=str(data.get("wind_speed_max", 0)),
+                        temperatureMinC=str(data.get("temperature_min", 0)),
+                        temperatureMaxC=str(data.get("temperature_max", 0)),
+                        sunrise=sunrise_date,
+                        sunset=sunset_date,
+                        precipitationMM=str(data.get("precipitation_sum", 0)),
+                        precipitationProbability=str(data.get("precipitation_probability_max", 0)),
+                        locationId=values.get('locationId', "")
+                    )
+                    forecasts.append(wf)
+
+            forecasts.sort(key=lambda x: x['forecastDate'], reverse=True)
+
+        except requests.exceptions.ConnectionError as e:
+            self.client = None
+            self.log.error(f"Failed to connect to InfluxDB: {e}")
+            raise InfluxDBNoConnectionException("Unable to connect to InfluxDB.")
+
+        except Exception as e:
+            raise InfluxDBQueryException(str(e))
+
+        return forecasts
+
+    @_retry_connection
     def write_weather_forecast(self, orga_id: str, location_id: str, weather_forecasts):
         """
         Writes Weather Forecast for a given Location (Orga) to InfluxDB.
