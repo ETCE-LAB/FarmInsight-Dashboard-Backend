@@ -215,7 +215,7 @@ python manage.py loaddata application
 
 Start on 
 ```sh
-python manage.py runsever
+python manage.py runserver
 ```
 
 Run on a desired port
