@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from farminsight_dashboard_backend.models import FPF, Organization, Location
+from .custom_serializer import CustomSerializer
 from .hardware_serializer import HardwareSerializer
 from .controllable_action_serializer import ControllableActionSerializer
 from .camera_serializer import CameraImageSerializer, CameraSerializer
@@ -8,14 +9,15 @@ from .sensor_serializer import SensorDataSerializer, SensorLastValueSerializer
 from .location_serializer import LocationSerializer
 
 
-class FPFSerializer(serializers.ModelSerializer):
+class FPFSerializer(CustomSerializer):
     organizationId = serializers.PrimaryKeyRelatedField(
         source='organization',  # Maps this field to the 'organization' foreign key in the model
         queryset=Organization.objects.all()
     )
     locationId = serializers.PrimaryKeyRelatedField(
         source='location',  # Maps this field to the 'location' foreign key in the model
-        queryset=Location.objects.all()
+        queryset=Location.objects.all(),
+        allow_null=True,
     )
 
     class Meta:
@@ -23,10 +25,41 @@ class FPFSerializer(serializers.ModelSerializer):
         read_only_fields = ('id',)
         fields = ('id', 'name', 'isPublic', 'sensorServiceIp', 'organizationId', 'locationId')
 
+    def validate_sensorServiceIp(self, value):
+        '''
+        this does not accept localhost:8001, add http:// or use 127.0.0.1:8001 for development purposes
+        '''
+        from urllib.parse import urlparse
+
+        parsed = urlparse(value)
+        if parsed.netloc:
+            return value
+
+        import ipaddress
+
+        try:
+            ipaddress.ip_address(value)
+            return value
+        except ValueError as e:
+            if ':' in value:
+                try:
+                    ip, port = value.split(':')
+                    ipaddress.ip_address(ip)
+                    int(port)
+                    return value
+                except:
+                    pass
+
+        raise serializers.ValidationError('Not a valid IP address or URL')
+
     def validate(self, data):
-        fpfs = FPF.objects.filter(name=data['name'], organization=data['organization'])
+        if 'organization' in data: # this depends on if there were other errors before
+            fpfs = FPF.objects.filter(name=data['name'], organization=data['organization'])
+        else:
+            fpfs = FPF.objects.filter(name=data['name'], organization_id=data['organizationId'])
+
         if len(fpfs) > 0:
-            raise serializers.ValidationError({"name":"This name is already taken for this organization"})
+            raise serializers.ValidationError({"name": "This name is already taken for this organization"})
         return data
 
 

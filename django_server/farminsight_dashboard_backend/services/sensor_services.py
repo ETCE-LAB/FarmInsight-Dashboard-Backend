@@ -62,9 +62,11 @@ def create_sensor(sensor):
     return serializer.data
 
 
-def set_sensor_order(ids: list[str]):
+def set_sensor_order(ids: list[str]) -> SensorSerializer:
     sensors = Sensor.objects.filter(id__in=ids)
     for sensor in sensors:
         sensor.orderIndex = ids.index(str(sensor.id))
 
     Sensor.objects.bulk_update(sensors, ['orderIndex'])
+
+    return SensorSerializer(sensors, many=True)

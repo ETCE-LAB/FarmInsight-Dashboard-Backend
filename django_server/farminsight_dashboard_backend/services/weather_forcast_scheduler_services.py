@@ -101,18 +101,14 @@ class WeatherForecastScheduler:
             response = requests.get(request_url, stream=True)
 
             raw_data = response.json()['daily']
-
             data = [
                 { key: raw_data[key][i] for key in raw_data }
                 for i in range(len(raw_data['time']))
             ]
-
         except Exception as e:
-            print(f"Error fetching Weather Forecast")
-
+            pass
 
         if response.status_code == 200:
-
             location = Location.objects.get(id=locationId)
 
             from farminsight_dashboard_backend.services import InfluxDBManager

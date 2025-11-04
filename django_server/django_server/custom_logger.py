@@ -18,5 +18,4 @@ class DatabaseLogHandler(logging.Handler):
                 relatedResourceId=resource_id,
             )
         except Exception as e:
-            #print(f'DatabaseLogHandler: {e} {type(e)}')
             pass

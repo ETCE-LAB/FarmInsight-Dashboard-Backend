@@ -36,6 +36,8 @@ All FarmInsight Repositories:
 * <a href="https://github.com/ETCE-LAB/FarmInsight-Dashboard-Backend">Dashboard-Backend</a>
 * <a href="https://github.com/ETCE-LAB/FarmInsight-FPF-Backend">FPF-Backend</a>
 
+Link to our productive System:<a href="https://farminsight.etce.isse.tu-clausthal.de"> FarmInsight.etce.isse.tu-clausthal.de</a>
+
 ### Core vision
 
 <img src="/.documentation/FarmInsightOverview.jpg">
@@ -105,13 +107,16 @@ See for example the existing http_action_scripts.py and take it as a template.
 Give your new class the desired logic and add a new UUID as the action_script_class_id.
 Make sure to export the new class in the package '__init__' file.
 
-### Weather forecast
-Locations can be added for a FPF and one location can be marked for the weather data forecast gathering.
-With an external API, the weather forecast for the upcoming 16 days will be gathered and stored in the Influx DB.
-
 ### User Authentication
 The backend uses standard Django user authentication.
 Users can register and log in through the frontend.
+
+### Weather Forecast
+Locations can be added for a FPF and one location can be marked for the weather data forecast gathering.
+With an external API, the weather forecast for the upcoming 16 days will be gathered and stored in the Influx DB.
+
+For the Weather Forecast we are using the public api https://open-meteo.com. The Backend is gathering every day at 6 a.m. the forecast for all Locations, where the Settings is activated.
+16 Days of Data are stored, but in the frontend only 3 days are visible.
 
 ## Development Setup
 
@@ -210,7 +215,7 @@ python manage.py loaddata application
 
 Start on 
 ```sh
-python manage.py runsever
+python manage.py runserver
 ```
 
 Run on a desired port
@@ -255,7 +260,15 @@ If there is no admin account with adequate rights you need to create a superuser
 python manage.py createsuperuser
 ```
 
-## Contributing
+## 🔄 Contribute to FarmInsight
+We welcome contributions! Please follow these steps:
+1. Fork the repository.
+2. Create a new branch: `git checkout -b feature/your-feature`
+3. Make your changes and commit them: `git commit -m 'Add new feature'`
+4. Push the branch: `git push origin feature/your-feature`
+5. Create a pull request.
+
+## Past/Present Contributors
 
 This project was developed as part of the Digitalisierungsprojekt at DigitalTechnologies WS24/25 by:
 * Tom Luca Heering
@@ -271,8 +284,7 @@ Project supervision:
 Many thanks to Anant for the deployment!
 
 ## License
-
-
+This project is licensed under the [AGPL-3.0](https://www.gnu.org/licenses/agpl-3.0.html) license.
 
 <!-- MARKDOWN LINKS & IMAGES -->
 [Python-img]: https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54

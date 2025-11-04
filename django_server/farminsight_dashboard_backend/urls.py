@@ -46,7 +46,8 @@ from farminsight_dashboard_backend.views import (
     get_direct_ping, get_action_queue,
     post_log_message_insecure, get_reset_userprofile_password, get_all_userprofiles, post_sensor_order,
     post_growing_cycle_order, post_camera_order, post_controllable_action_order, post_organization_order,
-    post_hardware_order, HardwareEditViews, post_hardware, ActionTriggerView, post_fpf_order
+    post_hardware_order, HardwareEditViews, post_hardware, ActionTriggerView, post_fpf_order,
+    post_userprofile_active_status, forgot_password_view, reset_password_view, get_all_organizations
 )
 
 urlpatterns = [
@@ -54,9 +55,10 @@ urlpatterns = [
     path('userprofiles/<str:identifier>', UserprofileView.as_view(), name='userprofile_operations'),
 
     path('organizations/own', get_own_organizations, name='get_own_organizations'),
+    path('organizations/all', get_all_organizations, name='get_all_organizations'),
+    path('organizations/sort-order', post_organization_order, name='post_organization_order'),
     path('organizations/<str:organization_id>', OrganizationView.as_view(), name='organization_operations'),
     path('organizations', post_organization, name='post_organization'),
-    path('organizations/sort-order', post_organization_order, name='post_organization_order'),
 
     path('fpfs', FpfView.as_view(), name='post_fpf'),
     path('fpfs/visible', get_visible_fpf, name='get_visible_fpf'),
@@ -96,6 +98,9 @@ urlpatterns = [
     path('signup/', signup_view, name='signup_view'),
     path('logout', logout_view, name='logout_view'),
     path('change-password', change_password_view, name='change_password_view'),
+    path('forgot-password', forgot_password_view, name='forgot_password_view'),
+    path('reset-password', reset_password_view, name='reset_password_view'),
+
     path('log_messages', post_log_message, name='post_log_message'),
     path('log_messages/<str:resource_type>/<str:resource_id>', get_log_messages, name='get_log_messages'),
     path('log-messages-insecure/<str:resource_id>/<str:message>', post_log_message_insecure, name='post_log_message_insecure'),
@@ -129,4 +134,5 @@ urlpatterns = [
 
     path('admin/password-reset/<str:userprofile_id>', get_reset_userprofile_password, name='get_reset_userprofile_password'),
     path('admin/userprofiles-all', get_all_userprofiles, name='get_all_userprofiles'),
+    path('admin/set-active/<str:userprofile_id>', post_userprofile_active_status, name='post_userprofile_active_status'),
 ]

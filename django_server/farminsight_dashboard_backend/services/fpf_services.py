@@ -2,6 +2,7 @@ import datetime
 
 from django.conf import settings
 from django.utils import timezone
+from rest_framework.exceptions import ValidationError
 
 from farminsight_dashboard_backend.exceptions import NotFoundException
 from farminsight_dashboard_backend.models import FPF, Userprofile
@@ -22,8 +23,7 @@ def create_fpf(data) -> FPFSerializer:
     from farminsight_dashboard_backend.services import InfluxDBManager, post_fpf_id
 
     serializer = FPFSerializer(data=data, partial=True)
-
-    if serializer.is_valid(raise_exception=True):
+    if serializer.is_valid():
         serializer.save()
         fpf_id = serializer.data.get('id')
         try:
@@ -36,6 +36,8 @@ def create_fpf(data) -> FPFSerializer:
             raise api_error
 
         InfluxDBManager.get_instance().sync_fpf_buckets()
+    else:
+        raise ValidationError(serializer.errors)
 
     return serializer
 
@@ -92,13 +94,15 @@ def get_visible_fpf_preview(user: Userprofile=None) -> FPFPreviewSerializer:
     public_fpfs = FPF.objects.filter(isPublic=True).all()
     fpfs |= set([fpf for fpf in public_fpfs])
 
-    serializer = FPFPreviewSerializer(fpfs, many=True)
+    serializer = FPFPreviewSerializer(sorted(fpfs, key=lambda x: (x.organization.orderIndex, x.orderIndex)), many=True)
     return serializer
 
 
-def set_fpf_order(ids: list[str]):
+def set_fpf_order(ids: list[str]) -> FPFSerializer:
     items = FPF.objects.filter(id__in=ids)
     for item in items:
         item.orderIndex = ids.index(str(item.id))
 
     FPF.objects.bulk_update(items, ['orderIndex'])
+
+    return FPFSerializer(items, many=True)

@@ -2297,11 +2297,6 @@ components:
         name:
           type: string
 
-
-
-
-
-        
   requestBodies:
     Organization:
       description: Organization object that needs to be added
