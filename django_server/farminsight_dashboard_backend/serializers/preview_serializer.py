@@ -13,7 +13,7 @@ class FPFPreviewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = FPF
-        fields = ['id', 'name', 'organization', 'lastImageUrl', 'sensors']
+        fields = ['id', 'name', 'organization', 'lastImageUrl', 'sensors', 'isActive']
 
     def get_lastImageUrl(self, obj):
         newest_image: Image = None

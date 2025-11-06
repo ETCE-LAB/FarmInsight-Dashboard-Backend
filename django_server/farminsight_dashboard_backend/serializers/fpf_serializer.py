@@ -23,7 +23,7 @@ class FPFSerializer(CustomSerializer):
     class Meta:
         model = FPF
         read_only_fields = ('id',)
-        fields = ('id', 'name', 'isPublic', 'sensorServiceIp', 'organizationId', 'locationId')
+        fields = ('id', 'name', 'isPublic', 'sensorServiceIp', 'organizationId', 'locationId', 'isActive')
 
     def validate_sensorServiceIp(self, value):
         '''
@@ -71,7 +71,7 @@ class FPFFunctionalSerializer(serializers.ModelSerializer):
     class Meta:
         model = FPF
         read_only_fields = ('id',)
-        fields = ('id', 'name', 'isPublic', 'sensorServiceIp', 'locationId', 'orderIndex')
+        fields = ('id', 'name', 'isPublic', 'sensorServiceIp', 'locationId', 'orderIndex', 'isActive')
 
 
 class FPFTechnicalKeySerializer(serializers.ModelSerializer):
@@ -102,6 +102,7 @@ class FPFFullSerializer(serializers.ModelSerializer):
             'ControllableAction',
             'orderIndex',
             'Hardware',
+            'isActive'
         ]
 
 
