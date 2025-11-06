@@ -4,7 +4,7 @@ from rest_framework.response import Response
 
 from farminsight_dashboard_backend.serializers import DateRangeSerializer, FPFFullDataSerializer
 from farminsight_dashboard_backend.services import get_all_fpf_data, get_all_sensor_data, get_images_by_camera
-from farminsight_dashboard_backend.services.data_services import get_last_weather_forecast
+from farminsight_dashboard_backend.services.data_services import get_last_weather_forecast, get_weather_forecasts_by_date
 
 
 @api_view(['GET'])
@@ -73,7 +73,15 @@ def get_weather_forecasts(request, location_id):
     :param request:
     :return: 3 Weather Forecasts
     """
+    if request.query_params == {}:
+        response = get_last_weather_forecast(location_id)
+    else:
+        serializer = DateRangeSerializer(data=request.query_params)
+        serializer.is_valid(raise_exception=True)
 
-    response = get_last_weather_forecast(location_id)
+        from_date = serializer.validated_data.get('from_date')
+        to_date = serializer.validated_data.get('to_date')
+        response = get_weather_forecasts_by_date(location_id, from_date, to_date)
 
     return Response(response, status=status.HTTP_200_OK)
+

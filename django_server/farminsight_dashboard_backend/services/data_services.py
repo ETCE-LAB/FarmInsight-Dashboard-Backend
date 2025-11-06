@@ -2,7 +2,6 @@ from farminsight_dashboard_backend.models import FPF, Sensor, Location
 from farminsight_dashboard_backend.utils import get_date_range
 from .influx_services import InfluxDBManager
 from ..exceptions import NotFoundException
-from ..serializers.fpf_serializer import FPFFullSerializer
 
 
 def get_all_fpf_data(fpf_id):
@@ -54,4 +53,16 @@ def get_last_weather_forecast(locationId):
     location = Location.objects.get(id=locationId)
     forecasts = InfluxDBManager.get_instance().fetch_last_weather_forcast(location.organization.id, location.id )
 
+    return forecasts
+
+def get_weather_forecasts_by_date(location_id: str, from_date, to_date=None):
+    """
+    :param location_id: UUID of the location
+    :param to_date: must be in ISO 8601 format (e.g. 2024-10-01T00:00:00Z) or YYYY-MM-DD format.
+    :param from_date: must be in ISO 8601 format (e.g. 2024-10-31T23:59:59Z) or YYYY-MM-DD format.
+    :return:
+    """
+    from_date_iso, to_date_iso = get_date_range(from_date, to_date)
+    location = Location.objects.get(id=location_id)
+    forecasts = InfluxDBManager.get_instance().fetch_all_weather_forecasts(location.organization.id, location.id, from_date_iso, to_date_iso)
     return forecasts
