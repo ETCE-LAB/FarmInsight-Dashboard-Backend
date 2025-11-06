@@ -1,3 +1,4 @@
+import asyncio
 import time
 import signal
 import os
@@ -9,6 +10,7 @@ from django.db.migrations.executor import MigrationExecutor
 from django.db import connections
 
 from farminsight_dashboard_backend.utils import get_logger
+from django_server.matrix_notifier import matrix_client
 
 
 class FarminsightDashboardBackendConfig(AppConfig):
@@ -36,12 +38,18 @@ class FarminsightDashboardBackendConfig(AppConfig):
                     from farminsight_dashboard_backend.services.trigger.MeasurementTriggerManager import \
                         MeasurementTriggerManager
 
+                    matrix_client.start_in_thread()
+                    # Wait for the matrix client to be fully initialized and logged in.
+                    if not matrix_client.wait_until_ready(timeout=30):
+                        self.log.error("Matrix client failed to initialize within the timeout.")
+
                     InfluxDBManager.get_instance().initialize_connection()
                     CameraScheduler.get_instance().start()
                     DataRetentionScheduler.get_instance().start()
                     WeatherForecastScheduler.get_instance().start()
                     AutoTriggerScheduler.get_instance().start()
                     MeasurementTriggerManager.build_trigger_mapping()
+
                     self.log.info("Started successfully.")
                     break
             except OperationalError as e:

@@ -15,3 +15,4 @@ opencv-python~=4.10.0.84
 plugp100~=5.1.4
 paho-mqtt~=2.1.0
 PyP100~=0.1.2
+matrix-nio~=0.25.2

@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 from pathlib import Path
 import environ
 import os
+import logging
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -123,6 +124,18 @@ DATABASES = {
     }
 }
 
+# Matrix notification settings
+MATRIX_HOMESERVER = env('MATRIX_HOMESERVER', default='')
+MATRIX_USER = env('MATRIX_USER', default='')
+MATRIX_PASSWORD = env('MATRIX_PASSWORD', default='')
+# A dictionary mapping log levels to room IDs.
+MATRIX_ROOM_IDS = {
+    'INFO': env('MATRIX_ROOM_ID_INFO', default=''),
+    'WARNING': env('MATRIX_ROOM_ID_WARNING', default=''),
+    'ERROR': env('MATRIX_ROOM_ID_ERROR', default=''),
+    'DEBUG': env('MATRIX_ROOM_ID_DEBUG', default=''),  # Optionaler Raum für Debug-Logs
+}
+
 # For logging in the console
 LOGGING = {
     'version': 1,
@@ -147,6 +160,11 @@ LOGGING = {
             'level': 'INFO',
             'class': 'django_server.custom_logger.DatabaseLogHandler',
         },
+        'matrix_handler': {
+            'level': 'DEBUG',  # Handler soll alle Logs ab DEBUG-Level empfangen
+            'class': 'django_server.custom_logger.MatrixLogHandler',
+            'formatter': 'simple',
+        },
     },
     'loggers': {
         'django': {
@@ -155,7 +173,7 @@ LOGGING = {
             'propagate': True,
         },
         'farminsight_dashboard_backend': {
-            'handlers': ['console', 'db_handler'],
+            'handlers': ['console', 'db_handler', 'matrix_handler'],
             'level': 'DEBUG',
             'propagate': False,
         }
@@ -253,3 +271,9 @@ DB_QUEUE_RETENTION_DAYS = env('DB_QUEUE_RETENTION_DAYS', default=7)
 SMTP_SERVER_ADDRESS = env('SMTP_SERVER_ADDRESS', default='smtp.gmail.com')
 SMTP_SENDER_MAIL = env('SMTP_SENDER_MAIL', default='')
 SMTP_SENDER_PASSWORD = env('SMTP_SENDER_PASSWORD', default='')
+
+
+
+# Test log for Matrix notification
+logger = logging.getLogger('farminsight_dashboard_backend')
+logger.info("Matrix notification system is configured and working.")
