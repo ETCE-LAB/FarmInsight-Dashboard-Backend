@@ -9,8 +9,6 @@ import requests
 
 
 class OpenMeteoClient:
-    """Client, der eine 16‑Tage‑Vorhersage abfragt – mit robustem Fallback."""
-
     def __init__(self, latitude: float, longitude: float):
         self.latitude = latitude
         self.longitude = longitude

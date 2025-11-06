@@ -6,8 +6,6 @@ logger = get_logger()
 
 
 class SensorDataLoader:
-    """Lädt und vereinheitlicht Regen- und Füllstandsdaten aus CSV-Dateien."""
-
     def __init__(self, rain_path: str, water_path: str, tank_capacity: float):
         self.rain_path = rain_path
         self.water_path = water_path
@@ -26,10 +24,8 @@ class SensorDataLoader:
         water["_time"] = pd.to_datetime(water["_time"], utc=True).dt.tz_convert("Europe/Berlin")
         water["date"] = water["_time"].dt.tz_localize(None).dt.normalize()  # dtype: datetime64[ns]
 
-        # 2) Werte-Spalte vereinheitlichen
         water["fill"] = pd.to_numeric(water["_value"], errors="coerce")
 
-        # 3) Auf Tagesebene aggregieren (über die *Spalte* 'date' – kein rename von _time!)
         water = (
             water.groupby("date", as_index=False)
             .agg(fill=("fill", "max"))  # Aggregationen nach Bedarf anpassen
@@ -37,7 +33,6 @@ class SensorDataLoader:
 
         water = water.rename(columns={water.columns[0]: "date"})  # erste Spalte ist date
 
-        # Auf Datum mergen
         df = pd.merge(rain, water, on="date", how="outer").sort_values("date")
 
         df["rain_capture"] = df["rain_mm"]
@@ -80,11 +75,10 @@ def correct_values(df: pd.DataFrame) -> pd.DataFrame:
         duration = (t1 - t0).total_seconds()
         current = t0
         while current < t1:
-            day_end = (current + pd.Timedelta(days=1)).normalize()  # tz-aware Mitternacht
+            day_end = (current + pd.Timedelta(days=1)).normalize()
             chunk_end = min(t1, day_end)
             frac = (chunk_end - current).total_seconds() / duration
 
-            # <- HIER: tz-naiv + normalisiert als Join-Key
             rows.append({
                 "date": current.tz_localize(None).normalize(),
                 "rain_mm": v * frac

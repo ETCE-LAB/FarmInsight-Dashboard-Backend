@@ -126,12 +126,12 @@ def forecast_greenhouse():
     resp.raise_for_status()
     forecast = resp.json()
 
-    face_azimuth_deg = 30.0  # Dachfläche A schaut nach Osten (Normale 90°)
+    face_azimuth_deg = 30.0  # Dachfläche A schaut nach NordOstNord
     face_area_m2 = 10.0  # Fläche je Dachseite (geneigte Fläche), z.B. 10 m²
     slope_deg = 30.0  # Dachneigung 30°
     precip_key = "rain_sum"  # nur Regen; alternativ "precipitation_sum"
     wind_bias_strength = 0.3
-    wind_exposure_factors = (0.8, 0.9)  # A (luv) leicht beschleunigt, B (lee) abgeschirmt
+    wind_exposure_factors = (0.8, 0.9)  # A (luv) leicht zugeneigt, B (lee) abgeschirmt
 
     result = compute_greenhouse_roof_rain(
         forecast,
@@ -140,7 +140,7 @@ def forecast_greenhouse():
         slope_deg=slope_deg,  # Neigung
         precip_key=precip_key,
         wind_bias_strength=wind_bias_strength,  # Windverteilungsstärke
-        wind_exposure_factors=wind_exposure_factors,  # A leicht exponiert, B leicht abgeschirmt
+        wind_exposure_factors=wind_exposure_factors,  # A leicht zugeneigt, B leicht abgeschirmt
     )
 
     logging.info("Datum        Regen(mm)   A(mm)   B(mm)   A(m³)   B(m³)   Gesamt(m³)  Wind aus (°)  Wind nach (°)")
