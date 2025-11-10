@@ -21,7 +21,7 @@ async def websocket_stream(livestream_url: str,
     """
     loop = asyncio.get_event_loop()
     channel_layer = get_channel_layer()
-    frame_interval = 1.0 / 60
+    frame_interval = 1.0 / 30
 
     # Öffne VideoCapture im Executor (vermeidet blocking im Eventloop)
     cap = await loop.run_in_executor(None, cv2.VideoCapture, livestream_url)
