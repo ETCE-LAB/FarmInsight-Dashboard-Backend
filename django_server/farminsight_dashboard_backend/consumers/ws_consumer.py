@@ -106,7 +106,7 @@ class WebsocketStreamingManager:
 
     @classmethod
     async def add_client(cls, camera_id: str, livestream_url: str, group_name: str, max_fps: int = 5):
-        logger.info("New Client for Camera Livestream: ", camera_id)
+        logger.info(f'New Client for Camera Livestream: {camera_id} ' )
         async with cls._lock:
 
             entry = cls._streams.get(camera_id)
