@@ -43,9 +43,10 @@ class SensorUpdatesConsumer(AsyncWebsocketConsumer):
 
 class CameraLivestreamConsumer(AsyncWebsocketConsumer):
     """
-    Integration von websocket_stream:
-    - beim ersten Client wird das Stream-Task gestartet
-    - bei letzter Trennung wird das Stop-Event gesetzt
+    Integration of  websocket_stream:
+    - Stream Task starts when first Client connects
+    - Stream Task stops when last Client disconnects
+    - Frames are sent to all connected clients via channel_layer.group_send
     """
     def __init__(self, *args, **kwargs):
         super().__init__(args, kwargs)
@@ -62,7 +63,7 @@ class CameraLivestreamConsumer(AsyncWebsocketConsumer):
             await self.channel_layer.group_add(self.room_group_name, self.channel_name)
             await self.accept()
 
-            # Hole livestreamUrl in einem non-blocking call
+            # Get livestream URL from Camera
             try:
                 camera = await sync_to_async(get_active_camera_by_id)(self.room_name)
                 livestream_url = camera.livestreamUrl
@@ -70,7 +71,7 @@ class CameraLivestreamConsumer(AsyncWebsocketConsumer):
                 logger.info("Client failed to connect to CameraLivestreamConsumer")
                 return
 
-            # Start/inkrementiere den Stream für diese Kamera
+            # Start of streaming task (if not already started)
             await WebsocketStreamingManager.add_client(self.room_name, livestream_url, self.room_group_name)
         except Exception as e:
             await LogMessage.objects.acreate(
@@ -96,10 +97,11 @@ class CameraLivestreamConsumer(AsyncWebsocketConsumer):
 
 class WebsocketStreamingManager:
     """
-    Einfacher manager, der pro camera_id:
-    - die Client-Anzahl tracked
-    - ein stop_event hält
-    - die streaming task startet/stoppt
+    Static class to manage websocket streaming tasks.:
+    - tracks active streaming tasks per camera_id
+    - starts a new streaming task when the first client connects
+    - stops the streaming task when the last client disconnects
+    - uses asyncio.Lock to ensure thread-safe access to the internal state
     """
     _streams: dict = {}
     _lock = asyncio.Lock()
@@ -116,7 +118,7 @@ class WebsocketStreamingManager:
             stop_event = asyncio.Event()
             task = asyncio.create_task(websocket_stream(livestream_url, group_name, max_fps=max_fps, stop_event=stop_event))
 
-            # cleanup wenn task fertig ist
+            # cleanup if task is done
             def _done_callback(t, cid=camera_id):
                 try:
                     # entferne Eintrag asynchron
@@ -135,7 +137,7 @@ class WebsocketStreamingManager:
                 return
             entry['clients'] -= 1
             if entry['clients'] <= 0:
-                # Stoppe das streaming-task; cleanup geschieht im done-callback
+                # Stop the streaming task
                 entry['stop_event'].set()
 
     @classmethod
