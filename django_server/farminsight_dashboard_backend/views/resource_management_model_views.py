@@ -89,7 +89,6 @@ def post_model(request):
             create_action_mappings(fpf_id, resource_model.id, actions_data)
             logger.info(f"Actions created successfully for model {resource_model.name}")
 
-        resource_model = create_model(fpf_id, request.data)
         ModelScheduler.get_instance().add_model_job(resource_model.id)
 
         # Serialize for response
@@ -178,7 +177,7 @@ def set_active_scenario(request, model_id: str):
 
 
 class ModelParamsView(views.APIView):
-    def get(self, request):
+    def post(self, request):
         url = request.data.get("URL")
         if not url:
             return Response({"error": "Missing 'URL' field"}, status=status.HTTP_400_BAD_REQUEST)

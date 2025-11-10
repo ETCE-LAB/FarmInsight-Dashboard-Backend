@@ -132,8 +132,8 @@ urlpatterns = [
     path('hardwares/<str:hardware_id>', HardwareEditViews.as_view(), name='hardware_edits'),
 
     path('models', post_model, name='post_model'),
+    path("models/params", ModelParamsView.as_view(), name="get_resource-params"),
     path('models/<str:model_id>', ResourceManagementModelView.as_view(), name='model_operations'),
-    path("models/params", ModelParamsView.as_view(), name="resource-params"),
     path('models/<str:model_id>/active_scenario', set_active_scenario, name='set_active_scenario'),
 
     path('util/direct-ping/<str:resource_type>/<str:resource_id>', get_direct_ping, name='get_direct_ping'),
