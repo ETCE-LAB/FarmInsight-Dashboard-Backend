@@ -5,11 +5,14 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 from django.utils import timezone
 
-from farminsight_dashboard_backend.models import ResourceManagementModel
+from farminsight_dashboard_backend.models import ResourceManagementModel, ControllableAction, ActionMapping
+from farminsight_dashboard_backend.services.forecast_action_scheduler_services import ForecastActionScheduler
+from farminsight_dashboard_backend.services.influx_services import InfluxDBManager
 from farminsight_dashboard_backend.services.model_action_injection_services import inject_model_actions_into_queue
 from farminsight_dashboard_backend.services.resource_management_model_services import ResourceManagementModelService
 from farminsight_dashboard_backend.utils import get_logger
 
+logger = get_logger()
 
 class ModelScheduler:
     _instance = None
@@ -96,42 +99,85 @@ class ModelScheduler:
 
     def _fetch_and_store_forecast(self, model_id: str):
         """
-        Fetch forecast data and store it in the DB
+        Fetch forecast data from model API, store it in InfluxDB,
+        and schedule forecast-based actions for the active scenario.
         """
         try:
             model = ResourceManagementModel.objects.get(id=model_id)
-
             base_url = model.URL.rstrip('/')
-            query_params = ResourceManagementModelService.build_model_query_params(model)
+            query_params = ResourceManagementModelService.  build_model_query_params(model)
             full_url = f"{base_url}/farm-insight{query_params}"
 
-            self.log.debug(f"Fetching forecast from {full_url}")
+            logger.debug(f"Fetching forecast for model {model.name} from {full_url}")
 
             response = requests.get(full_url, timeout=10)
             response.raise_for_status()
             data = response.json()
 
-            forecasts = data.get("forecasts", [])
-            if not forecasts:
-                self.log.warning(f"No forecasts found for model {model.name}.")
+            # --- Store forecasts in InfluxDB ---
+            influx = InfluxDBManager.get_instance()
+            influx.write_model_forecast(
+                fpf_id=str(model.FPF.id),
+                model_id=str(model.id),
+                model_name=model.name,
+                forecasts=data
+            )
+            logger.info(f"Forecasts updated for model {model.name}")
+
+            # --- Handle actions (forecast triggers) ---
+            actions = data.get("actions", [])
+            if not actions:
+                logger.debug(f"No actions found in forecast for model {model.name}.")
                 return
 
-            from farminsight_dashboard_backend.services.influx_services import InfluxDBManager
+            # 1️⃣ Find actions for the active scenario
+            active_scenario = (model.activeScenario or "").lower()
+            scenario_entry = next(
+                (a for a in actions if a.get("name", "").lower() == active_scenario),
+                None
+            )
+            if not scenario_entry:
+                logger.warning(f"No matching scenario '{active_scenario}' found for model {model.name}.")
+                return
 
-            influx = InfluxDBManager.get_instance()
-            influx.write_model_forecast(fpf_id=str(model.FPF.id), model_id=str(model.id), model_name=model.name, forecasts=data)
+            scenario_actions = scenario_entry.get("value", [])
+            if not scenario_actions:
+                logger.warning(f"No action entries found for scenario '{active_scenario}' in model {model.name}.")
+                return
 
+            # 2️⃣ Schedule forecast-based actions
+            # Each entry looks like {"timestamp": "...", "value": 1.5, "action": "watering"}
+            scheduler = ForecastActionScheduler.get_instance()
+            for action_entry in scenario_actions:
+                action_name = action_entry.get("action")
+                if not action_name:
+                    continue
 
-            self.log.info(f"Forecasts updated for model {model.name}")
+                try:
+                    mapped_action = ActionMapping.objects.get(
+                        action_name=action_name,
+                        resource_management_model_id=model_id
+                    )
+                    print(mapped_action)
+                    print("try to get:",mapped_action.controllable_action_id)
+                    controllable_action = ControllableAction.objects.get(
+                        id=mapped_action.controllable_action_id,
+                        isActive=True
+                    )
 
-            # Enqueue the actions in the action queue
-            actions = data.get("actions", [])
-            if actions:
-                inject_model_actions_into_queue(str(model.id), actions)
+                except ActionMapping.DoesNotExist:
+                    logger.warning(f"Unknown or unmapped action '{action_name}' for model {model.name}")
+                    continue
+                except ControllableAction.DoesNotExist:
+                    logger.warning(f"Unknown or inactive controllable action '{action_name}' for model {model.name}")
+                    continue
 
-        except ResourceManagementModel.DoesNotExist:
-            self.log.warning(f"ResourceManagementModel {model_id} does not exist.")
-        except requests.exceptions.RequestException as e:
-            self.log.error(f"Error fetching forecast for model {model_id}: {e}")
+                # The scheduler will manage the chain (next actions)
+                scheduler.schedule_forecast_chain(controllable_action, scenario_actions)
+
+            logger.info(f"Scheduled forecast actions for model {model.name} ({active_scenario}).")
+
+        except requests.RequestException as e:
+            logger.error(f"Error fetching forecast for model {model_id}: {e}")
         except Exception as e:
-            self.log.error(f"Unexpected error updating forecast for model {model_id}: {e}")
+            logger.error(f"Unexpected error updating forecast for model {model_id}: {e}")

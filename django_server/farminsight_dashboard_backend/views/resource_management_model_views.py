@@ -39,6 +39,9 @@ class ResourceManagementModelView(views.APIView):
 
         serializer = update_model(model_id, request.data)
 
+        # TODO Update the scheduler if the interval has been changed
+        # ModelScheduler.get_instance().reschedule_model_job(model_id, new_interval)
+
         logger.info(" model updated successfully", extra={'resource_id': model_id})
 
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -119,9 +122,9 @@ def get_forecasts(request, fpf_id: str):
     influx = InfluxDBManager.get_instance()
 
     for model in models:
-        if model.forecasts:
-            forecast = influx.fetch_latest_model_forecast(fpf_id=fpf_id, model_id=model.id)
-            combined_forecasts.append(forecast)
+        #if model.forecasts:
+        forecast = influx.fetch_latest_model_forecast(fpf_id=fpf_id, model_id=model.id)
+        combined_forecasts.append(forecast)
 
     if not combined_forecasts:
         return Response(
