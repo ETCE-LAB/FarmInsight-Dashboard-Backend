@@ -1,6 +1,5 @@
 import asyncio
 import time
-import signal
 import os
 import threading
 
@@ -34,7 +33,7 @@ class FarminsightDashboardBackendConfig(AppConfig):
                     time.sleep(retry_interval)
                     retry_count += 1
                 else:
-                    from farminsight_dashboard_backend.services import InfluxDBManager, CameraScheduler, DataRetentionScheduler, WeatherForecastScheduler, AutoTriggerScheduler
+                    from farminsight_dashboard_backend.services import InfluxDBManager, CameraScheduler, DataRetentionScheduler, WeatherForecastScheduler, AutoTriggerScheduler, ModelScheduler
                     from farminsight_dashboard_backend.services.trigger.MeasurementTriggerManager import \
                         MeasurementTriggerManager
 
@@ -48,6 +47,7 @@ class FarminsightDashboardBackendConfig(AppConfig):
                     DataRetentionScheduler.get_instance().start()
                     WeatherForecastScheduler.get_instance().start()
                     AutoTriggerScheduler.get_instance().start()
+                    ModelScheduler.get_instance().start()
                     MeasurementTriggerManager.build_trigger_mapping()
 
                     self.log.info("Started successfully.")
