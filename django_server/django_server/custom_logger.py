@@ -4,8 +4,8 @@ import os
 
 from django.conf import settings
 
-from farminsight_dashboard_backend.models import Notification
-from .matrix_notifier import send_matrix_notification, matrix_client
+
+from .matrix_notifier import send_matrix_notification, matrix_client, send_matrix_notification_sync
 
 # Farbzuordnung für verschiedene Log-Level zur besseren visuellen Darstellung
 LOG_LEVEL_COLORS = {
@@ -26,6 +26,7 @@ class MatrixLogHandler(logging.Handler):
         # Verhindert eine Endlosschleife, indem Logs vom Notifier selbst ignoriert werden.
         if 'nio' in record.name or 'matrix_notifier' in record.name:
             return
+        from farminsight_dashboard_backend.models import Notification
 
         try:
             room_ids = list(Notification.objects.values_list('room_id', flat=True))
@@ -53,8 +54,7 @@ class MatrixLogHandler(logging.Handler):
 
             coroutines = []
             for room_id in room_ids:
-                coro = send_matrix_notification(room_id, plain_text, html_body)
-                coroutines.append(coro)
+                send_matrix_notification_sync(room_id, plain_text, html_body)
 
 
             if coroutines:

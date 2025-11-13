@@ -6,7 +6,10 @@ from farminsight_dashboard_backend.serializers import UserprofileSerializer
 from farminsight_dashboard_backend.services import search_userprofiles, update_userprofile_name, \
     get_memberships_by_organization
 from rest_framework.decorators import api_view, permission_classes
+from farminsight_dashboard_backend.utils import get_logger
 
+
+logger = get_logger()
 
 class UserprofileView(APIView):
     permission_classes = [IsAuthenticated]
@@ -33,7 +36,9 @@ class UserprofileView(APIView):
         if str(request.user.id) != identifier:
             return Response(status=status.HTTP_403_FORBIDDEN)
 
+        old_name = request.user.name
         updated_userprofile = update_userprofile_name(identifier, request.data.get('name'))
+        logger.info(f'User profile name updated: "{old_name}" -> "{request.data.get("name")}" (User ID: {identifier})', extra={'resource_id': identifier})
         return Response(UserprofileSerializer(updated_userprofile).data)
 
 

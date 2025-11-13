@@ -57,7 +57,7 @@ def post_notification(request):
     return Response(notification.data, status=status.HTTP_201_CREATED)
 
 @api_view(['GET'])
-def get_notifications(request, room_id):
+def get_notifications(request):
     serializer = get_all_notifications()
     return Response(serializer.data, status=status.HTTP_200_OK)
 
