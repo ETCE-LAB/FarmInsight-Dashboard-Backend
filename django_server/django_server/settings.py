@@ -128,13 +128,7 @@ DATABASES = {
 MATRIX_HOMESERVER = env('MATRIX_HOMESERVER', default='')
 MATRIX_USER = env('MATRIX_USER', default='')
 MATRIX_PASSWORD = env('MATRIX_PASSWORD', default='')
-# A dictionary mapping log levels to room IDs.
-MATRIX_ROOM_IDS = {
-    'INFO': env('MATRIX_ROOM_ID_INFO', default=''),
-    'WARNING': env('MATRIX_ROOM_ID_WARNING', default=''),
-    'ERROR': env('MATRIX_ROOM_ID_ERROR', default=''),
-    'DEBUG': env('MATRIX_ROOM_ID_DEBUG', default=''),  # Optionaler Raum für Debug-Logs
-}
+
 
 # For logging in the console
 LOGGING = {
@@ -161,7 +155,7 @@ LOGGING = {
             'class': 'django_server.custom_logger.DatabaseLogHandler',
         },
         'matrix_handler': {
-            'level': 'DEBUG',  # Handler soll alle Logs ab DEBUG-Level empfangen
+            'level': 'DEBUG',
             'class': 'django_server.custom_logger.MatrixLogHandler',
             'formatter': 'simple',
         },

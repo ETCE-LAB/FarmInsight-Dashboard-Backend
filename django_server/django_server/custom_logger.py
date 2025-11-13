@@ -3,6 +3,8 @@ import asyncio
 import os
 
 from django.conf import settings
+
+from farminsight_dashboard_backend.models import Notification
 from .matrix_notifier import send_matrix_notification, matrix_client
 
 # Farbzuordnung für verschiedene Log-Level zur besseren visuellen Darstellung
@@ -25,10 +27,13 @@ class MatrixLogHandler(logging.Handler):
         if 'nio' in record.name or 'matrix_notifier' in record.name:
             return
 
-        # Wählt die Raum-ID basierend auf dem Log-Level aus den Django-Settings.
-        room_id = settings.MATRIX_ROOM_IDS.get(record.levelname)
-        if not room_id:
-            return  # Kein Raum für dieses Level konfiguriert, also nichts tun.
+        try:
+            room_ids = list(Notification.objects.values_list('room_id', flat=True))
+            if not room_ids:
+                return
+        except Exception as e:
+            print(f"MatrixLogHandler failed to query Notification rooms: {e}")
+            return
 
         if not matrix_client.loop or not matrix_client.is_running:
             print(f"[Matrix not ready] {self.format(record)}")
@@ -46,9 +51,16 @@ class MatrixLogHandler(logging.Handler):
                 f'<p><font color="{'#aaaaaa'}"><em>File: {os.path.splitext(record.filename)[0]}:{record.lineno}</em></font></p>'
             )
 
-            coro = send_matrix_notification(room_id, plain_text, html_body)
-            # And schedule it to run on the client's event loop from this sync thread
-            asyncio.run_coroutine_threadsafe(coro, matrix_client.loop)
+            coroutines = []
+            for room_id in room_ids:
+                coro = send_matrix_notification(room_id, plain_text, html_body)
+                coroutines.append(coro)
+
+
+            if coroutines:
+                bundled_coro = asyncio.gather(*coroutines)
+                asyncio.run_coroutine_threadsafe(bundled_coro, matrix_client.loop)
+
         except RuntimeError as e:
             # Hier vorsichtig loggen, um keine Schleife zu erzeugen.
             # Ein print ist hier sicherer als logger.error.

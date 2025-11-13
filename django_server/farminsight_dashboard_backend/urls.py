@@ -48,7 +48,8 @@ from farminsight_dashboard_backend.views import (
     post_growing_cycle_order, post_camera_order, post_controllable_action_order, post_organization_order,
     post_hardware_order, HardwareEditViews, post_hardware, ActionTriggerView, post_fpf_order,
     post_userprofile_active_status, forgot_password_view, reset_password_view, get_all_organizations,
-    post_model, ResourceManagementModelView, ModelParamsView, get_forecasts, set_active_scenario
+    post_model, ResourceManagementModelView, ModelParamsView, get_forecasts, set_active_scenario,
+    get_notifications, post_notification, NotificationView
 )
 urlpatterns = [
     path('userprofiles', get_userprofile, name='get_userprofile'),
@@ -141,4 +142,9 @@ urlpatterns = [
     path('admin/password-reset/<str:userprofile_id>', get_reset_userprofile_password, name='get_reset_userprofile_password'),
     path('admin/userprofiles-all', get_all_userprofiles, name='get_all_userprofiles'),
     path('admin/set-active/<str:userprofile_id>', post_userprofile_active_status, name='post_userprofile_active_status'),
+
+    path('notifications', get_notifications, name='get_notifications'),
+    path('notifications/create', post_notification, name='post_notification'),
+    path('notifications/<str:room_id>', NotificationView.as_view(), name='notification_operations'),
+
 ]
