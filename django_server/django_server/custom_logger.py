@@ -49,7 +49,7 @@ class MatrixLogHandler(logging.Handler):
             html_body = (
                 f'<p><font color="{color}"><strong>{record.levelname}</strong></font></p>'
                 f'<font color="{'#ffffff'}">{plain_text}</font>'
-                f'<p><font color="{'#aaaaaa'}"><em>File: {os.path.splitext(record.filename)[0]}:{record.lineno}</em></font></p>'
+                f'<p><font color="{'#aaaaaa'}"><em>Function: {record.funcName} File: {os.path.splitext(record.filename)[0]}:{record.lineno}</em></font></p>'
             )
 
             coroutines = []
