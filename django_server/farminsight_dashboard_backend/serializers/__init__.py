@@ -17,3 +17,4 @@ from .hardware_serializer import HardwareSerializer
 from .threshold_serializer import ThresholdSerializer
 from .action_script_description_serializer import ActionScriptDescriptionSerializer
 from .location_serializer import LocationSerializer
+from .resource_management_model_serializer import ResourceManagementModelSerializer, ActionMappingSerializer, ResourceManagementModelDataSerializer

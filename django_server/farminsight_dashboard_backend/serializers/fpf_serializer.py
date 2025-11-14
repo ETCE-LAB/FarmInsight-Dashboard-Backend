@@ -7,6 +7,7 @@ from .camera_serializer import CameraImageSerializer, CameraSerializer
 from .growing_cycle_serializer import GrowingCycleSerializer
 from .sensor_serializer import SensorDataSerializer, SensorLastValueSerializer
 from .location_serializer import LocationSerializer
+from .resource_management_model_serializer import ResourceManagementModelSerializer, ResourceManagementModelDataSerializer
 
 
 class FPFSerializer(CustomSerializer):
@@ -82,6 +83,7 @@ class FPFTechnicalKeySerializer(serializers.ModelSerializer):
 
 class FPFFullSerializer(serializers.ModelSerializer):
     Sensors = SensorLastValueSerializer(many=True, source='sensors')
+    Models = ResourceManagementModelSerializer(many=True, source='models')
     Cameras = CameraSerializer(many=True, source='cameras')
     GrowingCycles = GrowingCycleSerializer(many=True, source='growingCycles')
     Location = LocationSerializer(many=False, source='location')
@@ -96,6 +98,7 @@ class FPFFullSerializer(serializers.ModelSerializer):
             'isPublic',
             'sensorServiceIp',
             'Sensors',
+            'Models',
             'Cameras',
             'GrowingCycles',
             'Location',
@@ -107,6 +110,7 @@ class FPFFullSerializer(serializers.ModelSerializer):
 
 class FPFFullDataSerializer(serializers.ModelSerializer):
     Sensors = SensorDataSerializer(many=True, source='sensors')
+    Models = ResourceManagementModelDataSerializer(many=True, source='models')
     Cameras = CameraImageSerializer(many=True, source='cameras')
     GrowingCycles = GrowingCycleSerializer(many=True, source='growingCycles')
 
@@ -118,6 +122,7 @@ class FPFFullDataSerializer(serializers.ModelSerializer):
             'isPublic',
             'sensorServiceIp',
             'Sensors',
+            'Models',
             'Cameras',
             'GrowingCycles',
         ]
