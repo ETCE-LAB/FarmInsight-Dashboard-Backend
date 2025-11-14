@@ -59,13 +59,13 @@ def get_all_active_auto_triggers(action_id=None):
 
 def update_action_trigger(actionTrigger_id, data) -> ActionTriggerSerializer:
     """
-    Update the given organization with the given data if the user has sufficient permissions.
-    :param org_id: organization id to update
+    Update the given actionTrigger with the given data.
+    :param actionTrigger_id: actionTrigger_id to update
     :param data: new organization data
-    :return:
+    :return: ActionTriggerSerializer
     """
     actionTrigger = ActionTrigger.objects.get(id=actionTrigger_id)
-    data["actionId"] = actionTrigger.action_id#
+    data["actionId"] = actionTrigger.action_id
     data["id"] = actionTrigger_id
     serializer = ActionTriggerSerializer(actionTrigger, data=data)
 
