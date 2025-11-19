@@ -1,6 +1,8 @@
 import uuid
 from django.db import models
 from django.db.models import Max
+
+from .hardware import Hardware
 from .fpf import FPF
 
 
@@ -24,6 +26,7 @@ class Camera(models.Model):
     livestreamUrl = models.CharField(max_length=256)
     FPF = models.ForeignKey(FPF, related_name='cameras', on_delete=models.CASCADE)
     orderIndex = models.IntegerField(default=get_order_index_default)
+    hardware = models.ForeignKey(Hardware, on_delete=models.SET_NULL, blank=True, null=True)
 
     class Meta:
         ordering = ['orderIndex']
