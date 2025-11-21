@@ -27,15 +27,13 @@ class FPFHealthScheduler:
     def start(self):
         self.logger.info("Starting FPF Health Scheduler.")
         # Run every 5 minutes
-        self.scheduler.add_job(self.run_check, 'interval', seconds=10)
+        self.scheduler.add_job(self.run_check, 'interval', seconds=300)
         self.scheduler.start()
 
-    # --- UPDATE THIS METHOD ---
     def run_check(self):
         self.logger.info("Running FPF health check...")
         try:
-            # management.call_command('check_fpf_health') <-- REMOVE THIS
-            check_all_fpf_health() # <-- ADD THIS
+            check_all_fpf_health()
         except Exception as e:
             self.logger.error(f"Error running FPF health check: {e}")
     # ---

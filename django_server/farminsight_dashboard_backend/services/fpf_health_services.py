@@ -1,6 +1,4 @@
 from farminsight_dashboard_backend.models import FPF
-# This import assumes 'get_sensor_types' is available from the 'services' package
-# (e.g., defined in services/__init__.py or another services file)
 from farminsight_dashboard_backend.services import get_sensor_types
 from farminsight_dashboard_backend.utils import get_logger
 
@@ -18,7 +16,7 @@ def check_all_fpf_health():
     for fpf in fpfs:
         is_active = False
         try:
-            # We use get_sensor_types as a simple ping to the FPF.
+            # get_sensor_types as a simple ping to the FPF.
             get_sensor_types(fpf.id)
             is_active = True
             logger.info(f'FPF {fpf.name} is online.')
