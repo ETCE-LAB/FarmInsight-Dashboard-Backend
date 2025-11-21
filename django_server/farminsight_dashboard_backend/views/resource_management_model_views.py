@@ -37,10 +37,26 @@ class ResourceManagementModelView(views.APIView):
         if not is_member(request.user, get_organization_by_model_id(model_id)):
             return Response(status=status.HTTP_403_FORBIDDEN)
 
-        serializer = update_model(model_id, request.data)
+        from farminsight_dashboard_backend.models import ResourceManagementModel
+        from farminsight_dashboard_backend.services import ModelScheduler
 
-        # TODO Update the scheduler if the interval has been changed
-        # ModelScheduler.get_instance().reschedule_model_job(model_id, new_interval)
+        # Fetch old interval
+        try:
+            model = ResourceManagementModel.objects.get(id=model_id)
+        except ResourceManagementModel.DoesNotExist:
+            return Response({"error": "Model not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        old_interval = model.intervalSeconds
+
+        # Update model
+        serializer = update_model(model_id, request.data)
+        new_interval = serializer.data.get("intervalSeconds", old_interval)
+
+        # Check and reschedule if changed
+        if int(new_interval) != int(old_interval):
+            scheduler = ModelScheduler.get_instance()
+            scheduler.reschedule_model_job(model_id, int(new_interval))
+            logger.info(f"Model {model_id} interval updated: {old_interval} → {new_interval}")
 
         logger.info(" model updated successfully", extra={'resource_id': model_id})
 
@@ -122,7 +138,6 @@ def get_forecasts(request, fpf_id: str):
     influx = InfluxDBManager.get_instance()
 
     for model in models:
-        #if model.forecasts:
         forecast = influx.fetch_latest_model_forecast(fpf_id=fpf_id, model_id=model.id)
         combined_forecasts.append(forecast)
 

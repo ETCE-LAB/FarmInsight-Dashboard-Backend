@@ -12,6 +12,7 @@ from influxdb_client import InfluxDBClient, Point, WritePrecision
 
 from farminsight_dashboard_backend.exceptions import InfluxDBQueryException, InfluxDBNoConnectionException, InfluxDBWriteException
 from farminsight_dashboard_backend.models import FPF, Organization
+from farminsight_dashboard_backend.utils import _validate_forecasts_structure
 
 
 class InfluxDBManager:
@@ -448,6 +449,14 @@ class InfluxDBManager:
               "actions": [ ... ]
             }
         """
+        # Validate before writing
+        is_valid, error_msg = _validate_forecasts_structure(forecasts)
+        if not is_valid:
+            self.log.error(
+                f"Forecast validation failed for model '{model_name}' (ID {model_id}): {error_msg}"
+            )
+            return  # do NOT write invalid data
+
         try:
             write_api = self.client.write_api(write_options=SYNCHRONOUS)
 
@@ -480,6 +489,7 @@ class InfluxDBManager:
         :param hours: Time range to look back (default: 24h)
         :return: List of parsed forecast dict (each item has 'timestamp', 'modelName', 'forecasts', 'actions')
         """
+        from farminsight_dashboard_backend.services import get_model_by_id
         try:
             query_api = self.client.query_api()
 
@@ -503,7 +513,7 @@ class InfluxDBManager:
                     return {
                         "timestamp": record.get_time().isoformat(),
                         "modelId": record.values.get("modelId"),
-                        "modelName": record.values.get("modelName"),
+                        "modelName": get_model_by_id(model_id).name,
                         "data": forecast_data
                     }
 

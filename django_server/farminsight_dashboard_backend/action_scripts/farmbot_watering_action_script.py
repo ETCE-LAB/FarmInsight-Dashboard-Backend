@@ -20,11 +20,24 @@ class FarmbotSequenceActionScript(TypedSensor):
 
     def init_additional_information(self):
         self.maximumDurationInSeconds = self.controllable_action.maximumDurationSeconds or 0
-        additional_information = json.loads(self.controllable_action.additionalInformation)
-        self.server = additional_information['server']
-        self.sequence_name = additional_information['sequence_name']
-        self.email = additional_information['email']
-        self.password = additional_information['password']
+
+        try:
+            additional_information = json.loads(self.controllable_action.additionalInformation or "{}")
+        except Exception:
+            additional_information = {}
+
+        if not isinstance(additional_information, dict):
+            logger.error(
+                f"Invalid additionalInformation format for action {self.controllable_action.id}: "
+                f"{self.controllable_action.additionalInformation}",
+                extra={'resource_id': self.controllable_action.id}
+            )
+            additional_information = {}
+
+        self.server = additional_information.get('server')
+        self.sequence_name = additional_information.get('sequence_name')
+        self.email = additional_information.get('email')
+        self.password = additional_information.get('password')
 
     @staticmethod
     def get_description() -> ActionScriptDescription:

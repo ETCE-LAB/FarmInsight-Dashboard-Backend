@@ -131,9 +131,13 @@ class ModelScheduler:
                 return
 
             # 1️⃣ Find actions for the active scenario
-            active_scenario = (model.activeScenario or "").lower()
+            # As .lower() changes "-" to "_", we replace them manually here
+            active_scenario = (model.activeScenario or "").lower().replace("-", "_")
             scenario_entry = next(
-                (a for a in actions if a.get("name", "").lower() == active_scenario),
+                (
+                    a for a in actions
+                    if a.get("name", "").lower().replace("-", "_") == active_scenario
+                ),
                 None
             )
             if not scenario_entry:
