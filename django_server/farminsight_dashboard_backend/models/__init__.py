@@ -15,3 +15,6 @@ from .controllable_action import ControllableAction
 from .hardware import Hardware
 from .location import Location
 from .threshold import Threshold
+from .resource_management_model import ResourceManagementModel
+from .action_mapping import ActionMapping
+from .notification import Notification

@@ -30,7 +30,7 @@ class FpfView(views.APIView):
             return Response(status=status.HTTP_403_FORBIDDEN)
 
         fpf = update_fpf(fpf_id, request.data)
-        logger.info('updated fpf', extra={'resource_id': fpf_id})
+        logger.info(f'FPF updated: {fpf.data.get("name")} - Changes: {list(request.data.keys())}',extra={'resource_id': fpf_id})
         return Response(fpf.data, status=status.HTTP_200_OK)
 
     def post(self, request):
@@ -38,6 +38,7 @@ class FpfView(views.APIView):
             return Response(status=status.HTTP_403_FORBIDDEN)
 
         serializer = create_fpf(request.data)
+        logger.info(f'FPF created: {serializer.data.get("name")} (ID: {serializer.data.get("id")})',extra={'resource_id': serializer.data.get('id')})
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def get(self, request, fpf_id):
@@ -63,6 +64,7 @@ def get_fpf_api_key(request, fpf_id):
     :return: 
     """
     update_fpf_api_key(fpf_id)
+    logger.info(f'FPF API key regenerated for FPF ID: {fpf_id}', extra={'resource_id': fpf_id})
     return Response(status=status.HTTP_200_OK)
 
 

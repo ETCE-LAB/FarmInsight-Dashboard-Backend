@@ -52,7 +52,7 @@ class DataRetentionScheduler:
 
 
 def cleanup_task(logger):
-    logger.debug("Cleanup task triggered")
+    logger.debug("Cleanup task for old logs triggered")
     try:
         dt = timezone.now() - timedelta(days=settings.DB_LOG_RETENTION_DAYS)
         LogMessage.objects.filter(createdAt__lt=dt).delete()
@@ -60,6 +60,6 @@ def cleanup_task(logger):
         dt = timezone.now() - timedelta(days=settings.DB_QUEUE_RETENTION_DAYS)
         ActionQueue.objects.filter(createdAt__lt=dt).delete()
 
-        logger.debug("Cleanup task completed")
+        logger.debug("Cleanup task for old logs completed")
     except Exception as e:
         logger.error(f"Error during cleanup task: {e}")

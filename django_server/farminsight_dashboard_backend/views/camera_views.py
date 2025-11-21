@@ -9,8 +9,8 @@ from farminsight_dashboard_backend.serializers.camera_serializer import CameraSe
 from farminsight_dashboard_backend.services import get_active_camera_by_id, update_camera, delete_camera, \
     get_fpf_by_id, create_camera, is_member, get_camera_by_id, get_organization_by_camera_id, \
     get_organization_by_fpf_id, is_admin, set_camera_order
-from farminsight_dashboard_backend.services.fpf_streaming_services import rtsp_stream, http_stream
 from farminsight_dashboard_backend.utils import get_logger
+
 
 
 logger = get_logger()
@@ -108,7 +108,7 @@ def get_camera_livestream(request, camera_id):
     """
     Authenticated via Query Param Bearer token
     Only member of the FPFs organization are allowed to stream.
-    User http or rtsp streaming protocol (depending on the camera livestream url) to stream a video feed.
+    Uses a Websocket to send Frames to each Watcher
     :param request:
     :param camera_id:
     :return:
@@ -122,20 +122,14 @@ def get_camera_livestream(request, camera_id):
     parsed_url = urlparse(livestream_url)
     scheme = parsed_url.scheme.lower()
 
-    if scheme in ['http', 'https']:
-        return StreamingHttpResponse(
-            http_stream(livestream_url),
-            content_type="multipart/x-mixed-replace; boundary=frame"
-        )
-    elif scheme == 'rtsp':
-        return StreamingHttpResponse(
-            rtsp_stream(livestream_url),
-            content_type="multipart/x-mixed-replace; boundary=frame"
-        )
-    else:
+    logger.info("Camera Livestream started", extra={'resource_id': camera_id})
+    try:
+        return Response(True, status=status.HTTP_200_OK)
+    except Exception as e:
+        logger.error(f"Error starting websocket stream: {e}", extra={'resource_id': camera_id})
         return Response(
-            {"error": f"Unsupported protocol: {scheme}"},
-            status=400
+            {"error": f"Could not start websocket stream: {e}"},
+            status=500
         )
 
 

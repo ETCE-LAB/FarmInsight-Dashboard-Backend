@@ -47,9 +47,10 @@ from farminsight_dashboard_backend.views import (
     post_log_message_insecure, get_reset_userprofile_password, get_all_userprofiles, post_sensor_order,
     post_growing_cycle_order, post_camera_order, post_controllable_action_order, post_organization_order,
     post_hardware_order, HardwareEditViews, post_hardware, ActionTriggerView, post_fpf_order,
-    post_userprofile_active_status, forgot_password_view, reset_password_view, get_all_organizations
+    post_userprofile_active_status, forgot_password_view, reset_password_view, get_all_organizations,
+    post_model, ResourceManagementModelView, ModelParamsView, get_forecasts, set_active_scenario,
+    get_notifications, post_notification, NotificationView
 )
-
 urlpatterns = [
     path('userprofiles', get_userprofile, name='get_userprofile'),
     path('userprofiles/<str:identifier>', UserprofileView.as_view(), name='userprofile_operations'),
@@ -67,6 +68,7 @@ urlpatterns = [
     path('fpfs/<str:fpf_id>/data', get_fpf_data, name='get_fpf_data'),
     path('fpfs/<str:fpf_id>/hardware', get_fpf_hardware, name='get_fpf_hardware'),
     path('fpfs/sort-order/<str:org_id>', post_fpf_order, name='post_fpf_order'),
+    path('fpfs/<str:fpf_id>/forecasts', get_forecasts, name='get_forecasts'),
 
     path('memberships', MembershipView.as_view(), name='post_membership'),
     path('memberships/<str:membership_id>', MembershipView.as_view(), name='membership_operations'),
@@ -130,9 +132,19 @@ urlpatterns = [
     path('hardwares/sort-order/<str:fpf_id>', post_hardware_order, name='post_hardware_order'),
     path('hardwares/<str:hardware_id>', HardwareEditViews.as_view(), name='hardware_edits'),
 
+    path('models', post_model, name='post_model'),
+    path("models/params", ModelParamsView.as_view(), name="get_resource-params"),
+    path('models/<str:model_id>', ResourceManagementModelView.as_view(), name='model_operations'),
+    path('models/<str:model_id>/active_scenario', set_active_scenario, name='set_active_scenario'),
+
     path('util/direct-ping/<str:resource_type>/<str:resource_id>', get_direct_ping, name='get_direct_ping'),
 
     path('admin/password-reset/<str:userprofile_id>', get_reset_userprofile_password, name='get_reset_userprofile_password'),
     path('admin/userprofiles-all', get_all_userprofiles, name='get_all_userprofiles'),
     path('admin/set-active/<str:userprofile_id>', post_userprofile_active_status, name='post_userprofile_active_status'),
+
+    path('notifications', get_notifications, name='get_notifications'),
+    path('notifications/create', post_notification, name='post_notification'),
+    path('notifications/<str:room_id>', NotificationView.as_view(), name='notification_operations'),
+
 ]

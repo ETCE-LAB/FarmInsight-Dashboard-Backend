@@ -79,7 +79,9 @@ class SensorView(APIView):
         except Exception as e:
             raise Exception(f"Unable to create sensor at FPF. {e}")
 
-        return Response(create_sensor(sensor), status=status.HTTP_200_OK)
+        sensor_data = create_sensor(sensor)
+        logger.info(f'Sensor created: {sensor.get("name")} (ID: {sensor.get("id")}) for FPF {fpf_id}',extra={'resource_id': sensor.get('id')})
+        return Response(sensor_data, status=status.HTTP_200_OK)
 
     def put(self, request, sensor_id):
         """
@@ -112,7 +114,7 @@ class SensorView(APIView):
         update_sensor_payload = {key: value for key, value in data.items() if key != "connection"}
         update_sensor(sensor_id, update_sensor_payload)
 
-        logger.info('sensor updated successfully', extra={'resource_id': sensor_id})
+        logger.info('Sensor updated successfully', extra={'resource_id': sensor_id})
 
         return Response(data, status=status.HTTP_200_OK)
 

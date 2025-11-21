@@ -70,6 +70,7 @@ def get_camera_images(request, camera_id):
 def get_weather_forecasts(request, location_id):
     """
     Get current weather data for a given location
+    :param location_id:
     :param request:
     :return: 3 Weather Forecasts
     """

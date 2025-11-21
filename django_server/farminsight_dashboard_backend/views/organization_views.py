@@ -46,6 +46,7 @@ class OrganizationView(APIView):
 #@permission_classes([IsAuthenticated])
 def post_organization(request):
     org = create_organization(request.data, request.user)
+    logger.info(f'Organization created: {org.data.get("name")} (ID: {org.data.get("id")})', extra={'resource_id': org.data.get('id')})
     return Response(org.data, status=status.HTTP_201_CREATED)
 
 
