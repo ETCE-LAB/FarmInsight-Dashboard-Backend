@@ -3,6 +3,7 @@ import requests
 import logging
 import threading
 import time
+from uuid import UUID
 from datetime import datetime
 from django.conf import settings
 from django.utils import timezone
@@ -431,6 +432,87 @@ class InfluxDBManager:
         except Exception as e:
             self.client = None
             raise InfluxDBWriteException(str(e))
+
+
+    @_retry_connection
+    def write_model_forecast(self, fpf_id: str, model_id: str, model_name: str, forecasts: dict):
+        """
+        Writes model forecasts (including actions) for a given FPF into InfluxDB.
+        Each forecast is stored as a JSON blob for flexibility.
+        :param fpf_id: FPF UUID (bucket name)
+        :param model_id: ID of the model that generated the forecasts
+        :param model_name: Display name of the model
+        :param forecasts: dict with structure:
+            {
+              "forecasts": [ ... ],
+              "actions": [ ... ]
+            }
+        """
+        try:
+            write_api = self.client.write_api(write_options=SYNCHRONOUS)
+
+            # Use the same "ModelForecast" measurement for all models
+            timestamp = timezone.now().isoformat()
+            forecast_json = json.dumps(forecasts)
+
+            point = (
+                Point("ModelForecast")
+                .tag("modelId", str(model_id))
+                .tag("modelName", str(model_name))
+                .field("forecastData", forecast_json)
+                .time(timestamp, WritePrecision.NS)
+            )
+
+            write_api.write(bucket=str(fpf_id), record=point)
+            self.log.info(f"Wrote model forecast for model '{model_name}' into bucket {fpf_id}.")
+
+        except Exception as e:
+            self.client = None
+            raise InfluxDBWriteException(f"Failed to write model forecast: {e}")
+
+
+    @_retry_connection
+    def fetch_latest_model_forecast(self, fpf_id: str, model_id: str, hours: int = 24) -> list[dict]:
+        """
+        Fetches the most recent model forecast for the given FPF and model.
+        :param fpf_id: The ID of the FPF (bucket name)
+        :param model_id: The ID of the model (tag in Influx)
+        :param hours: Time range to look back (default: 24h)
+        :return: List of parsed forecast dict (each item has 'timestamp', 'modelName', 'forecasts', 'actions')
+        """
+        try:
+            query_api = self.client.query_api()
+
+            query = (
+                f'from(bucket: "{str(UUID(fpf_id))}") '
+                f'|> range(start: -{hours}h) '
+                f'|> filter(fn: (r) => r["_measurement"] == "ModelForecast" and r["modelId"] == "{str(model_id)}") '
+                f'|> sort(columns: ["_time"], desc: true) '
+                f'|> limit(n: 1)'
+            )
+
+            result = query_api.query(org=self.influxdb_settings['org'], query=query)
+
+            for table in result:
+                for record in table.records:
+                    try:
+                        forecast_data = json.loads(record.get_value())
+                    except Exception:
+                        forecast_data = {}
+
+                    return {
+                        "timestamp": record.get_time().isoformat(),
+                        "modelId": record.values.get("modelId"),
+                        "modelName": record.values.get("modelName"),
+                        "data": forecast_data
+                    }
+
+            # No records found
+            return None
+
+        except Exception as e:
+            self.client = None
+            raise InfluxDBQueryException(f"Failed to fetch model forecast: {e}")
 
 
     def close(self):

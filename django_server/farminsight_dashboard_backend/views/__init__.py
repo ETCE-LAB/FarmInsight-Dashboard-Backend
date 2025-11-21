@@ -18,3 +18,5 @@ from .action_trigger_views import post_action_trigger, ActionTriggerView
 from .threshold_views import post_threshold, ThresholdEditViews
 from .utility_views import get_direct_ping
 from .admin_views import get_reset_userprofile_password, get_all_userprofiles, post_userprofile_active_status
+from .resource_management_model_views import ResourceManagementModelView, post_model, ModelParamsView, get_forecasts, set_active_scenario
+from .notification_views import get_notifications, post_notification, NotificationView

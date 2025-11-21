@@ -4,3 +4,4 @@ from .manual_trigger_handler import ManualTriggerHandler, create_manual_triggere
 from .time_of_day_trigger_handler import TimeOfDayTriggerHandler
 from .interval_trigger_handler import IntervalTriggerHandler
 from .measurement_trigger_handler import MeasurementTriggerHandler
+from .forecast_trigger_handler import ForecastTriggerHandler
