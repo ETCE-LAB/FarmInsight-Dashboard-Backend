@@ -112,6 +112,11 @@ def delete_hardware(fpf_id: str, hardware_id: str):
 def post_hardware_sort_order(fpf_id: str, data: dict):
     return send_request_to_fpf(fpf_id, 'post', '/api/hardwares/sort-order', data)
 
+def get_ping(fpf_id: str, resource_id: str):
+    return send_request_to_fpf(fpf_id, 'get', f'/api/pings/available/{resource_id}')
+
+def get_value_ping(fpf_id: str, sensor_id: str):
+    return send_request_to_fpf(fpf_id, 'get', f'/api/pings/value/{sensor_id}')
 
 def build_fpf_url(fpf_address, endpoint):
     """
