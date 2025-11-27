@@ -28,11 +28,20 @@ def send_request_to_fpf(fpf_id, method, endpoint, data=None, params=None):
         response = requests.request(method, url, json=data, params=params, headers=headers, timeout=10)
         #response = requests.request(method, url, json=data, params=params, timeout=10)
         response.raise_for_status()
+        if not fpf.isActive:
+            fpf.isActive = True
+            fpf.save()
         return response.json()
 
     except JSONDecodeError as e:
+        if not fpf.isActive:
+            fpf.isActive = True
+            fpf.save()
         return None
     except RequestException as e:
+        if fpf.isActive:
+            fpf.isActive = False
+            fpf.save()
         raise Exception(f"Cannot reach the FPF service at {url}: {str(e)}")
 
     except ValueError:
