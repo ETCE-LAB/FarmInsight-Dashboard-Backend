@@ -102,8 +102,8 @@ class InfluxDBManager:
 
                 for fpf in fpf_objects:
                     bucket_name = str(fpf.id)
-                    if not bucket_api.find_bucket_by_name(bucket_name):
-                        self.log.info(f"Creating new bucket: {bucket_name}")
+                    if not bucket_api.find_bucket_by_name(bucket_name): # pragma: no cover
+                        self.log.info(f"Creating InfluxDB bucket for FPF '{fpf.name}'.")
                         bucket_api.create_bucket(bucket_name=bucket_name, org=self.influxdb_settings['org'])
 
         except Exception as e:
@@ -124,8 +124,8 @@ class InfluxDBManager:
 
                 for orga in orga_objects:
                     bucket_name = str(orga.id)
-                    if not bucket_api.find_bucket_by_name(bucket_name):
-                        self.log.info(f"Creating new bucket: {bucket_name}")
+                    if not bucket_api.find_bucket_by_name(bucket_name): # pragma: no cover
+                        self.log.info(f"Creating InfluxDB bucket for organization '{orga.name}'.")
                         bucket_api.create_bucket(bucket_name=bucket_name, org=self.influxdb_settings['org'])
 
         except Exception as e:
@@ -149,6 +149,7 @@ class InfluxDBManager:
         :return: Dictionary with sensor IDs as keys, each containing a list of measurements.
         """
         try:
+            self.log.info(f"Fetching sensor measurements from '{from_date}' to '{to_date}'.")
             query_api = self.client.query_api()
 
             # Build the filter part of the query for multiple sensors
@@ -175,6 +176,7 @@ class InfluxDBManager:
         except requests.exceptions.ConnectionError as e:
             raise InfluxDBNoConnectionException("Unable to connect to InfluxDB.")
 
+
         except Exception as e:
             self.client = None
             raise InfluxDBQueryException(str(e))
@@ -190,6 +192,7 @@ class InfluxDBManager:
         :return: Dictionary with sensor IDs as keys, each containing the latest measurement.
         """
         try:
+            self.log.info(f"Fetching latest measurement for {len(sensor_ids)} sensors.")
             query_api = self.client.query_api()
 
             # Build the filter part of the query for multiple sensors
@@ -232,6 +235,7 @@ class InfluxDBManager:
         :param fpf_id: The ID of the FPF (used as the bucket name in InfluxDB).
         """
         try:
+            self.log.info(f"Writing {len(measurements)} measurements for a sensor.")
             write_api = self.client.write_api(write_options=SYNCHRONOUS)
 
             points = []
@@ -244,7 +248,6 @@ class InfluxDBManager:
                 )
                 points.append(point)
             write_api.write(bucket=fpf_id, record=points)
-
 
         except Exception as e:
             self.client = None
@@ -259,6 +262,7 @@ class InfluxDBManager:
         """
 
         try:
+            self.log.info(f"Fetching last weather forecast for a location.")
             query_api = self.client.query_api()
 
             # Construct the query
@@ -328,6 +332,7 @@ class InfluxDBManager:
     @_retry_connection
     def fetch_all_weather_forecasts(self, orga_id: str, location_id: str, from_date: str, to_date: str):
         try:
+            self.log.info(f"Fetching all weather forecasts for a location from '{from_date}' to '{to_date}'.")
             query_api = self.client.query_api()
 
             # Construct the query
@@ -401,6 +406,7 @@ class InfluxDBManager:
         :param weather_forecasts: List of weather forecast dictionaries.
         """
         try:
+            self.log.info(f"Writing {len(weather_forecasts)} weather forecasts for a location.")
             write_api = self.client.write_api(write_options=SYNCHRONOUS)
 
             points = []
@@ -491,6 +497,7 @@ class InfluxDBManager:
         """
         from farminsight_dashboard_backend.services import get_model_by_id
         try:
+            self.log.info(f"Fetching latest model forecast for a model.")
             query_api = self.client.query_api()
 
             query = (

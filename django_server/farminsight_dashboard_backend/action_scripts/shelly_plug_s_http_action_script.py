@@ -16,9 +16,11 @@ class ShellyPlugHttpActionScript(TypedSensor):
     maximumDurationInSeconds = 0
 
     def init_additional_information(self):
+        logger.info("Initializing Shelly Plug S (HTTP) action script.")
         self.maximumDurationInSeconds = self.controllable_action.maximumDurationSeconds or 0
         additional_information = json.loads(self.controllable_action.additionalInformation)
         self.http_endpoint = additional_information['http']
+        logger.info(f"Shelly Plug S (HTTP) initialized for endpoint: {self.http_endpoint}")
 
     @staticmethod
     def get_description() -> ActionScriptDescription:
@@ -49,6 +51,7 @@ class ShellyPlugHttpActionScript(TypedSensor):
         - JSON string: {"value": "on", "delay": 1800}
         """
         try:
+            logger.info(f"Controlling Shelly plug at {self.http_endpoint} with action: {action_value}")
             if action_value not in ["on", "off"]:
                 logger.error(f"Invalid action value: {action_value}. Expected 'on' or 'off'.", extra={'resource_id': self.controllable_action.id})
                 return
@@ -59,23 +62,27 @@ class ShellyPlugHttpActionScript(TypedSensor):
 
             if self.maximumDurationInSeconds > 0:
                 params["timer"] = self.maximumDurationInSeconds
+                logger.info(f"Action will be reversed after {self.maximumDurationInSeconds} seconds.")
 
             # Send HTTP request
             response = requests.get(url, params=params, timeout=5)
 
             if response.status_code == 200:
-                logger.info(f"Successfully sent '{action_value}' command to Shelly plug with delay={self.maximumDurationInSeconds}s.", extra={'resource_id': self.controllable_action.id})
+                logger.info(f"Successfully sent '{action_value}' command to Shelly plug at {self.http_endpoint}.")
             else:
-                logger.error(f"Failed to control Shelly plug. Status code: {response.status_code}", extra={'resource_id': self.controllable_action.id})
+                logger.error(f"Failed to control Shelly plug at {self.http_endpoint}. Status: {response.status_code}, Response: {response.text}", extra={'resource_id': self.controllable_action.id})
 
+        except requests.exceptions.RequestException as e:
+            logger.error(f"HTTP request failed for Shelly plug at {self.http_endpoint}: {e}", extra={'resource_id': self.controllable_action.id})
         except Exception as e:
-            logger.error(f"Exception during Shelly smart plug control: {e}", extra={'resource_id': self.controllable_action.id})
+            logger.error(f"An unexpected error occurred during Shelly smart plug control: {e}", extra={'resource_id': self.controllable_action.id})
 
     def run(self, action_value):
         try:
+            logger.info(f"Running Shelly Plug HTTP action with value: {action_value}")
             asyncio.run(self.control_smart_plug(action_value=str(action_value).strip().lower()))
         except Exception as e:
-            logger.error(f"Exception during smart plug control: {e}", extra={'resource_id': self.controllable_action.id})
+            logger.error(f"Exception during smart plug control execution: {e}", extra={'resource_id': self.controllable_action.id})
 
 
 class ShellyPlugMqttActionScript(TypedSensor):
@@ -87,13 +94,15 @@ class ShellyPlugMqttActionScript(TypedSensor):
     maximumDurationInSeconds = 0
 
     def init_additional_information(self):
+        logger.info("Initializing Shelly Plug S (MQTT) action script.")
         self.maximumDurationInSeconds = self.controllable_action.maximumDurationSeconds or 0
         info = json.loads(self.controllable_action.additionalInformation)
         self.mqtt_broker = info['mqtt-broker']
         self.mqtt_port = info.get('mqtt-port', 1883)
         self.mqtt_username = info.get('mqtt-username')
         self.mqtt_password = info.get('mqtt-password')
-        self.mqtt_topic = info['mqtt-topic']  # e.g., "shellies/shellyplug-s-1234/relay/0/command"
+        self.mqtt_topic = info['mqtt-topic']
+        logger.info(f"Shelly Plug S (MQTT) initialized for broker: {self.mqtt_broker}, topic: {self.mqtt_topic}")
 
     @staticmethod
     def get_description() -> ActionScriptDescription:
@@ -142,46 +151,54 @@ class ShellyPlugMqttActionScript(TypedSensor):
 
     def send_mqtt_command(self, topic: str, payload: str):
         try:
+            logger.info(f"Sending MQTT command. Topic: '{topic}', Payload: '{payload}'")
             client = mqtt.Client()
             if self.mqtt_username and self.mqtt_password:
                 client.username_pw_set(self.mqtt_username, self.mqtt_password)
 
             client.connect(self.mqtt_broker, self.mqtt_port, 60)
             client.loop_start()
-            logger.debug(f"Publishing to {topic}: {payload}")
             result = client.publish(topic, payload)
             result.wait_for_publish()
             client.loop_stop()
             client.disconnect()
 
             if result.rc == mqtt.MQTT_ERR_SUCCESS:
-                logger.debug(f"Successfully sent '{payload}' to topic '{topic}'", extra={'resource_id': self.controllable_action.id})
+                logger.info(f"Successfully sent '{payload}' to topic '{topic}'")
             else:
+                logger.error(f"Failed to publish MQTT message to topic '{topic}'. Return code: {result.rc}", extra={'resource_id': self.controllable_action.id})
                 raise RuntimeError(f"Failed to publish message. MQTT return code: {result.rc}")
         except Exception as e:
+            logger.error(f"Exception during MQTT communication: {e}", extra={'resource_id': self.controllable_action.id})
             raise RuntimeError(f"Exception during MQTT communication: {e}")
 
     def control_smart_plug(self, action_value):
         try:
-
+            logger.info(f"Controlling Shelly plug via MQTT with action: {action_value}")
             if action_value not in ["on", "off"]:
+                logger.error(f"Invalid action value: {action_value}. Expected 'on' or 'off'.")
                 raise ValueError(f"Invalid action value: {action_value}. Expected 'on' or 'off'.")
 
             self.send_mqtt_command(self.mqtt_topic, action_value)
 
             if self.maximumDurationInSeconds > 0:
-                logger.info(f"Delaying {self.maximumDurationInSeconds} seconds before sending 'off' command.", extra={'resource_id': self.controllable_action.id})
-                asyncio.run(self.delayed_off(self.maximumDurationInSeconds))
+                opposite_action = "off" if action_value == "on" else "on"
+                logger.info(f"Action will be reversed to '{opposite_action}' after {self.maximumDurationInSeconds} seconds.")
+                asyncio.run(self.delayed_action(self.maximumDurationInSeconds, opposite_action))
 
         except Exception as e:
+            logger.error(f"Exception during Shelly smart plug control: {e}", extra={'resource_id': self.controllable_action.id})
             raise RuntimeError(f"Exception during Shelly smart plug control: {e}") from e
 
-    async def delayed_off(self, delay_seconds: int):
+    async def delayed_action(self, delay_seconds: int, action: str):
         await asyncio.sleep(delay_seconds)
-        self.send_mqtt_command(self.mqtt_topic, "off")
+        logger.info(f"Executing delayed action: '{action}'")
+        self.send_mqtt_command(self.mqtt_topic, action)
 
     def run(self, action_value):
         try:
+            logger.info(f"Running Shelly Plug MQTT action with value: {action_value}")
             self.control_smart_plug(action_value=str(action_value).strip().lower())
         except Exception as e:
+            logger.error(f"Exception during smart plug control execution: {e}", extra={'resource_id': self.controllable_action.id})
             raise RuntimeError(f"Exception during smart plug control: {e}")

@@ -28,6 +28,7 @@ class SensorView(APIView):
         :return:
         """
         if not is_member(request.user, get_organization_by_sensor_id(sensor_id)):
+            logger.warning(f"Unauthorized attempt to access sensor by user '{request.user.name}'")
             return Response(status=status.HTTP_403_FORBIDDEN)
 
         sensor = get_sensor(sensor_id)
@@ -50,6 +51,7 @@ class SensorView(APIView):
         fpf_id = request.data.get('fpfId')
 
         if not is_member(request.user, get_organization_by_fpf_id(fpf_id)):
+            logger.warning(f"Unauthorized attempt to create sensor by user '{request.user.name}'")
             return Response(status=status.HTTP_403_FORBIDDEN)
 
         sensor = request.data
@@ -77,10 +79,11 @@ class SensorView(APIView):
             post_sensor(fpf_id, sensor_config)
 
         except Exception as e:
+            logger.error(f"Unable to create sensor at FPF. {e}")
             raise Exception(f"Unable to create sensor at FPF. {e}")
 
         sensor_data = create_sensor(sensor)
-        logger.info(f'Sensor created: {sensor.get("name")} (ID: {sensor.get("id")}) for FPF {fpf_id}',extra={'resource_id': sensor.get('id')})
+        logger.info(f"Sensor '{sensor.get('name')}' created by user '{request.user.name}'",extra={'resource_id': sensor.get('id')})
         return Response(sensor_data, status=status.HTTP_200_OK)
 
     def put(self, request, sensor_id):
@@ -95,6 +98,7 @@ class SensorView(APIView):
         :return:
         """
         if not is_member(request.user, get_organization_by_sensor_id(sensor_id)):
+            logger.warning(f"Unauthorized attempt to update sensor by user '{request.user.name}'")
             return Response(status=status.HTTP_403_FORBIDDEN)
 
         data = request.data
@@ -112,9 +116,9 @@ class SensorView(APIView):
 
         # Update sensor locally
         update_sensor_payload = {key: value for key, value in data.items() if key != "connection"}
-        update_sensor(sensor_id, update_sensor_payload)
+        sensor = update_sensor(sensor_id, update_sensor_payload)
 
-        logger.info('Sensor updated successfully', extra={'resource_id': sensor_id})
+        logger.info(f"Sensor '{sensor.name}' updated by user '{request.user.name}'", extra={'resource_id': sensor_id})
 
         return Response(data, status=status.HTTP_200_OK)
 
@@ -128,6 +132,7 @@ def get_fpf_sensor_types(request, fpf_id):
     :return:
     """
     if not is_member(request.user, get_organization_by_fpf_id(fpf_id)):
+        logger.warning(f"Unauthorized attempt to get sensor types by user '{request.user.name}'")
         return Response(status=status.HTTP_403_FORBIDDEN)
 
     sensor_types = get_sensor_types(fpf_id)
@@ -138,8 +143,10 @@ def get_fpf_sensor_types(request, fpf_id):
 @permission_classes([IsAuthenticated])
 def post_sensor_order(request, fpf_id):
     if not is_admin(request.user, get_organization_by_fpf_id(fpf_id)):
+        logger.warning(f"Unauthorized attempt to reorder sensors by user '{request.user.name}'")
         return Response(status=status.HTTP_403_FORBIDDEN)
 
     serializer = set_sensor_order(request.data)
+    logger.info(f"Sensor order for FPF {fpf_id} updated by user '{request.user.name}'")
 
     return Response(data=serializer.data, status=status.HTTP_200_OK)
