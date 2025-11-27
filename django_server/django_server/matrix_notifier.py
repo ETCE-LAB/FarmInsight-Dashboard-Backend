@@ -147,15 +147,9 @@ class MatrixClient:
             return
 
         # Schedule the async send_message coroutine to run on the client's event loop
-        future = asyncio.run_coroutine_threadsafe(
+        asyncio.run_coroutine_threadsafe(
             self.send_message(room_id, plain_text, html_body), self.loop
         )
-        try:
-            # You can optionally wait for the result, but for logging it's often fire-and-forget.
-            # If you wait, add a timeout to avoid blocking forever.
-            future.result(timeout=10)
-        except Exception as e:
-            logger.error(f"Error scheduling Matrix notification: {e}")
 
 
 matrix_client = MatrixClient()
