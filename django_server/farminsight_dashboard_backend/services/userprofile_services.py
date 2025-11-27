@@ -57,7 +57,6 @@ def set_password_to_random_password(userprofile_id: str) -> string:
 
 
 def all_userprofiles() -> UserprofileSerializer:
-    logger.debug("Fetching all user profiles.")
     return UserprofileSerializer(Userprofile.objects.all(), many=True)
 
 

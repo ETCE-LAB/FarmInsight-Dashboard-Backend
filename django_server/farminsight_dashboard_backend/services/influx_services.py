@@ -149,7 +149,6 @@ class InfluxDBManager:
         :return: Dictionary with sensor IDs as keys, each containing a list of measurements.
         """
         try:
-            self.log.info(f"Fetching sensor measurements from '{from_date}' to '{to_date}'.")
             query_api = self.client.query_api()
 
             # Build the filter part of the query for multiple sensors
@@ -192,7 +191,6 @@ class InfluxDBManager:
         :return: Dictionary with sensor IDs as keys, each containing the latest measurement.
         """
         try:
-            self.log.info(f"Fetching latest measurement for {len(sensor_ids)} sensors.")
             query_api = self.client.query_api()
 
             # Build the filter part of the query for multiple sensors
@@ -235,7 +233,6 @@ class InfluxDBManager:
         :param fpf_id: The ID of the FPF (used as the bucket name in InfluxDB).
         """
         try:
-            self.log.info(f"Writing {len(measurements)} measurements for a sensor.")
             write_api = self.client.write_api(write_options=SYNCHRONOUS)
 
             points = []
@@ -262,7 +259,6 @@ class InfluxDBManager:
         """
 
         try:
-            self.log.info(f"Fetching last weather forecast for a location.")
             query_api = self.client.query_api()
 
             # Construct the query
@@ -332,7 +328,6 @@ class InfluxDBManager:
     @_retry_connection
     def fetch_all_weather_forecasts(self, orga_id: str, location_id: str, from_date: str, to_date: str):
         try:
-            self.log.info(f"Fetching all weather forecasts for a location from '{from_date}' to '{to_date}'.")
             query_api = self.client.query_api()
 
             # Construct the query
@@ -406,7 +401,7 @@ class InfluxDBManager:
         :param weather_forecasts: List of weather forecast dictionaries.
         """
         try:
-            self.log.info(f"Writing {len(weather_forecasts)} weather forecasts for a location.")
+            self.log.info(f"Saving {len(weather_forecasts)} weather forecasts in InfluxDB")
             write_api = self.client.write_api(write_options=SYNCHRONOUS)
 
             points = []
@@ -483,7 +478,7 @@ class InfluxDBManager:
 
         except Exception as e:
             self.client = None
-            raise InfluxDBWriteException(f"Failed to write model forecast: {e}")
+            raise InfluxDBWriteException(f"Failed to write model forecast to InfluxDB: {e}")
 
 
     @_retry_connection
@@ -497,7 +492,6 @@ class InfluxDBManager:
         """
         from farminsight_dashboard_backend.services import get_model_by_id
         try:
-            self.log.info(f"Fetching latest model forecast for a model.")
             query_api = self.client.query_api()
 
             query = (

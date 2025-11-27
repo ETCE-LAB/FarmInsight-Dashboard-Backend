@@ -99,7 +99,6 @@ def update_fpf_api_key(fpf_id):
 
 
 def get_visible_fpf_preview(user: Userprofile=None) -> FPFPreviewSerializer:
-    logger.debug(f"Fetching visible FPF previews for user: '{user.username if user else 'Anonymous'}'.")
     fpfs = set()
     if user:
         memberships = get_memberships(user)
