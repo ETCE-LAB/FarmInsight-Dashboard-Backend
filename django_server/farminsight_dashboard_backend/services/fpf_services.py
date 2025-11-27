@@ -108,7 +108,7 @@ def get_visible_fpf_preview(user: Userprofile=None) -> FPFPreviewSerializer:
     public_fpfs = FPF.objects.filter(isPublic=True).all()
     fpfs |= set([fpf for fpf in public_fpfs])
 
-    serializer = FPFPreviewSerializer(sorted(fpfs, key=lambda x: (x.organization.orderIndex, x.orderIndex)), many=T)
+    serializer = FPFPreviewSerializer(sorted(fpfs, key=lambda x: (x.organization.orderIndex, x.orderIndex)), many=True)
     return serializer
 
 
