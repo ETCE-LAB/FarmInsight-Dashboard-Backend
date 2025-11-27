@@ -25,6 +25,7 @@ class FPF(models.Model):
     createdAt = models.DateTimeField(auto_now_add=True, null=True)
     location = models.ForeignKey(Location, blank=True, null=True, on_delete=models.SET_NULL)
     orderIndex = models.IntegerField(default=get_order_index_default)
+    isActive = models.BooleanField(default=True)
 
     class Meta:
         constraints = [
