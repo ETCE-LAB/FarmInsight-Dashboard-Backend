@@ -109,3 +109,12 @@ class ResourceManagementModelService:
                     print(f"⚠️ Failed to fetch sensor value for {name}: {e}")
 
         return f"?{urlencode(params)}" if params else ""
+
+def set_model_order(ids: list[str]) -> ResourceManagementModelSerializer:
+    models = ResourceManagementModel.objects.filter(id__in=ids)
+    for model in models:
+        model.orderIndex = ids.index(str(model.id))
+
+    ResourceManagementModel.objects.bulk_update(models, ['orderIndex'])
+
+    return ResourceManagementModelSerializer(models, many=True)
