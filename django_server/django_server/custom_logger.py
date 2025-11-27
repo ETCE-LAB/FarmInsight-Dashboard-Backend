@@ -5,9 +5,9 @@ import os
 from django.conf import settings
 
 
-from .matrix_notifier import send_matrix_notification, matrix_client, send_matrix_notification_sync
+from .matrix_notifier import matrix_client, send_matrix_notification_sync
 
-# Farbzuordnung für verschiedene Log-Level zur besseren visuellen Darstellung
+# Farbzuordnung für verschiedene Log-Level
 LOG_LEVEL_COLORS = {
     'INFO': '#36a64f',      # Grün
     'WARNING': '#ffc107',   # Gelb
@@ -37,7 +37,6 @@ class MatrixLogHandler(logging.Handler):
             return
 
         if not matrix_client.loop or not matrix_client.is_running:
-            print(f"[Matrix not ready] {self.format(record)}")
             return
 
 
@@ -62,8 +61,6 @@ class MatrixLogHandler(logging.Handler):
                 asyncio.run_coroutine_threadsafe(bundled_coro, matrix_client.loop)
 
         except RuntimeError as e:
-            # Hier vorsichtig loggen, um keine Schleife zu erzeugen.
-            # Ein print ist hier sicherer als logger.error.
             print(f"FATAL: Failed to send log to Matrix from handler: {e}")
 
 
