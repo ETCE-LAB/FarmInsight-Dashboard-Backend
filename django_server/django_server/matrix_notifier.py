@@ -35,7 +35,6 @@ class MatrixClient:
     async def start(self):
         if not all([settings.MATRIX_HOMESERVER, settings.MATRIX_USER, settings.MATRIX_PASSWORD]):
             logger.warning("Matrix notification settings are not configured.")
-            self._ready_event.set() # Set event to unblock waiters
             return
 
         self.client = AsyncClient(settings.MATRIX_HOMESERVER, settings.MATRIX_USER)
@@ -44,7 +43,7 @@ class MatrixClient:
             if isinstance(login_response, LoginError):
                 logger.error(f"Matrix login failed: {login_response.message}")
                 self.client = None
-                self._ready_event.set()  # Unblock waiters on failure
+                self._ready_event.set()  # Unblock waiters even on failure
                 return
 
             logger.info("Matrix client logged in successfully.")
@@ -83,7 +82,7 @@ class MatrixClient:
         except Exception as e:
             logger.error(f"Matrix client startup error: {e}")
             self.client = None
-            self._ready_event.set()  # Unblock waiters on failure
+            self._ready_event.set()  # Unblock waiters even on failure
 
     async def stop(self):
         if self.client:
@@ -95,6 +94,7 @@ class MatrixClient:
 
     def wait_until_ready(self, timeout: float | None = None) -> bool:
         """Blocks until the client is ready or the timeout is reached."""
+        logger.info("Waiting for Matrix client to be ready...")
         return self._ready_event.wait(timeout)
 
 
@@ -134,21 +134,22 @@ class MatrixClient:
             logger.error(f"Error sending Matrix notification: {e}")
 
     def send_message_sync(self, room_id: str, plain_text: str, html_body: str | None = None):
+        """
+        Schedules sending a message from a synchronous context.
+        This is thread-safe.
+        """
+        # Wait for the client to be initialized. This is crucial for startup logging.
+        # The timeout prevents the app from hanging indefinitely if the client fails to start.
+        self.wait_until_ready(timeout=15.0)
 
-        ready = self._ready_event.wait(timeout=5.0)
+        if not self.is_running or not self.loop:
+            logger.warning("Matrix client is not running. Skipping notification.")
+            return
 
         # Schedule the async send_message coroutine to run on the client's event loop
-        future = asyncio.run_coroutine_threadsafe(
+        asyncio.run_coroutine_threadsafe(
             self.send_message(room_id, plain_text, html_body), self.loop
         )
-
-        def handle_exception(fut):
-            try:
-                fut.result()
-            except Exception as e:
-                print(f"Error sending Matrix notification in background: {e}")
-
-        future.add_done_callback(handle_exception)
 
 
 matrix_client = MatrixClient()
