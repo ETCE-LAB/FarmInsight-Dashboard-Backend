@@ -3,7 +3,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.status import HTTP_404_NOT_FOUND, HTTP_200_OK
 
-from farminsight_dashboard_backend.services import get_value_ping, get_sensor
+from farminsight_dashboard_backend.services import get_value_ping, get_sensor, get_ping, get_hardware
 
 
 @api_view(['GET'])
@@ -12,6 +12,9 @@ def get_direct_ping(request, resource_type, resource_id):
     if resource_type == 'sensor':
         fpf_id = get_sensor(resource_id).FPF_id
         response = get_value_ping(str(fpf_id), resource_id)
+    elif resource_type == 'hardware':
+        fpf_id = get_hardware(resource_id).FPF_id
+        response = get_ping(str(fpf_id), resource_id)
     else:
         return Response(status=HTTP_404_NOT_FOUND)
 

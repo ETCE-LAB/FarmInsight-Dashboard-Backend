@@ -12,7 +12,8 @@ from .data_services import get_all_fpf_data, get_all_sensor_data
 from .influx_services import InfluxDBManager
 from .sensor_services import get_sensor, update_sensor, create_sensor, sensor_exists, set_sensor_order
 from .growing_cycle_services import update_growing_cycle, create_growing_cycle, remove_growing_cycle, get_growing_cycles_by_fpf_id, set_growing_cycle_order
-from .fpf_connection_services import get_sensor_hardware_configuration, post_fpf_id, post_fpf_api_key, get_sensor_types, put_update_sensor, post_sensor
+from .fpf_connection_services import get_sensor_hardware_configuration, post_fpf_id, post_fpf_api_key, get_sensor_types, put_update_sensor, post_sensor, get_ping, \
+    get_action_queue_by_fpf_id, get_available_action_script_types_by_fpf_id, execute_action, get_value_ping
 from .auth_services import get_auth_token, valid_api_key_for_sensor, create_single_use_token, valid_api_key_for_fpf, valid_api_key_for_camera, valid_api_key_for_action
 from .camera_services import get_active_camera_by_id, create_camera, update_camera, delete_camera, get_camera_by_id, get_active_camera_count, fetch_camera_snapshot, set_camera_order
 from .image_services import get_images_by_camera, save_image
@@ -24,9 +25,8 @@ from .location_services import create_location, update_location, remove_location
 from .weather_forcast_scheduler_services import WeatherForecastScheduler
 from .controllable_action_services import get_active_controllable_action_by_id, create_controllable_action, update_controllable_action, delete_controllable_action, get_controllable_action_by_id, set_is_automated, set_controllable_action_order
 from .action_queue_services import is_new_action, create_auto_triggered_actions_in_queue, process_action_queue, get_active_state, is_already_enqueued
-from .hardware_services import get_hardware_for_fpf, get_or_create_hardware, set_hardware_order, update_hardware, remove_hardware, create_hardware
+from .hardware_services import get_hardware_for_fpf, get_or_create_hardware, set_hardware_order, update_hardware, remove_hardware, create_hardware, get_all_hardwares, get_hardware
 from .threshold_services import create_threshold, remove_threshold, update_threshold
 from .action_trigger_services import create_action_trigger, get_action_trigger, get_all_auto_timeOfDay_action_triggers, get_all_auto_interval_triggers, get_all_active_auto_triggers
 from .auto_trigger_scheduler_services import AutoTriggerScheduler
 from .email_services import send_html_email
-from .fpf_connection_services import get_action_queue_by_fpf_id, get_available_action_script_types_by_fpf_id, execute_action, get_value_ping

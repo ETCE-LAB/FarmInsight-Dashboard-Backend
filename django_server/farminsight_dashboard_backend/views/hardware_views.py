@@ -8,7 +8,7 @@ from farminsight_dashboard_backend.utils import get_logger
 from farminsight_dashboard_backend.serializers import HardwareSerializer
 from farminsight_dashboard_backend.services import is_member, get_organization_by_fpf_id, \
     get_hardware_for_fpf, is_admin, set_hardware_order, get_organization_by_hardware_id, update_hardware, \
-    remove_hardware, create_hardware
+    remove_hardware, create_hardware, is_system_admin, get_all_hardwares
 
 logger = get_logger()
 
@@ -24,6 +24,16 @@ def get_fpf_hardware(request, fpf_id):
 
     hardware = get_hardware_for_fpf(fpf_id)
     serializer = HardwareSerializer(hardware, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_all_hardware(request):
+    if not is_system_admin(request.user):
+        return Response(status=status.HTTP_403_FORBIDDEN)
+
+    serializer = get_all_hardwares()
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 

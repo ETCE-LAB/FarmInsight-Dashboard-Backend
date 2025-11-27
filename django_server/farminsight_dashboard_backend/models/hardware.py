@@ -18,6 +18,7 @@ class Hardware(models.Model):
     name = models.CharField(max_length=256)
     FPF = models.ForeignKey(FPF, related_name='hardware', on_delete=models.CASCADE)
     orderIndex = models.IntegerField(default=get_order_index_default)
+    pingEndpoint = models.CharField(blank=True, max_length=256, null=True)
 
     class Meta:
         ordering = ['orderIndex']

@@ -13,6 +13,14 @@ def get_hardware_for_fpf(fpf_id):
     return Hardware.objects.filter(FPF__id=fpf_id).distinct()
 
 
+def get_all_hardwares() -> HardwareSerializer:
+    return HardwareSerializer(Hardware.objects.all(), many=True)
+
+
+def get_hardware(hardware_id: str):
+    return Hardware.objects.get(id=hardware_id)
+
+
 def create_hardware_at_fpf(fpf_id: str, hardware_id: str, hardware_name: str):
     data = {'name': hardware_name, 'id': hardware_id }
     try:
