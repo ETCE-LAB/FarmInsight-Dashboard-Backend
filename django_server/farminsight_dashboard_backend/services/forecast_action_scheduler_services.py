@@ -56,8 +56,8 @@ class ForecastActionScheduler:
         upcoming = []
         for entry in forecast_actions:
             ts = entry["timestamp"]
-            if timezone.is_naive(ts):
-                ts = timezone.make_aware(ts)
+            if ts.tzinfo is None:
+                ts = timezone.make_aware(ts, timezone=timezone.utc)
             if ts > now:
                 upcoming.append(entry)
 
@@ -112,10 +112,17 @@ class ForecastActionScheduler:
 
             # Schedule the next one (chain)
             now_time = timezone.now()
-            remaining = [
-                f for f in forecast_actions
-                if timezone.make_aware(f["timestamp"]) > now_time
-            ]
+            remaining = []
+
+            for f in forecast_actions:
+                ts = f["timestamp"]
+
+                if ts.tzinfo is None:
+                    ts = timezone.make_aware(ts, timezone=timezone.utc)
+
+                if ts > now_time:
+                    remaining.append(f)
+
             if remaining:
                 self.schedule_forecast_chain(action, remaining)
 
