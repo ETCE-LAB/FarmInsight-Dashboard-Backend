@@ -17,13 +17,11 @@ def get_all_fpf_data(fpf_id):
     :param fpf_id: UUID of the FPF
     :return:
     """
-    logger.info(f"Fetching all data for FPF.")
     try:
         fpf = FPF.objects.prefetch_related('sensors', 'cameras', 'growingCycles').get(id=fpf_id)
     except FPF.DoesNotExist:
-        logger.error(f"FPF not found.")
+        logger.error(f"Could not fetch FPF Data. FPF not found.")
         raise NotFoundException(f'FPF with id: {fpf_id} was not found.')
-    logger.info(f"Successfully fetched all data for FPF.")
     return fpf
 
 def get_all_sensor_data(sensor_id, from_date=None, to_date=None):
@@ -35,43 +33,31 @@ def get_all_sensor_data(sensor_id, from_date=None, to_date=None):
     :param from_date: must be in ISO 8601 format (e.g. 2024-10-31T23:59:59Z) or YYYY-MM-DD format.
     :return:
     """
-    logger.info(f"Fetching all data for sensor.")
     try:
         sensor = Sensor.objects.get(id=sensor_id)
     except Sensor.DoesNotExist:
-        logger.error(f"Sensor not found.")
         raise NotFoundException(f'Sensor with id: {sensor_id} was not found.')
 
     # Set dates and convert to iso code
     from_date_iso, to_date_iso = get_date_range(from_date, to_date)
 
     # Fetch measurements for all sensors in one call
-    logger.info(f"Fetching measurements for sensor between {from_date_iso} and {to_date_iso}.")
     measurements_by_sensor = InfluxDBManager.get_instance().fetch_sensor_measurements(
         fpf_id=str(sensor.FPF.id),
         sensor_ids=[str(sensor.id)],
         from_date=from_date_iso,
         to_date=to_date_iso)
 
-    measurements = measurements_by_sensor.get(str(sensor.id), [])
-    if not measurements:
-        logger.warning(f"No measurements found for sensor.")
-    else:
-        logger.info(f"Successfully fetched {len(measurements)} measurements for sensor.")
-    return measurements
+    return measurements_by_sensor.get(str(sensor.id), [])
 
 def get_last_weather_forecast(locationId):
     """
     Get the last weather forecast for all locations
     :return: list of weather forecasts
     """
-    logger.info(f"Fetching last weather forecast for location.")
     location = Location.objects.get(id=locationId)
     forecasts = InfluxDBManager.get_instance().fetch_last_weather_forcast(location.organization.id, location.id )
-    if not forecasts:
-        logger.warning(f"No weather forecast found for location.")
-    else:
-        logger.info(f"Successfully fetched last weather forecast for location.")
+
     return forecasts
 
 def get_weather_forecasts_by_date(location_id: str, from_date, to_date=None):
@@ -82,11 +68,8 @@ def get_weather_forecasts_by_date(location_id: str, from_date, to_date=None):
     :return:
     """
     from_date_iso, to_date_iso = get_date_range(from_date, to_date)
-    logger.info(f"Fetching weather forecasts for location between {from_date_iso} and {to_date_iso}.")
     location = Location.objects.get(id=location_id)
     forecasts = InfluxDBManager.get_instance().fetch_all_weather_forecasts(location.organization.id, location.id, from_date_iso, to_date_iso)
     if not forecasts:
-        logger.warning(f"No weather forecasts found for location in the specified date range.")
-    else:
-        logger.info(f"Successfully fetched {len(forecasts)} weather forecasts for location.")
+        logger.warning(f"No weather forecasts found for {location_id} in the specified date range from {from_date_iso} to {to_date_iso}.")
     return forecasts
