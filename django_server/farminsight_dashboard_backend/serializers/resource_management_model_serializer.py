@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from farminsight_dashboard_backend.models import ResourceManagementModel, ActionMapping, FPF, ControllableAction
+from farminsight_dashboard_backend.serializers.threshold_serializer import ThresholdSerializer
 
 
 class ActionMappingSerializer(serializers.ModelSerializer):
@@ -14,7 +15,7 @@ class ActionMappingSerializer(serializers.ModelSerializer):
 
 class ResourceManagementModelSerializer(serializers.ModelSerializer):
     actions = ActionMappingSerializer(source="action", many=True, read_only=True)
-
+    thresholds = ThresholdSerializer(many=True)
     class Meta:
         model = ResourceManagementModel
         fields = [
@@ -28,11 +29,13 @@ class ResourceManagementModelSerializer(serializers.ModelSerializer):
             "availableScenarios",
             "forecasts",
             "actions",
+            "thresholds",
         ]
 
 class ResourceManagementModelDataSerializer(serializers.ModelSerializer):
     actions = ActionMappingSerializer(source="action", many=True, read_only=True)
     latest_forecast = serializers.SerializerMethodField()
+    thresholds = ThresholdSerializer(many=True)
 
     class Meta:
         model = ResourceManagementModel
@@ -42,6 +45,7 @@ class ResourceManagementModelDataSerializer(serializers.ModelSerializer):
             "forecasts",
             "actions",
             "latest_forecast",
+            "thresholds",
         ]
 
     def get_latest_forecast(self, obj):
