@@ -4,7 +4,8 @@ from django.utils.timezone import now
 
 from farminsight_dashboard_backend.models import ActionQueue
 from farminsight_dashboard_backend.serializers import ActionQueueSerializerDescriptive
-from farminsight_dashboard_backend.services import get_controllable_action_by_id
+# Import directly from module to avoid circular import
+from farminsight_dashboard_backend.services.controllable_action_services import get_controllable_action_by_id
 
 from farminsight_dashboard_backend.services.action_trigger_services import get_all_active_auto_triggers
 from farminsight_dashboard_backend.services.trigger.trigger_handler_factory import TriggerHandlerFactory
