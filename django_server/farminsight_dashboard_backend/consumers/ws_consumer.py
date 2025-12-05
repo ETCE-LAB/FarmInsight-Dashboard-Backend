@@ -6,6 +6,7 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 
 from farminsight_dashboard_backend.models import LogMessage
 from farminsight_dashboard_backend.services import sensor_exists, get_active_camera_by_id
+from farminsight_dashboard_backend.services.camera_services import trigger_camera_plug
 from farminsight_dashboard_backend.services.fpf_streaming_services import websocket_stream
 from farminsight_dashboard_backend.utils import get_logger
 
@@ -115,6 +116,13 @@ class WebsocketStreamingManager:
             if entry:
                 entry['clients'] += 1
                 return
+            
+            # New stream starting - Turn ON Smart Plug
+            try:
+                await sync_to_async(trigger_camera_plug)(camera_id, "On")
+            except Exception as e:
+                logger.error(f"Failed to turn on camera plug: {e}")
+
             stop_event = asyncio.Event()
             task = asyncio.create_task(websocket_stream(livestream_url, group_name, max_fps=max_fps, stop_event=stop_event))
 
@@ -139,6 +147,12 @@ class WebsocketStreamingManager:
             if entry['clients'] <= 0:
                 # Stop the streaming task
                 entry['stop_event'].set()
+                
+                # Stream stopping - Turn OFF Smart Plug
+                try:
+                    await sync_to_async(trigger_camera_plug)(camera_id, "Off")
+                except Exception as e:
+                    logger.error(f"Failed to turn off camera plug: {e}")
 
     @classmethod
     async def _cleanup(cls, camera_id: str):

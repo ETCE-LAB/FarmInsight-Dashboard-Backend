@@ -68,7 +68,7 @@ def update_fpf(fpf_id, data):
 
 
 def get_fpf_by_id(fpf_id: str):
-    fpf = FPF.objects.filter(id=fpf_id).prefetch_related('sensors', 'cameras', 'growingCycles').first()
+    fpf = FPF.objects.filter(id=fpf_id).prefetch_related('sensors', 'cameras', 'growingCycles', 'actions', 'actions__hardware', 'actions__triggers').first()
     if fpf is None:
         logger.warning(f"Could not find FPF with id: {fpf_id}")
         raise NotFoundException(f'FPF with id: {fpf_id} was not found.')
