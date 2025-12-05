@@ -24,7 +24,9 @@ class FPFSerializer(CustomSerializer):
     class Meta:
         model = FPF
         read_only_fields = ('id',)
-        fields = ('id', 'name', 'isPublic', 'sensorServiceIp', 'organizationId', 'locationId', 'isActive')
+        fields = ('id', 'name', 'isPublic', 'sensorServiceIp', 'organizationId', 'locationId', 'isActive',
+                  'energyGridConnectThreshold', 'energyShutdownThreshold', 'energyWarningThreshold',
+                  'energyBatteryMaxWh', 'energyGridDisconnectThreshold')
 
     def validate_sensorServiceIp(self, value):
         '''
@@ -72,7 +74,9 @@ class FPFFunctionalSerializer(serializers.ModelSerializer):
     class Meta:
         model = FPF
         read_only_fields = ('id',)
-        fields = ('id', 'name', 'isPublic', 'sensorServiceIp', 'locationId', 'orderIndex', 'isActive')
+        fields = ('id', 'name', 'isPublic', 'sensorServiceIp', 'locationId', 'orderIndex', 'isActive',
+                  'energyGridConnectThreshold', 'energyShutdownThreshold', 'energyWarningThreshold',
+                  'energyBatteryMaxWh', 'energyGridDisconnectThreshold')
 
 
 class FPFTechnicalKeySerializer(serializers.ModelSerializer):

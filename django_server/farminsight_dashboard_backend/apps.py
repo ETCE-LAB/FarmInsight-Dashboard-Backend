@@ -33,7 +33,7 @@ class FarminsightDashboardBackendConfig(AppConfig):
                     time.sleep(retry_interval)
                     retry_count += 1
                 else:
-                    from farminsight_dashboard_backend.services import InfluxDBManager, CameraScheduler, DataRetentionScheduler, WeatherForecastScheduler, AutoTriggerScheduler, ModelScheduler, FPFHealthScheduler, ForecastActionScheduler
+                    from farminsight_dashboard_backend.services import InfluxDBManager, CameraScheduler, DataRetentionScheduler, WeatherForecastScheduler, AutoTriggerScheduler, ModelScheduler, FPFHealthScheduler, ForecastActionScheduler, EnergyManagementScheduler
                     from farminsight_dashboard_backend.services.trigger.MeasurementTriggerManager import \
                         MeasurementTriggerManager
 
@@ -50,6 +50,7 @@ class FarminsightDashboardBackendConfig(AppConfig):
                     FPFHealthScheduler.get_instance().start()
                     ModelScheduler.get_instance().start()
                     ForecastActionScheduler.get_instance().start()
+                    EnergyManagementScheduler.get_instance().start()
                     MeasurementTriggerManager.build_trigger_mapping()
 
                     self.log.info("Started successfully.")

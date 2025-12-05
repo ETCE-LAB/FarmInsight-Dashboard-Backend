@@ -7,6 +7,7 @@ class Threshold(models.Model):
     THRESHOLD_TYPES = [
         ("sensor", "Sensor"),
         ("model", "Model"),
+        ("energy", "Energy"),
     ]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -15,7 +16,7 @@ class Threshold(models.Model):
     color = models.CharField(max_length=64, blank=True)
     description = models.CharField(max_length=512, blank=True)
     sensor = models.ForeignKey(Sensor, related_name='thresholds', on_delete=models.CASCADE, blank=True, null=True, default=None)
-    thresholdType = models.CharField(max_length=64, choices=THRESHOLD_TYPES)
+    thresholdType = models.CharField(max_length=64, choices=THRESHOLD_TYPES, default="sensor")
     resourceManagementModel = models.ForeignKey('ResourceManagementModel', related_name='thresholds', on_delete=models.CASCADE, blank=True, null=True, default=None)
 
     def __str__(self):
