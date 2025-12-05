@@ -41,10 +41,16 @@ def get_organization_by_sensor_id(sensor_id) -> Organization:
     org = Sensor.objects.select_related('FPF__organization').get(id=sensor_id).FPF.organization
     return org
 
-
 def get_organization_by_threshold_id(threshold_id) -> Organization:
-    org = Threshold.objects.select_related('sensor__FPF__organization').get(id=threshold_id).sensor.FPF.organization
-    return org
+    threshold = Threshold.objects.filter(id=threshold_id).first()
+    print(threshold)
+    if not threshold:
+        return None
+    if threshold.sensor is not None:
+        return Threshold.objects.select_related('sensor__FPF__organization').get(id=threshold_id).sensor.FPF.organization
+    else:
+        return Threshold.objects.select_related('resourceManagementModel__FPF__organization').get(id=threshold_id).resourceManagementModel.FPF.organization
+
 
 
 def get_organization_by_camera_id(camera_id) -> Organization:

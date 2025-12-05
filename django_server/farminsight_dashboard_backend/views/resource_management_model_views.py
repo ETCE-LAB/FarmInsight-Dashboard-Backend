@@ -138,7 +138,7 @@ def get_forecasts(request, fpf_id: str):
     influx = InfluxDBManager.get_instance()
 
     for model in models:
-        forecast = influx.fetch_latest_model_forecast(fpf_id=fpf_id, model_id=model.id)
+        forecast = influx.fetch_latest_model_forecast(fpf_id=fpf_id, model_id=model.id, hours=168)
         combined_forecasts.append(forecast)
 
     if not combined_forecasts:
