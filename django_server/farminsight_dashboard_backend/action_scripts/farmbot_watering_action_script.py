@@ -19,11 +19,13 @@ class FarmbotSequenceActionScript(TypedSensor):
     maximumDurationInSeconds = 0
 
     def init_additional_information(self):
+        logger.info("Initializing Farmbot sequence action script.")
         self.maximumDurationInSeconds = self.controllable_action.maximumDurationSeconds or 0
 
         try:
             additional_information = json.loads(self.controllable_action.additionalInformation or "{}")
-        except Exception:
+        except Exception as e:
+            logger.error(f"Failed to parse additionalInformation JSON: {e}", extra={'resource_id': self.controllable_action.id})
             additional_information = {}
 
         if not isinstance(additional_information, dict):
@@ -38,6 +40,7 @@ class FarmbotSequenceActionScript(TypedSensor):
         self.sequence_name = additional_information.get('sequence_name')
         self.email = additional_information.get('email')
         self.password = additional_information.get('password')
+        logger.info(f"Farmbot action script initialized for server: {self.server} and sequence: {self.sequence_name}")
 
     @staticmethod
     def get_description() -> ActionScriptDescription:
@@ -87,17 +90,22 @@ class FarmbotSequenceActionScript(TypedSensor):
         Executes the Farmbot given farmbot sequence.
         """
         try:
+            logger.info(f"Executing Farmbot sequence: '{self.sequence_name}' on server: {self.server}")
             fb = Farmbot()
+            logger.info("Acquiring Farmbot token...")
             token = fb.get_token(self.email, self.password, self.server)
             fb.set_token(token)
+            logger.info("Token acquired. Executing sequence.")
 
             fb.sequence(self.sequence_name)
+            logger.info(f"Successfully triggered Farmbot sequence: '{self.sequence_name}'")
 
         except Exception as e:
-            logger.error(f"Exception during Farmbot sequence control: {e}", extra={'resource_id': self.controllable_action.id})
+            logger.error(f"Exception during Farmbot sequence execution: {e}", extra={'resource_id': self.controllable_action.id})
 
     def run(self, action_value):
         try:
+            logger.info(f"Running Farmbot sequence action for sequence: {self.sequence_name}")
             asyncio.run(self.run_sequence())
         except Exception as e:
-            logger.error(f"Exception during smart plug control: {e}", extra={'resource_id': self.controllable_action.id})
+            logger.error(f"Exception during Farmbot sequence run: {e}", extra={'resource_id': self.controllable_action.id})

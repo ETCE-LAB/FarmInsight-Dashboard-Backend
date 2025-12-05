@@ -28,6 +28,7 @@ class ForecastActionScheduler:
 
     def start(self):
         """Start the scheduler and periodic cleanup task."""
+        logger.info("Starting ForecastActionScheduler...")
         self._scheduler.add_job(
             self.cleanup_old_forecast_triggers,
             trigger="interval",
@@ -36,13 +37,14 @@ class ForecastActionScheduler:
             replace_existing=True,
         )
         self._scheduler.start()
-        logger.info("ForecastActionScheduler started.")
+        logger.info("ForecastActionScheduler started successfully.")
 
     def schedule_forecast_chain(self, action, forecast_actions: list[dict]):
         """
         Schedule the next forecast action in the list.
         If the list is empty, nothing is scheduled.
         """
+        logger.debug(f"Attempting to schedule forecast chain for action '{action.name}'.")
         # Convert timestamps to datetime if needed
         for entry in forecast_actions:
             ts = entry.get("timestamp")
@@ -50,6 +52,7 @@ class ForecastActionScheduler:
                 try:
                     entry["timestamp"] = datetime.fromisoformat(ts.replace("Z", "+00:00"))
                 except Exception:
+                    logger.warning(f"Could not parse timestamp '{ts}' for action '{action.name}'. Using current time.")
                     entry["timestamp"] = timezone.now()
 
         now = timezone.now()
@@ -62,7 +65,7 @@ class ForecastActionScheduler:
                 upcoming.append(entry)
 
         if not upcoming:
-            logger.debug(f"No upcoming forecast actions for {action.name}")
+            logger.debug(f"No upcoming forecast actions for '{action.name}'.")
             return
 
         # Sort by soonest timestamp
@@ -72,7 +75,10 @@ class ForecastActionScheduler:
         value = next_action["value"]
 
         # Remove existing forecast trigger for this action
-        ActionTrigger.objects.filter(action=action, type="forecast").delete()
+        deleted_count, _ = ActionTrigger.objects.filter(action=action, type="forecast").delete()
+        if deleted_count > 0:
+            logger.debug(f"Removed {deleted_count} existing forecast triggers for action '{action.name}'.")
+
 
         # Create a one-shot forecast trigger
         trigger = ActionTrigger.objects.create(
@@ -84,6 +90,7 @@ class ForecastActionScheduler:
             isActive=True,
             action=action
         )
+        logger.debug(f"Created new forecast trigger for action '{action.name}'.")
 
         self._scheduler.add_job(
             func=self._execute_forecast_action,
@@ -97,15 +104,18 @@ class ForecastActionScheduler:
 
     def _execute_forecast_action(self, trigger_id, forecast_actions):
         """Executes a forecast action and schedules the next one."""
+        action_name = "unknown"
         try:
             trigger = ActionTrigger.objects.get(id=trigger_id)
             action = trigger.action
+            action_name = action.name
 
-            logger.info(f"Executing forecast action for {action.name}")
+            logger.info(f"Executing forecast action for '{action_name}'.")
 
             # Add to queue and execute
             ActionQueue.objects.create(action=action, trigger=trigger)
             process_action_queue()
+            logger.debug(f"Action '{action_name}' added to queue and processed.")
 
             trigger.isActive = False
             trigger.save(update_fields=["isActive"])
@@ -124,13 +134,19 @@ class ForecastActionScheduler:
                     remaining.append(f)
 
             if remaining:
+                logger.debug(f"Found {len(remaining)} remaining forecast actions for '{action_name}'. Scheduling next one.")
                 self.schedule_forecast_chain(action, remaining)
+            else:
+                logger.debug(f"No more forecast actions to schedule for '{action_name}'.")
 
+        except ActionTrigger.DoesNotExist:
+            logger.error(f"Forecast action trigger not found. It might have been deleted.")
         except Exception as e:
-            logger.error(f"Error executing forecast action {trigger_id}: {e}")
+            logger.error(f"Error executing forecast action for '{action_name}': {e}")
 
     def cleanup_old_forecast_triggers(self):
         """Remove old or inactive forecast triggers (older than 2 days)."""
+        logger.debug("Running cleanup for old forecast triggers.")
         cutoff = timezone.now() - timedelta(days=2)
         deleted, _ = ActionTrigger.objects.filter(
             type="forecast",
@@ -138,4 +154,4 @@ class ForecastActionScheduler:
             createdAt__lt=cutoff
         ).delete()
         if deleted:
-            logger.debug(f"Cleaned up {deleted} old forecast triggers.")
+            logger.info(f"Cleaned up {deleted} old forecast triggers.")
