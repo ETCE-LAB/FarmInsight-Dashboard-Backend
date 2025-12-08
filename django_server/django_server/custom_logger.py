@@ -4,6 +4,7 @@ import os
 
 from django.conf import settings
 
+from enum import Enum
 
 from .matrix_notifier import send_matrix_notification, matrix_client, send_matrix_notification_sync
 
@@ -16,6 +17,24 @@ LOG_LEVEL_COLORS = {
     'DEBUG': '#ff00ff',     # Magenta
 }
 
+class LogCategory(Enum):
+    GENERAL = 'General'
+
+    ACTION_TRIGGERED = 'Action triggered'
+    ACTION_NOT_TRIGGERED = 'Action not triggered'
+    CAMERA_NOT_AVAILABLE = 'Camera not available'
+    EMAIL_ERROR = 'Email Server not available'
+    FORECAST ='Forecast'
+    FORECAST_ERROR = 'Error while getting Forecast'
+    FPF_HEALTH_CHECK = 'Check for FPF Health'
+    INFLUX_CONNECTION_ERROR = 'Error while connecting to influx database'
+    INFLUX_WRITE_ERROR = 'Error writing to influx database'
+    MODEL_ACTION_TRIGGERED = 'Model action triggered'
+    MODEL_ACTION_NOT_AVAILABLE = 'Model action not available'
+    MODEL_FORECAST_ERROR = 'Error while getting Model Forecast'
+    SENSOR_DATA_ERROR = 'Error while getting Sensor Data'
+    SYSTEM_INIT = 'System init'
+    SYSTEM_INIT_ERROR = 'Error while starting System'
 
 class MatrixLogHandler(logging.Handler):
     def __init__(self, level=logging.NOTSET):
@@ -46,8 +65,15 @@ class MatrixLogHandler(logging.Handler):
 
             color = LOG_LEVEL_COLORS.get(record.levelname, '#6c757d')
 
+            category = getattr(record, 'category', None)
+
+            log_category = (f'<font color="#ffffff">'
+                            f'<strong>Category: [{category.value}]</strong>'
+                            f'</font>') if category is not None else ""
+
             html_body = (
                 f'<p><font color="{color}"><strong>{record.levelname}</strong></font></p>'
+                f'{log_category}'
                 f'<font color="{'#ffffff'}">{plain_text}</font>'
                 f'<p><font color="{'#aaaaaa'}"><em>Function: {record.funcName} File: {os.path.splitext(record.filename)[0]}:{record.lineno}</em></font></p>'
             )
