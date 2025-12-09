@@ -20,21 +20,14 @@ LOG_LEVEL_COLORS = {
 class LogCategory(Enum):
     GENERAL = 'General'
 
-    ACTION_TRIGGERED = 'Action triggered'
-    ACTION_NOT_TRIGGERED = 'Action not triggered'
-    CAMERA_NOT_AVAILABLE = 'Camera not available'
-    EMAIL_ERROR = 'Email Server not available'
-    FORECAST ='Forecast'
-    FORECAST_ERROR = 'Error while getting Forecast'
-    FPF_HEALTH_CHECK = 'Check for FPF Health'
-    INFLUX_CONNECTION_ERROR = 'Error while connecting to influx database'
-    INFLUX_WRITE_ERROR = 'Error writing to influx database'
-    MODEL_ACTION_TRIGGERED = 'Model action triggered'
-    MODEL_ACTION_NOT_AVAILABLE = 'Model action not available'
-    MODEL_FORECAST_ERROR = 'Error while getting Model Forecast'
-    SENSOR_DATA_ERROR = 'Error while getting Sensor Data'
-    SYSTEM_INIT = 'System init'
-    SYSTEM_INIT_ERROR = 'Error while starting System'
+    SYSTEM = 'System'
+    ACTION = 'Action'
+    DATABASE = 'Database'
+    SENSOR = 'Sensor'
+    FORECAST = 'Forecast'
+    MODEL = 'Model'
+    CAMERA = 'Camera'
+    EMAIL = 'Email'
 
 class MatrixLogHandler(logging.Handler):
     def __init__(self, level=logging.NOTSET):
