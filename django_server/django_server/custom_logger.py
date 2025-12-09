@@ -46,23 +46,6 @@ class MatrixLogHandler(logging.Handler):
         get_room_ids_async = sync_to_async(list, thread_sensitive=True)
         send_matrix_notification_async = sync_to_async(send_matrix_notification_sync, thread_sensitive=True)
 
-        try:
-            plain_text = f"{record.getMessage()}"
-
-            color = LOG_LEVEL_COLORS.get(record.levelname, '#6c757d')
-
-            category = getattr(record, 'category', None)
-
-            log_category = (f'<font color="#ffffff">'
-                            f'<strong>Category: [{category.value}]</strong>'
-                            f'</font>') if category is not None else ""
-
-            html_body = (
-                f'<p><font color="{color}"><strong>{record.levelname}</strong></font></p>'
-                f'{log_category}'
-                f'<font color="{'#ffffff'}">{plain_text}</font>'
-                f'<p><font color="{'#aaaaaa'}"><em>Function: {record.funcName} File: {os.path.splitext(record.filename)[0]}:{record.lineno}</em></font></p>'
-            )
         async def _async_emit():
             try:
                 room_ids = await get_room_ids_async(Notification.objects.values_list('room_id', flat=True))
@@ -75,8 +58,16 @@ class MatrixLogHandler(logging.Handler):
             try:
                 plain_text = f"{record.getMessage()}"
                 color = LOG_LEVEL_COLORS.get(record.levelname, '#6c757d')
+
+                category = getattr(record, 'category', None)
+
+                log_category = (f'<font color="#ffffff">'
+                                f'<strong>Category: [{category.value}]</strong>'
+                                f'</font>') if category is not None else ""
+
                 html_body = (
                     f'<p><font color="{color}"><strong>{record.levelname}</strong></font></p>'
+                    f'{log_category}'
                     f'<font color="{'#ffffff'}">{plain_text}</font>'
                     f'<p><font color="{'#aaaaaa'}"><em>Function: {record.funcName} File: {os.path.splitext(record.filename)[0]}:{record.lineno}</em></font></p>'
                 )
