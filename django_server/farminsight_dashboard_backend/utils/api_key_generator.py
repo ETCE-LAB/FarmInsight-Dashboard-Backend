@@ -1,5 +1,8 @@
+import logging
 import random
 import string
+
+logger = logging.getLogger(__name__)
 
 
 def generate_random_api_key(length=32):

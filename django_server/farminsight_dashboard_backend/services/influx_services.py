@@ -102,8 +102,8 @@ class InfluxDBManager:
 
                 for fpf in fpf_objects:
                     bucket_name = str(fpf.id)
-                    if not bucket_api.find_bucket_by_name(bucket_name):
-                        self.log.info(f"Creating new bucket: {bucket_name}")
+                    if not bucket_api.find_bucket_by_name(bucket_name): # pragma: no cover
+                        self.log.info(f"Creating InfluxDB bucket for FPF '{fpf.name}'.")
                         bucket_api.create_bucket(bucket_name=bucket_name, org=self.influxdb_settings['org'])
 
         except Exception as e:
@@ -124,8 +124,8 @@ class InfluxDBManager:
 
                 for orga in orga_objects:
                     bucket_name = str(orga.id)
-                    if not bucket_api.find_bucket_by_name(bucket_name):
-                        self.log.info(f"Creating new bucket: {bucket_name}")
+                    if not bucket_api.find_bucket_by_name(bucket_name): # pragma: no cover
+                        self.log.info(f"Creating InfluxDB bucket for organization '{orga.name}'.")
                         bucket_api.create_bucket(bucket_name=bucket_name, org=self.influxdb_settings['org'])
 
         except Exception as e:
@@ -174,6 +174,7 @@ class InfluxDBManager:
 
         except requests.exceptions.ConnectionError as e:
             raise InfluxDBNoConnectionException("Unable to connect to InfluxDB.")
+
 
         except Exception as e:
             self.client = None
@@ -244,7 +245,6 @@ class InfluxDBManager:
                 )
                 points.append(point)
             write_api.write(bucket=fpf_id, record=points)
-
 
         except Exception as e:
             self.client = None
@@ -401,6 +401,7 @@ class InfluxDBManager:
         :param weather_forecasts: List of weather forecast dictionaries.
         """
         try:
+            self.log.info(f"Saving {len(weather_forecasts)} weather forecasts in InfluxDB")
             write_api = self.client.write_api(write_options=SYNCHRONOUS)
 
             points = []
@@ -477,7 +478,7 @@ class InfluxDBManager:
 
         except Exception as e:
             self.client = None
-            raise InfluxDBWriteException(f"Failed to write model forecast: {e}")
+            raise InfluxDBWriteException(f"Failed to write model forecast to InfluxDB: {e}")
 
 
     @_retry_connection

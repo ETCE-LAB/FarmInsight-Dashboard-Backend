@@ -1,7 +1,11 @@
+import logging
+
 from farminsight_dashboard_backend.models import FPF, Sensor, Location
 from farminsight_dashboard_backend.utils import get_date_range
 from .influx_services import InfluxDBManager
 from ..exceptions import NotFoundException
+
+logger = logging.getLogger(__name__)
 
 
 def get_all_fpf_data(fpf_id):
@@ -16,6 +20,7 @@ def get_all_fpf_data(fpf_id):
     try:
         fpf = FPF.objects.prefetch_related('sensors', 'cameras', 'growingCycles').get(id=fpf_id)
     except FPF.DoesNotExist:
+        logger.error(f"Could not fetch FPF Data. FPF not found.")
         raise NotFoundException(f'FPF with id: {fpf_id} was not found.')
     return fpf
 
@@ -65,4 +70,6 @@ def get_weather_forecasts_by_date(location_id: str, from_date, to_date=None):
     from_date_iso, to_date_iso = get_date_range(from_date, to_date)
     location = Location.objects.get(id=location_id)
     forecasts = InfluxDBManager.get_instance().fetch_all_weather_forecasts(location.organization.id, location.id, from_date_iso, to_date_iso)
+    if not forecasts:
+        logger.warning(f"No weather forecasts found for {location_id} in the specified date range from {from_date_iso} to {to_date_iso}.")
     return forecasts

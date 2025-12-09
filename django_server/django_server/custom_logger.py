@@ -2,13 +2,13 @@ import logging
 import asyncio
 import os
 
+from asgiref.sync import sync_to_async
 from django.conf import settings
 
 from enum import Enum
+from .matrix_notifier import matrix_client, send_matrix_notification_sync
 
-from .matrix_notifier import send_matrix_notification, matrix_client, send_matrix_notification_sync
-
-# Farbzuordnung für verschiedene Log-Level zur besseren visuellen Darstellung
+# Farbzuordnung für verschiedene Log-Level
 LOG_LEVEL_COLORS = {
     'INFO': '#36a64f',      # Grün
     'WARNING': '#ffc107',   # Gelb
@@ -40,18 +40,11 @@ class MatrixLogHandler(logging.Handler):
             return
         from farminsight_dashboard_backend.models import Notification
 
-        try:
-            room_ids = list(Notification.objects.values_list('room_id', flat=True))
-            if not room_ids:
-                return
-        except Exception as e:
-            print(f"MatrixLogHandler failed to query Notification rooms: {e}")
-            return
-
         if not matrix_client.loop or not matrix_client.is_running:
-            print(f"[Matrix not ready] {self.format(record)}")
             return
 
+        get_room_ids_async = sync_to_async(list, thread_sensitive=True)
+        send_matrix_notification_async = sync_to_async(send_matrix_notification_sync, thread_sensitive=True)
 
         try:
             plain_text = f"{record.getMessage()}"
@@ -70,20 +63,31 @@ class MatrixLogHandler(logging.Handler):
                 f'<font color="{'#ffffff'}">{plain_text}</font>'
                 f'<p><font color="{'#aaaaaa'}"><em>Function: {record.funcName} File: {os.path.splitext(record.filename)[0]}:{record.lineno}</em></font></p>'
             )
+        async def _async_emit():
+            try:
+                room_ids = await get_room_ids_async(Notification.objects.values_list('room_id', flat=True))
+                if not room_ids:
+                    return
+            except Exception as e:
+                print(f"MatrixLogHandler failed to query Notification rooms: {e}")
+                return
 
-            coroutines = []
-            for room_id in room_ids:
-                send_matrix_notification_sync(room_id, plain_text, html_body)
+            try:
+                plain_text = f"{record.getMessage()}"
+                color = LOG_LEVEL_COLORS.get(record.levelname, '#6c757d')
+                html_body = (
+                    f'<p><font color="{color}"><strong>{record.levelname}</strong></font></p>'
+                    f'<font color="{'#ffffff'}">{plain_text}</font>'
+                    f'<p><font color="{'#aaaaaa'}"><em>Function: {record.funcName} File: {os.path.splitext(record.filename)[0]}:{record.lineno}</em></font></p>'
+                )
 
+                for room_id in room_ids:
+                    await send_matrix_notification_async(room_id, plain_text, html_body)
 
-            if coroutines:
-                bundled_coro = asyncio.gather(*coroutines)
-                asyncio.run_coroutine_threadsafe(bundled_coro, matrix_client.loop)
+            except Exception as e:
+                print(f"FATAL: Failed to send log to Matrix from handler: {e}")
 
-        except RuntimeError as e:
-            # Hier vorsichtig loggen, um keine Schleife zu erzeugen.
-            # Ein print ist hier sicherer als logger.error.
-            print(f"FATAL: Failed to send log to Matrix from handler: {e}")
+        asyncio.run_coroutine_threadsafe(_async_emit(), matrix_client.loop)
 
 
 class DatabaseLogHandler(logging.Handler):

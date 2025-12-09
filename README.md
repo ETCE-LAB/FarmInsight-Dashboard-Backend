@@ -118,6 +118,16 @@ With an external API, the weather forecast for the upcoming 16 days will be gath
 For the Weather Forecast we are using the public api https://open-meteo.com. The Backend is gathering every day at 6 a.m. the forecast for all Locations, where the Settings is activated.
 16 Days of Data are stored, but in the frontend only 3 days are visible.
 
+### <img src="https://matrix.org/images/matrix-logo-white.svg" width="30"> Notification Service
+The backend sends notifications using a Matrix server. To enable this, add your credentials to the `.env.dev` file. The target Matrix rooms are configured on the frontend's admin page.
+
+Example for `.env.dev`:
+```
+MATRIX_HOMESERVER=https://matrix.org
+MATRIX_USER_ID=@username:homeserver.org
+MATRIX_PASSWORD=password
+```
+
 ## Development Setup
 
 ### Set up Python

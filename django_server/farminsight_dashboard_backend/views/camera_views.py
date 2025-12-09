@@ -36,6 +36,7 @@ class CameraView(views.APIView):
         :return:
         """
         if not is_member(request.user, get_organization_by_camera_id(camera_id)):
+            logger.warning(f"Unauthorized attempt to update camera by user '{request.user.name}'")
             return Response(status=status.HTTP_403_FORBIDDEN)
 
         camera = get_camera_by_id(camera_id)
@@ -45,12 +46,13 @@ class CameraView(views.APIView):
         # Update the camera
         serializer = update_camera(camera_id, request.data)
 
-        logger.info("Camera updated successfully", extra={'resource_id': camera_id})
+        logger.info(f"Camera '{camera.name}' updated successfully by user '{request.user.name}'", extra={'resource_id': camera_id})
 
         # Update the scheduler
         camera = get_camera_by_id(camera_id)
         if camera.intervalSeconds != old_interval or camera.isActive != old_is_active:
             from farminsight_dashboard_backend.services import CameraScheduler
+            logger.info(f"Rescheduling camera job for camera '{camera.name}'")
             CameraScheduler.get_instance().reschedule_camera_job(camera.id, camera.intervalSeconds)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -63,6 +65,7 @@ class CameraView(views.APIView):
         :return:
         """
         if not is_admin(request.user, get_organization_by_camera_id(camera_id)):
+            logger.warning(f"Unauthorized attempt to delete camera by user '{request.user.name}'")
             return Response(status=status.HTTP_403_FORBIDDEN)
 
         from farminsight_dashboard_backend.services import CameraScheduler
@@ -73,7 +76,7 @@ class CameraView(views.APIView):
 
         delete_camera(camera)
 
-        logger.info("Camera deleted successfully", extra={'resource_id': fpf_id})
+        logger.info(f"Camera '{camera.name}' deleted successfully by user '{request.user.name}'", extra={'resource_id': fpf_id})
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -89,13 +92,14 @@ def post_camera(request):
     fpf_id = request.data.get('fpfId')
 
     if not is_member(request.user, get_organization_by_fpf_id(fpf_id)):
+        logger.warning(f"Unauthorized attempt to create camera by user '{request.user.name}'")
         return Response(status=status.HTTP_403_FORBIDDEN)
 
     get_fpf_by_id(fpf_id)
 
     camera = CameraSerializer(create_camera(fpf_id, request.data)).data
 
-    logger.info("Camera created successfully", extra={'resource_id': fpf_id})
+    logger.info(f"Camera '{camera.get('name')}' created successfully by user '{request.user.name}'", extra={'resource_id': fpf_id})
 
     from farminsight_dashboard_backend.services import CameraScheduler
     CameraScheduler.get_instance().add_camera_job(camera.get('id'))
@@ -114,6 +118,7 @@ def get_camera_livestream(request, camera_id):
     :return:
     """
     if not is_member(request.user, get_organization_by_camera_id(camera_id)):
+        logger.warning(f"Unauthorized attempt to access camera livestream by user '{request.user.name}'")
         return Response(status=status.HTTP_403_FORBIDDEN)
 
     camera = get_active_camera_by_id(camera_id)
@@ -122,11 +127,11 @@ def get_camera_livestream(request, camera_id):
     parsed_url = urlparse(livestream_url)
     scheme = parsed_url.scheme.lower()
 
-    logger.info("Camera Livestream started", extra={'resource_id': camera_id})
+    logger.info(f"Camera '{camera.name}' livestream started by user '{request.user.name}'", extra={'resource_id': camera_id})
     try:
         return Response(True, status=status.HTTP_200_OK)
     except Exception as e:
-        logger.error(f"Error starting websocket stream: {e}", extra={'resource_id': camera_id})
+        logger.error(f"Error starting websocket stream for camera '{camera.name}': {e}", extra={'resource_id': camera_id})
         return Response(
             {"error": f"Could not start websocket stream: {e}"},
             status=500
@@ -137,8 +142,10 @@ def get_camera_livestream(request, camera_id):
 @permission_classes([IsAuthenticated])
 def post_camera_order(request, fpf_id):
     if not is_admin(request.user, get_organization_by_fpf_id(fpf_id)):
+        logger.warning(f"Unauthorized attempt to reorder cameras by user '{request.user.name}'")
         return Response(status=status.HTTP_403_FORBIDDEN)
 
     serializer = set_camera_order(request.data)
+    logger.info(f"Camera order for FPF {fpf_id} updated by user '{request.user.name}'")
 
     return Response(data=serializer.data, status=status.HTTP_200_OK)
