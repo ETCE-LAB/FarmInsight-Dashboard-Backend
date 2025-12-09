@@ -19,6 +19,5 @@ def update_threshold(threshold_id:str, data) -> ThresholdSerializer:
 
 def remove_threshold(threshold_id:str):
     threshold = Threshold.objects.get(id=threshold_id)
-    print("Wo genau")
     threshold.delete()
 

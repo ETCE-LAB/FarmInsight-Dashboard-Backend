@@ -43,7 +43,6 @@ def get_organization_by_sensor_id(sensor_id) -> Organization:
 
 def get_organization_by_threshold_id(threshold_id) -> Organization:
     threshold = Threshold.objects.filter(id=threshold_id).first()
-    print(threshold)
     if not threshold:
         return None
     if threshold.sensor is not None:
