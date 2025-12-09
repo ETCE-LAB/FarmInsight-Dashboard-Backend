@@ -70,6 +70,9 @@ def put_update_sensor(fpf_id: str, sensor_id: str, update_fpf_payload: dict):
 def delete_sensor(fpf_id: str, sensor_id: str):
     return send_request_to_fpf(fpf_id, 'delete', f'/api/sensors/{sensor_id}')
 
+def get_actions(fpf_id: str):
+    return send_request_to_fpf(fpf_id, 'get', '/api/actions',)
+
 def post_action(fpf_id: str, data: dict):
     return send_request_to_fpf(fpf_id, 'post', f'/api/actions', data)
 

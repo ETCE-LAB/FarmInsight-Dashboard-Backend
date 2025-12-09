@@ -107,6 +107,7 @@ urlpatterns = [
     path('log-messages-insecure/<str:resource_id>/<str:message>', post_log_message_insecure, name='post_log_message_insecure'),
 
     path('controllable-actions', ControllableActionView.as_view(), name='post_controllable_action'),
+    path('controllable-actions/all/<str:fpf_id>', ControllableActionView.as_view(), name='get_controllable_actions'),
     path('controllable-actions/<str:controllable_action_id>', ControllableActionView.as_view(), name='controllable_action_operations'),
     path('execute-actions/<str:controllable_action_id>/<str:trigger_id>', execute_controllable_action, name='execute_controllable_action'),
     path('action-scripts/types/<str:fpf_id>', get_available_action_script_types, name='get_available_action_script_types'),

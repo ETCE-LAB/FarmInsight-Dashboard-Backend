@@ -35,7 +35,8 @@ class ControllableActionSerializer(serializers.ModelSerializer):
                   'trigger',
                   'status',
                   'orderIndex',
-                  ] #'sensorId',
+                  'nextAction',
+                  ]
 
     def get_status(self, obj):
         latest_entry = ActionQueue.objects.filter(
@@ -58,6 +59,22 @@ class ControllableActionSerializer(serializers.ModelSerializer):
         except Exception as e:
             return f"Unknown ({str(e)})"
 
+    def validate(self, obj):
+        if obj['nextAction'] is None or obj['nextAction'] == '' or self.initial_data['id'] == '':
+            return obj
+
+        # make sure to avoid loops, if this action is already a followup action of another one
+        actions = ControllableAction.objects.all()
+        prev_actions = [self.initial_data['id']]
+        prev_action = [a for a in actions if a.nextAction and str(a.nextAction.id) == self.initial_data['id']]
+        while prev_action:
+            prev_actions.append(str(prev_action[0].id))
+            prev_action = [a for a in actions if a.nextAction and a.nextAction.id == prev_action[0].id]
+
+        if str(obj['nextAction'].id) in prev_actions:
+            raise serializers.ValidationError("Action chains cannot be cyclic.")
+
+        return obj
 
 class ControllableActionTechnicalKeySerializer(serializers.ModelSerializer):
     hardware = HardwareSerializer(read_only=True)

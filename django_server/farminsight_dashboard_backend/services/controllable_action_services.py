@@ -8,6 +8,11 @@ from farminsight_dashboard_backend.serializers import ControllableActionSerializ
 from .fpf_connection_services import post_action, put_action, delete_action
 
 
+def get_actions(fpf_id: str) -> ControllableActionSerializer:
+    actions = ControllableAction.objects.filter(FPF_id=fpf_id)
+    return ControllableActionSerializer(actions, many=True)
+
+
 def get_active_controllable_action_by_id(controllable_action_id:str) -> ControllableAction:
     """
     Get active controllable_action by id

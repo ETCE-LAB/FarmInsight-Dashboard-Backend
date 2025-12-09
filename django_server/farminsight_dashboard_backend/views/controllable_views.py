@@ -11,13 +11,20 @@ from farminsight_dashboard_backend.services import get_fpf_by_id, get_organizati
     delete_controllable_action, get_controllable_action_by_id, get_organization_by_controllable_action_id, \
     set_is_automated, create_auto_triggered_actions_in_queue, is_member, update_controllable_action, \
     get_or_create_hardware, \
-    set_controllable_action_order, execute_action
+    set_controllable_action_order, execute_action, get_actions
 
 logger = get_logger()
 
 
 class ControllableActionView(views.APIView):
     permission_classes = [IsAuthenticated]
+
+    def get(self, request, fpf_id):
+        if not is_admin(request.user, get_organization_by_fpf_id(fpf_id)):
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+        serializer = get_actions(fpf_id)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request):
         """
