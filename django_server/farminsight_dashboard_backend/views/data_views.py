@@ -4,7 +4,9 @@ from rest_framework.response import Response
 
 from farminsight_dashboard_backend.serializers import DateRangeSerializer, FPFFullDataSerializer
 from farminsight_dashboard_backend.services import get_all_fpf_data, get_all_sensor_data, get_images_by_camera
-from farminsight_dashboard_backend.services.data_services import get_last_weather_forecast, get_weather_forecasts_by_date
+from farminsight_dashboard_backend.services.data_services import get_last_weather_forecast, \
+    get_weather_forecasts_by_date
+from farminsight_dashboard_backend.services.weather_status_service import get_weather_and_tank_values
 
 
 @api_view(['GET'])
@@ -66,6 +68,7 @@ def get_camera_images(request, camera_id):
 
     return Response(serializer.data, status=status.HTTP_200_OK)
 
+
 @api_view(['GET'])
 def get_weather_forecasts(request, location_id):
     """
@@ -86,3 +89,10 @@ def get_weather_forecasts(request, location_id):
 
     return Response(response, status=status.HTTP_200_OK)
 
+
+@api_view(['GET'])
+def get_weather_and_tank_status(request, location_id, sensor_id):
+    weather, measurements = get_weather_and_tank_values(location_id, sensor_id)
+    response = {"weather": weather, "tank_status": measurements}
+
+    return Response(response, status=status.HTTP_200_OK)
