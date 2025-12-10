@@ -1,6 +1,7 @@
 import logging
 import asyncio
 import threading
+from collections import deque
 from django.conf import settings
 from nio import AsyncClient, RoomSendError, LoginError
 from asgiref.sync import sync_to_async
@@ -15,6 +16,7 @@ class MatrixClient:
         self.is_running = False
         self._thread = None
         self._ready_event = threading.Event()
+        self._message_queue = deque()
 
     def start_in_thread(self):
         """Starts the Matrix client in a separate thread with its own event loop."""
@@ -42,6 +44,7 @@ class MatrixClient:
             login_response = await self.client.login(settings.MATRIX_PASSWORD)
             if isinstance(login_response, LoginError):
                 logger.error(f"Matrix login failed: {login_response.message}")
+                await self.client.close()
                 self.client = None
                 self._ready_event.set()  # Unblock waiters even on failure
                 return
@@ -78,9 +81,13 @@ class MatrixClient:
 
             self.is_running = True
             self._ready_event.set()  # Signal that the client is ready
+            # Process any messages that were queued before the client was ready
+            asyncio.run_coroutine_threadsafe(self._process_message_queue(), self.loop)
 
         except Exception as e:
             logger.error(f"Matrix client startup error: {e}")
+            if self.client:
+                await self.client.close()
             self.client = None
             self._ready_event.set()  # Unblock waiters even on failure
 
@@ -96,6 +103,12 @@ class MatrixClient:
         """Blocks until the client is ready or the timeout is reached."""
         logger.info("Waiting for Matrix client to be ready...")
         return self._ready_event.wait(timeout)
+
+    async def _process_message_queue(self):
+        logger.info(f"Processing {len(self._message_queue)} queued Matrix messages.")
+        while self._message_queue:
+            room_id, plain_text, html_body = self._message_queue.popleft()
+            await self.send_message(room_id, plain_text, html_body)
 
 
     async def send_message(self, room_id: str, plain_text: str, html_body: str | None = None):
@@ -138,24 +151,19 @@ class MatrixClient:
         Schedules sending a message from a synchronous context.
         This is thread-safe.
         """
-        # Wait for the client to be initialized. This is crucial for startup logging.
-        # The timeout prevents the app from hanging indefinitely if the client fails to start.
-        self.wait_until_ready(timeout=15.0)
-
-        if not self.is_running or not self.loop:
-            logger.warning("Matrix client is not running. Skipping notification.")
+        if not self.is_running:
+            # If the client isn't ready, queue the message instead of blocking.
+            logger.debug("Matrix client not ready, queueing message.")
+            self._message_queue.append((room_id, plain_text, html_body))
             return
 
+        if not self.loop:
+            logger.error("Matrix client event loop is not available. Cannot send message.")
+
         # Schedule the async send_message coroutine to run on the client's event loop
-        future = asyncio.run_coroutine_threadsafe(
+        asyncio.run_coroutine_threadsafe(
             self.send_message(room_id, plain_text, html_body), self.loop
         )
-        try:
-            # You can optionally wait for the result, but for logging it's often fire-and-forget.
-            # If you wait, add a timeout to avoid blocking forever.
-            future.result(timeout=10)
-        except Exception as e:
-            logger.error(f"Error scheduling Matrix notification: {e}")
 
 
 matrix_client = MatrixClient()

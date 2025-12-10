@@ -20,6 +20,7 @@ class OrganizationView(APIView):
         org = get_organization_by_id(organization_id)
 
         if not is_member(request.user, org):
+            logger.warning(f"Unauthorized attempt to access organization by user '{request.user.name}'")
             return Response(status=status.HTTP_403_FORBIDDEN)
 
         if org is None:
@@ -35,10 +36,11 @@ class OrganizationView(APIView):
         :return:
         """
         if not is_member(request.user, get_organization_by_id(organization_id)):
+            logger.warning(f"Unauthorized attempt to update organization by user '{request.user.name}'")
             return Response(status=status.HTTP_403_FORBIDDEN)
 
         organization = update_organization(organization_id, request.data)
-        logger.info('organization updated', extra={'resource_id': organization_id})
+        logger.info(f"Organization '{organization.data.get('name')}' updated by user '{request.user.name}'", extra={'resource_id': organization_id})
         return Response(organization.data, status=status.HTTP_200_OK)
 
 
@@ -46,7 +48,7 @@ class OrganizationView(APIView):
 @permission_classes([IsAuthenticated])
 def post_organization(request):
     org = create_organization(request.data, request.user)
-    logger.info(f'Organization created: {org.data.get("name")} (ID: {org.data.get("id")})', extra={'resource_id': org.data.get('id')})
+    logger.info(f"Organization '{org.data.get('name')}' created by user '{request.user.name}'", extra={'resource_id': org.data.get('id')})
     return Response(org.data, status=status.HTTP_201_CREATED)
 
 
@@ -71,6 +73,7 @@ def get_own_organizations(request):
 @permission_classes([IsAuthenticated])
 def get_all_organizations(request):
     if not is_system_admin(request.user):
+        logger.warning(f"Unauthorized attempt to access all organizations by user '{request.user.name}'")
         return Response(status=status.HTTP_403_FORBIDDEN)
 
     serializer = all_organizations()
@@ -82,8 +85,10 @@ def get_all_organizations(request):
 @permission_classes([IsAuthenticated])
 def post_organization_order(request):
     if not is_system_admin(request.user):
+        logger.warning(f"Unauthorized attempt to reorder organizations by user '{request.user.name}'")
         return Response(status=status.HTTP_403_FORBIDDEN)
 
     serializer = set_organization_order(request.data)
+    logger.info(f"Organization order updated by user '{request.user.name}'")
 
     return Response(data=serializer.data, status=status.HTTP_200_OK)

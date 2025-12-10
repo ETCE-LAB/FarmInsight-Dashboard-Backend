@@ -38,7 +38,6 @@ def create_manual_triggered_action_in_queue(action_id, trigger_id):
             }, partial=True)
             if serializer.is_valid(raise_exception=True):
                 serializer.save()
-                logger.info(f"Queued by manual trigger {trigger.description} with value {trigger.actionValue}", extra={'resource_id': action_id})
 
         process_action_queue()
 

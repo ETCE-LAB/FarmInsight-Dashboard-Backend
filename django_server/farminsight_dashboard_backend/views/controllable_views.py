@@ -32,11 +32,13 @@ class ControllableActionView(views.APIView):
         pass
 
         if not is_member(request.user, get_organization_by_controllable_action_id(controllable_action_id)):
+            logger.warning(f"Unauthorized attempt to update controllable action by user '{request.user.name}'")
             return Response(status=status.HTTP_403_FORBIDDEN)
 
         # Update the camera
         serializer = update_controllable_action(controllable_action_id, request.data)
-        logger.info("Controllable Action updated successfully", extra={'resource_id': controllable_action_id})
+        action = get_controllable_action_by_id(controllable_action_id)
+        logger.info(f"Controllable action '{action.name}' updated successfully by user '{request.user.name}'", extra={'resource_id': controllable_action_id})
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -50,6 +52,7 @@ class ControllableActionView(views.APIView):
         :return:
         """
         if not is_admin(request.user, get_organization_by_controllable_action_id(controllable_action_id)):
+            logger.warning(f"Unauthorized attempt to delete controllable action by user '{request.user.name}'")
             return Response(status=status.HTTP_403_FORBIDDEN)
 
         # TODO remove the trigger from any schedules or queues
@@ -59,7 +62,7 @@ class ControllableActionView(views.APIView):
 
         delete_controllable_action(controllable_action)
 
-        logger.info("Controllable action deleted successfully", extra={'resource_id': fpf_id})
+        logger.info(f"Controllable action '{controllable_action.name}' deleted successfully by user '{request.user.name}'", extra={'resource_id': fpf_id})
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -75,6 +78,7 @@ def post_controllable_action(request):
     fpf_id = request.data.get('fpfId')
 
     if not is_admin(request.user, get_organization_by_fpf_id(fpf_id)):
+        logger.warning(f"Unauthorized attempt to create controllable action by user '{request.user.name}'")
         return Response(status=status.HTTP_403_FORBIDDEN)
 
     get_fpf_by_id(fpf_id)
@@ -85,7 +89,7 @@ def post_controllable_action(request):
 
     controllable_action = ControllableActionSerializer(create_controllable_action(fpf_id, request.data), partial=True).data
 
-    logger.info("Controllable action created successfully", extra={'resource_id': fpf_id})
+    logger.info(f"Controllable action '{controllable_action.get('name')}' created successfully by user '{request.user.name}'", extra={'resource_id': fpf_id})
 
     return Response(controllable_action, status=status.HTTP_201_CREATED)
 
@@ -104,10 +108,15 @@ def execute_controllable_action(request, controllable_action_id, trigger_id):
     """
 
     if not is_admin(request.user, get_organization_by_controllable_action_id(controllable_action_id)):
+        logger.warning(f"Unauthorized attempt to execute controllable action by user '{request.user.name}'")
         return Response(status=status.HTTP_403_FORBIDDEN)
+
+    action = get_controllable_action_by_id(controllable_action_id)
+    logger.info(f"Executing controllable action '{action.name}' with trigger '{trigger_id}' by user '{request.user.name}'")
 
     if trigger_id == "auto": # The user set the controllable action to automatic
         set_is_automated(controllable_action_id, True)
+        logger.info(f"Controllable action '{action.name}' set to automatic mode")
         # Check if the trigger for the affected action can trigger and process the queue
         # get trigger type and refresh the creation
         create_auto_triggered_actions_in_queue(controllable_action_id)
@@ -122,16 +131,19 @@ def execute_controllable_action(request, controllable_action_id, trigger_id):
         # Completely new action
         if active_state is None:
             set_is_automated(controllable_action_id, False)
+            logger.info(f"Controllable action '{action.name}' set to manual mode")
             create_manual_triggered_action_in_queue(controllable_action_id, trigger_id)
 
         #if active_state is not None and get_controllable_action_by_id(controllable_action_id).isAutomated == False and (active_state.trigger.id is None or active_state.trigger.id == trigger_id):
         elif active_state is not None and (get_controllable_action_by_id(controllable_action_id).isAutomated == False and str(active_state.trigger.id) == trigger_id):
             set_is_automated(controllable_action_id, True)
+            logger.info(f"Controllable action '{action.name}' set to automatic mode")
             process_action_queue()
 
         # The user selected a new manual trigger, different from the current active state
         else:
             set_is_automated(controllable_action_id, False)
+            logger.info(f"Controllable action '{action.name}' set to manual mode")
             create_manual_triggered_action_in_queue(controllable_action_id, trigger_id)
 
     return Response(data={'success': ''}, status=status.HTTP_200_OK)
@@ -141,8 +153,10 @@ def execute_controllable_action(request, controllable_action_id, trigger_id):
 @permission_classes([IsAuthenticated])
 def post_controllable_action_order(request, fpf_id):
     if not is_admin(request.user, get_organization_by_fpf_id(fpf_id)):
+        logger.warning(f"Unauthorized attempt to reorder controllable actions by user '{request.user.name}'")
         return Response(status=status.HTTP_403_FORBIDDEN)
 
     set_controllable_action_order(request.data)
+    logger.info(f"Controllable action order for FPF {fpf_id} updated by user '{request.user.name}'")
 
     return Response(data={'success': ''}, status=status.HTTP_200_OK)

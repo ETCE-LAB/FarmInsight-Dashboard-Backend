@@ -27,18 +27,20 @@ class FpfView(views.APIView):
         :return:
         """
         if not is_member(request.user, get_organization_by_fpf_id(fpf_id)):
+            logger.warning(f"Unauthorized attempt to update FPF by user '{request.user.name}'")
             return Response(status=status.HTTP_403_FORBIDDEN)
 
         fpf = update_fpf(fpf_id, request.data)
-        logger.info(f'FPF updated: {fpf.data.get("name")} - Changes: {list(request.data.keys())}',extra={'resource_id': fpf_id})
+        logger.info(f"FPF '{fpf.data.get('name')}' updated by user '{request.user.name}'. Changes: {list(request.data.keys())}",extra={'resource_id': fpf_id})
         return Response(fpf.data, status=status.HTTP_200_OK)
 
     def post(self, request):
         if not is_member(request.user, get_organization_by_id(request.data['organizationId'])):
+            logger.warning(f"Unauthorized attempt to create FPF by user '{request.user.name}'")
             return Response(status=status.HTTP_403_FORBIDDEN)
 
         serializer = create_fpf(request.data)
-        logger.info(f'FPF created: {serializer.data.get("name")} (ID: {serializer.data.get("id")})',extra={'resource_id': serializer.data.get('id')})
+        logger.info(f"FPF '{serializer.data.get('name')}' created by user '{request.user.name}'",extra={'resource_id': serializer.data.get('id')})
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def get(self, request, fpf_id):
@@ -47,6 +49,7 @@ class FpfView(views.APIView):
 
         member = is_member(request.user, get_organization_by_fpf_id(fpf_id))
         if not (member or data['isPublic']):
+            logger.warning(f"Unauthorized attempt to access FPF by user '{request.user.name}'")
             return Response(status=status.HTTP_403_FORBIDDEN)
 
         if not member: # only show inactive sensors to members
@@ -64,7 +67,7 @@ def get_fpf_api_key(request, fpf_id):
     :return: 
     """
     update_fpf_api_key(fpf_id)
-    logger.info(f'FPF API key regenerated for FPF ID: {fpf_id}', extra={'resource_id': fpf_id})
+    logger.info(f"FPF API key regenerated for FPF '{get_fpf_by_id(fpf_id).name}' by user '{request.user.name}'", extra={'resource_id': fpf_id})
     return Response(status=status.HTTP_200_OK)
 
 
@@ -86,8 +89,10 @@ def get_visible_fpf(request):
 @permission_classes([IsAuthenticated])
 def post_fpf_order(request, org_id):
     if not is_admin(request.user, get_organization_by_id(org_id)):
+        logger.warning(f"Unauthorized attempt to reorder FPFs by user '{request.user.name}'")
         return Response(status=status.HTTP_403_FORBIDDEN)
 
     serializer = set_fpf_order(request.data)
+    logger.info(f"FPF order for organization {org_id} updated by user '{request.user.name}'")
 
     return Response(data=serializer.data, status=status.HTTP_200_OK)
