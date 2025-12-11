@@ -49,7 +49,7 @@ from farminsight_dashboard_backend.views import (
     post_hardware_order, HardwareEditViews, post_hardware, ActionTriggerView, post_fpf_order,
     post_userprofile_active_status, forgot_password_view, reset_password_view, get_all_organizations,
     post_model, ResourceManagementModelView, ModelParamsView, get_forecasts, set_active_scenario,
-    get_notifications, post_notification, NotificationView, post_model_order, get_weather_and_tank_status
+    get_notifications, post_notification, NotificationView, post_model_order, get_weather_and_water_status
 )
 urlpatterns = [
     path('userprofiles', get_userprofile, name='get_userprofile'),
@@ -78,7 +78,7 @@ urlpatterns = [
     path('sensors/<str:sensor_id>', SensorView.as_view(), name='sensor_operations'),
     path('sensors/types/available/<str:fpf_id>', get_fpf_sensor_types, name='get_fpf_sensor_types'),
     path('sensors/sort-order/<str:fpf_id>', post_sensor_order, name='post_sensor_order'),
-    path('sensors/<str:location_id><str:sensor_id>/tank_status', get_weather_and_tank_status, name='get_weather_and_tank_status'),
+    path('sensors/<str:location_id>/weather-and-tank-status/<str:sensor_id>', get_weather_and_water_status, name='get_weather_and_tank_status'),
 
     path('measurements/<str:sensor_id>', MeasurementView.as_view(), name='sensor-measurements'),
 
