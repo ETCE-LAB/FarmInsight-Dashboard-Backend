@@ -27,6 +27,7 @@ class ResourceManagementModelSerializer(serializers.ModelSerializer):
             "activeScenario",
             "availableScenarios",
             "forecasts",
+            "model_type",
             "actions",
         ]
 
@@ -40,6 +41,7 @@ class ResourceManagementModelDataSerializer(serializers.ModelSerializer):
             "id",
             "name",
             "forecasts",
+            "model_type",
             "actions",
             "latest_forecast",
         ]

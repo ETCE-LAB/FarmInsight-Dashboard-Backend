@@ -204,14 +204,22 @@ def get_energy_dashboard(request, fpf_id: str):
 
     Query Parameters:
     - battery_level_wh: Current battery level in Wh (optional, defaults to 50% of FPF's battery max)
+    - include_graph_data: Whether to include graph data with forecasts (optional, default: true)
+    - hours_back: Hours of historical data for graph (optional, default: 12)
+    - hours_ahead: Hours of forecast data for graph (optional, default: 24)
 
-    Returns combined view of consumers, sources, and current state.
+    Returns combined view of consumers, sources, current state, and graph data with forecasts.
     """
+    from farminsight_dashboard_backend.services.energy_forecast_services import get_energy_graph_data
+
     # Get FPF-specific energy configuration
     config = get_fpf_energy_config(fpf_id)
     default_battery = config['battery_max_wh'] * 0.5
     
     battery_level_str = request.query_params.get('battery_level_wh', str(default_battery))
+    include_graph_data = request.query_params.get('include_graph_data', 'true').lower() == 'true'
+    hours_back = int(request.query_params.get('hours_back', '12'))
+    hours_ahead = int(request.query_params.get('hours_ahead', '24'))
 
     try:
         battery_level_wh = float(battery_level_str)
@@ -225,7 +233,7 @@ def get_energy_dashboard(request, fpf_id: str):
         energy_state = get_energy_state_summary(fpf_id, battery_level_wh)
         runtime_hours = estimate_runtime_hours(fpf_id, battery_level_wh)
 
-        return Response({
+        response_data = {
             "fpf_id": fpf_id,
             "consumers": {
                 "list": EnergyConsumerDetailSerializer(consumers, many=True).data,
@@ -247,7 +255,13 @@ def get_energy_dashboard(request, fpf_id: str):
                 "grid_disconnect_percent": config['grid_disconnect_threshold'],
                 "battery_max_wh": config['battery_max_wh']
             }
-        }, status=status.HTTP_200_OK)
+        }
+
+        # Include graph data with forecasts if requested
+        if include_graph_data:
+            response_data["graph_data"] = get_energy_graph_data(fpf_id, hours_back, hours_ahead)
+
+        return Response(response_data, status=status.HTTP_200_OK)
 
     except Exception as e:
         logger.error(f"Error getting energy dashboard for FPF {fpf_id}: {e}")
@@ -321,3 +335,89 @@ def evaluate_energy_action(request, fpf_id: str):
         logger.error(f"Error evaluating energy action for FPF {fpf_id}: {e}")
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_battery_state(request, fpf_id: str):
+    """
+    Get the current battery state for an FPF.
+    Fetches live data from the battery sensor if available.
+
+    Returns:
+        - battery_level_wh: Current battery level in Wh
+        - percentage: Battery percentage (0-100)
+        - last_updated: Timestamp of last measurement
+        - source_name: Name of the battery source
+    """
+    from farminsight_dashboard_backend.models import EnergySource
+    from farminsight_dashboard_backend.services.influx_services import InfluxDBManager
+    from farminsight_dashboard_backend.services.energy_decision_services import get_fpf_energy_config
+
+    try:
+        # Get FPF configuration for battery max
+        config = get_fpf_energy_config(fpf_id)
+        battery_max_wh = config['battery_max_wh']
+
+        # Find battery source for this FPF
+        battery_source = EnergySource.objects.filter(
+            FPF_id=fpf_id,
+            sourceType='battery',
+            isActive=True
+        ).first()
+
+        if not battery_source:
+            return Response(
+                {"error": "No active battery source found for this FPF"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # Try to get live data from linked sensor
+        battery_level_wh = None
+        last_updated = None
+
+        if battery_source.sensor and battery_source.sensor.isActive:
+            try:
+                influx = InfluxDBManager.get_instance()
+                measurements = influx.fetch_latest_sensor_measurements(
+                    fpf_id=fpf_id,
+                    sensor_ids=[str(battery_source.sensor.id)]
+                )
+
+                sensor_data = measurements.get(str(battery_source.sensor.id))
+                if sensor_data and 'value' in sensor_data:
+                    battery_level_wh = float(sensor_data['value'])
+                    last_updated = sensor_data.get('measuredAt')
+            except Exception as e:
+                logger.warning(f"Could not fetch live battery data: {e}")
+
+        # Fallback: Try to fetch from BatteryLevel measurement in InfluxDB
+        if battery_level_wh is None:
+            try:
+                influx = InfluxDBManager.get_instance()
+                battery_data = influx.fetch_latest_battery_level(fpf_id)
+                if battery_data:
+                    battery_level_wh = battery_data.get('level_wh')
+                    last_updated = battery_data.get('timestamp')
+            except Exception as e:
+                logger.warning(f"Could not fetch battery level from InfluxDB: {e}")
+
+        # Fallback: Use currentOutputWatts from battery source
+        if battery_level_wh is None:
+            battery_level_wh = battery_source.currentOutputWatts
+            last_updated = battery_source.updatedAt.isoformat() if battery_source.updatedAt else None
+
+        # Calculate percentage
+        percentage = min(100.0, max(0.0, (battery_level_wh / battery_max_wh) * 100)) if battery_max_wh > 0 else 0.0
+
+        return Response({
+            "battery_level_wh": battery_level_wh,
+            "percentage": round(percentage, 2),
+            "max_wh": battery_max_wh,
+            "last_updated": last_updated,
+            "source_name": battery_source.name,
+            "source_id": str(battery_source.id)
+        }, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        logger.error(f"Error getting battery state for FPF {fpf_id}: {e}")
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

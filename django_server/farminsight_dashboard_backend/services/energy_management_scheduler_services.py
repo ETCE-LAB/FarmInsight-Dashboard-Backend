@@ -62,18 +62,18 @@ class EnergyManagementScheduler:
         Iterate over all active FPFs, check their battery level, and execute necessary actions.
         """
         active_fpfs = FPF.objects.all() # Assuming all FPFs might have energy management
-        
+
         influx = InfluxDBManager.get_instance()
-        
+
         for fpf in active_fpfs:
             try:
                 # 1. Find the battery level sensor
                 # Heuristic: Look for a sensor with 'battery' in name or parameter
                 battery_sensor = Sensor.objects.filter(
-                    FPF=fpf, 
+                    FPF=fpf,
                     isActive=True
                 ).filter(
-                    models.Q(name__icontains='battery') | 
+                    models.Q(name__icontains='battery') |
                     models.Q(parameter__icontains='battery')
                 ).first()
 
@@ -86,17 +86,17 @@ class EnergyManagementScheduler:
                     fpf_id=str(fpf.id),
                     sensor_ids=[str(battery_sensor.id)]
                 )
-                
+
                 latest_data = measurements.get(str(battery_sensor.id))
                 if not latest_data:
                     self.log.warning(f"No battery data found for FPF {fpf.name} (Sensor: {battery_sensor.name})")
                     continue
-                
+
                 battery_level_wh = float(latest_data['value'])
-                
+
                 # 3. Evaluate Energy State
                 state = evaluate_energy_state(str(fpf.id), battery_level_wh)
-                
+
                 self.log.info(f"Energy Check FPF {fpf.name}: Battery {state.battery_percentage:.1f}% - Action: {state.action.value}")
 
                 # 4. Execute Actions

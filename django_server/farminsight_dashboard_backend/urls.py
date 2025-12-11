@@ -52,7 +52,7 @@ from farminsight_dashboard_backend.views import (
     get_notifications, post_notification, NotificationView,
     EnergyConsumerView, post_energy_consumer, get_energy_consumers_by_fpf,
     EnergySourceView, post_energy_source, get_energy_sources_by_fpf,
-    get_energy_state, get_energy_dashboard, evaluate_energy_action
+    get_energy_state, get_energy_dashboard, evaluate_energy_action, get_battery_state
 )
 urlpatterns = [
     path('userprofiles', get_userprofile, name='get_userprofile'),
@@ -162,5 +162,6 @@ urlpatterns = [
     path('energy-state/<str:fpf_id>', get_energy_state, name='get_energy_state'),
     path('energy-dashboard/<str:fpf_id>', get_energy_dashboard, name='get_energy_dashboard'),
     path('energy-action/<str:fpf_id>', evaluate_energy_action, name='evaluate_energy_action'),
+    path('battery-state/<str:fpf_id>', get_battery_state, name='get_battery_state'),
 
 ]

@@ -82,7 +82,7 @@ def get_current_power_output_with_weather(fpf_id: str) -> float:
     """
     Get current power output including weather-based estimates for solar/wind sources.
     Uses weather forecast data to adjust production estimates for weather-dependent sources.
-    
+
     :param fpf_id: UUID of the FPF
     :return: Estimated total power output in watts
     """
