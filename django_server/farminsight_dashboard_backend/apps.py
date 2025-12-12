@@ -37,10 +37,10 @@ class FarminsightDashboardBackendConfig(AppConfig):
                     from farminsight_dashboard_backend.services.trigger.MeasurementTriggerManager import \
                         MeasurementTriggerManager
 
-                    #matrix_client.start_in_thread()
+                    matrix_client.start_in_thread()
                     # Wait for the matrix client to be fully initialized and logged in.
-                    #if not matrix_client.wait_until_ready(timeout=5):
-                    #    self.log.error("Matrix client failed to initialize within the timeout.")
+                    if not matrix_client.wait_until_ready(timeout=5):
+                        self.log.error("Matrix client failed to initialize within the timeout.")
 
                     InfluxDBManager.get_instance().initialize_connection()
                     CameraScheduler.get_instance().start()
