@@ -92,6 +92,7 @@ class CameraLivestreamConsumer(AsyncWebsocketConsumer):
 
     async def camera_frame(self, event):
         frame_data = event['frame_data']
+        logger.info("Livestream frame forwarded to client")
         await self.send(text_data=json.dumps({'frame_data': frame_data}))
 
 

@@ -73,7 +73,7 @@ async def websocket_stream(livestream_url: str,
                     groupname,
                     {"type": "camera_frame", "frame_data": b64}
                 )
-                #logger.info("Livestream frame sent")
+                logger.info("Livestream frame sent")
             last_time = now
 
     finally:
