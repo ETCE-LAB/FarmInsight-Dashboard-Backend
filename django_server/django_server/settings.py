@@ -13,7 +13,6 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 from pathlib import Path
 import environ
 import os
-import logging
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -155,7 +154,7 @@ LOGGING = {
             'class': 'django_server.custom_logger.DatabaseLogHandler',
         },
         'matrix_handler': {
-            'level': 'DEBUG',
+            'level': 'WARNING',  # Only send WARNING and above to Matrix to avoid spam
             'class': 'django_server.custom_logger.MatrixLogHandler',
             'formatter': 'simple',
         },
@@ -267,7 +266,3 @@ SMTP_SENDER_MAIL = env('SMTP_SENDER_MAIL', default='')
 SMTP_SENDER_PASSWORD = env('SMTP_SENDER_PASSWORD', default='')
 
 
-
-# Test log for Matrix notification
-logger = logging.getLogger('farminsight_dashboard_backend')
-logger.info("Matrix notification system is configured and working.")
