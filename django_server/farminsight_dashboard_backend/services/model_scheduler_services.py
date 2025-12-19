@@ -105,7 +105,7 @@ class ModelScheduler:
         try:
             model = ResourceManagementModel.objects.get(id=model_id)
             base_url = model.URL.rstrip('/')
-            query_params = ResourceManagementModelService.  build_model_query_params(model)
+            query_params = ResourceManagementModelService.build_model_query_params(model)
             full_url = f"{base_url}/farm-insight{query_params}"
 
             response = requests.get(full_url, timeout=10)
