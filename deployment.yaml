@@ -51,20 +51,31 @@ spec:
             - key: oidc.key
               path: oidc.key
       - name: farminsight-backend-sqlite-pv
-        flexVolume:
-          driver: "fstab/cifs"
-          fsType: "cifs"
-          secretRef:
-            name: "cifs-secret"
-          options:
-            networkPath: "//digit-lab-0053.digit.tu-clausthal.de/Cluster_Storage/Applications/Farminsight/Backend/Database"
-            mountOptions: "dir_mode=0755,file_mode=0755,vers=2.0,nobrl"
+        nfs:
+          server: 10.0.0.104
+          path: /mnt/not-nginx-reverse-proxy-static-files/Cluster_Storage/Applications/Farminsight/Backend/Database
+
       - name: farminsight-backend-image-pv
-        flexVolume:
-          driver: "fstab/cifs"
-          fsType: "cifs"
-          secretRef:
-            name: "cifs-secret"
-          options:
-            networkPath: "//digit-lab-0053.digit.tu-clausthal.de/Cluster_Storage/Applications/Farminsight/Backend/Pictures"
-            mountOptions: "dir_mode=0755,file_mode=0755,vers=2.0"
+        nfs:
+          server: 10.0.0.104
+          path: /mnt/not-nginx-reverse-proxy-static-files/Cluster_Storage/Applications/Farminsight/Backend/Pictures
+
+
+      # - name: farminsight-backend-sqlite-pv
+      #   flexVolume:
+      #     driver: "fstab/cifs"
+      #     fsType: "cifs"
+      #     secretRef:
+      #       name: "cifs-secret"
+      #     options:
+      #       networkPath: "//digit-lab-0053.digit.tu-clausthal.de/Cluster_Storage/Applications/Farminsight/Backend/Database"
+      #       mountOptions: "dir_mode=0755,file_mode=0755,vers=2.0,nobrl"
+      # - name: farminsight-backend-image-pv
+      #   flexVolume:
+      #     driver: "fstab/cifs"
+      #     fsType: "cifs"
+      #     secretRef:
+      #       name: "cifs-secret"
+      #     options:
+      #       networkPath: "//digit-lab-0053.digit.tu-clausthal.de/Cluster_Storage/Applications/Farminsight/Backend/Pictures"
+      #       mountOptions: "dir_mode=0755,file_mode=0755,vers=2.0"
