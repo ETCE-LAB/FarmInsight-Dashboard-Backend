@@ -49,7 +49,7 @@ from farminsight_dashboard_backend.views import (
     post_hardware_order, HardwareEditViews, post_hardware, ActionTriggerView, post_fpf_order,
     post_userprofile_active_status, forgot_password_view, reset_password_view, get_all_organizations,
     post_model, ResourceManagementModelView, ModelParamsView, get_forecasts, set_active_scenario,
-    get_notifications, post_notification, NotificationView,
+    get_notifications, post_notification, NotificationView, post_model_order,
     EnergyConsumerView, post_energy_consumer, get_energy_consumers_by_fpf,
     EnergySourceView, post_energy_source, get_energy_sources_by_fpf,
     get_energy_state, get_energy_dashboard, evaluate_energy_action
@@ -139,6 +139,7 @@ urlpatterns = [
     path("models/params", ModelParamsView.as_view(), name="get_resource-params"),
     path('models/<str:model_id>', ResourceManagementModelView.as_view(), name='model_operations'),
     path('models/<str:model_id>/active_scenario', set_active_scenario, name='set_active_scenario'),
+    path('models/sort-order/<str:fpf_id>', post_model_order, name='post_model_order'),
 
     path('util/direct-ping/<str:resource_type>/<str:resource_id>', get_direct_ping, name='get_direct_ping'),
 
@@ -150,7 +151,6 @@ urlpatterns = [
     path('notifications/create', post_notification, name='post_notification'),
     path('notifications/<str:room_id>', NotificationView.as_view(), name='notification_operations'),
 
-    # Energy Management Routes
     path('energy-consumers', post_energy_consumer, name='post_energy_consumer'),
     path('energy-consumers/<str:consumer_id>', EnergyConsumerView.as_view(), name='energy_consumer_operations'),
     path('energy-consumers/fpf/<str:fpf_id>', get_energy_consumers_by_fpf, name='get_energy_consumers_by_fpf'),

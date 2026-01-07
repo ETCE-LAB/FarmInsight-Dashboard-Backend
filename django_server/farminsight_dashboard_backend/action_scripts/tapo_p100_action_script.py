@@ -17,11 +17,13 @@ class TapoP100SmartPlugActionScriptWithDelay(TypedSensor):
     maximumDurationInSeconds = 0
 
     def init_additional_information(self):
+        logger.info("Initializing Tapo P100 Smart Plug action script.")
         self.maximumDurationInSeconds = self.controllable_action.maximumDurationSeconds or 0
         additional_information = json.loads(self.controllable_action.additionalInformation)
         self.ip_address = additional_information['ip-address']
         self.tapo_account_email = additional_information['tapo-account-email']
         self.tapo_account_password = additional_information['tapo-account-password']
+        logger.info(f"Tapo P100 initialized for IP: {self.ip_address}")
 
     @staticmethod
     def get_description() -> ActionScriptDescription:
@@ -62,29 +64,38 @@ class TapoP100SmartPlugActionScriptWithDelay(TypedSensor):
             - Plain string: "on" / "off"
             """
         try:
-
+            logger.info(f"Controlling Tapo smart plug at {self.ip_address} with action: {action_value}")
             if action_value not in ['on', 'off']:
+                logger.error(f"Invalid action value: {action_value}. Expected 'on' or 'off'.")
                 raise RuntimeError(f"Invalid action value: {action_value}. Expected 'on' or 'off'.")
 
-
             p100 = PyP100.P100(self.ip_address, self.tapo_account_email, self.tapo_account_password)
+            logger.info("Performing handshake and login...")
             p100.handshake()
             p100.login()
+            logger.info("Login successful.")
 
             if action_value == 'on':
+                logger.info("Turning plug on.")
                 p100.turnOn()
                 if self.maximumDurationInSeconds > 0:
+                    logger.info(f"Will turn off after {self.maximumDurationInSeconds} seconds.")
                     p100.turnOffWithDelay(self.maximumDurationInSeconds)
             else:
+                logger.info("Turning plug off.")
                 p100.turnOff()
                 if self.maximumDurationInSeconds > 0:
+                    logger.info(f"Will turn on after {self.maximumDurationInSeconds} seconds.")
                     p100.turnOnWithDelay(self.maximumDurationInSeconds)
-
+            logger.info("Smart plug action completed successfully.")
         except Exception as e:
+            logger.error(f"Failed to control smart plug with value '{action_value}': {e}")
             raise RuntimeError(f"Failed to control smart plug with value '{action_value}': {e}")
 
     def run(self, action_value):
         try:
+            logger.info(f"Running smart plug control for action: {action_value}")
             asyncio.run(self.control_smart_plug(action_value=str(action_value).strip().lower()))
         except Exception as e:
+            logger.error(f"Exception during smart plug control: {e}")
             raise RuntimeError(f"Exception during smart plug control: {e}")

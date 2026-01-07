@@ -1,4 +1,5 @@
 import datetime
+import logging
 
 from django.conf import settings
 from django.utils import timezone
@@ -11,6 +12,8 @@ from farminsight_dashboard_backend.utils import generate_random_api_key
 from farminsight_dashboard_backend.services.organization_services import get_organization_by_fpf_id
 from farminsight_dashboard_backend.services.membership_services import get_memberships, is_member
 
+logger = logging.getLogger(__name__)
+
 
 def create_fpf(data) -> FPFSerializer:
     """
@@ -22,10 +25,13 @@ def create_fpf(data) -> FPFSerializer:
     """
     from farminsight_dashboard_backend.services import InfluxDBManager, post_fpf_id
 
+    logger.info(f"Attempting to create a new FPF with name: {data.get('name')}")
     serializer = FPFSerializer(data=data, partial=True)
     if serializer.is_valid():
         serializer.save()
         fpf_id = serializer.data.get('id')
+        fpf_name = serializer.data.get('name')
+        logger.info(f"New FPF '{fpf_name}' created, starting post-creation process.")
         try:
             update_fpf_api_key(fpf_id)
             post_fpf_id(fpf_id)
@@ -33,10 +39,13 @@ def create_fpf(data) -> FPFSerializer:
             instance = serializer.instance
             if instance:
                 instance.delete()
+            logger.error(f"Error during post-creation process for FPF '{fpf_name}'. Deleting instance. Error: {api_error}")
             raise api_error
 
         InfluxDBManager.get_instance().sync_fpf_buckets()
+        logger.info(f"Successfully created and configured FPF '{fpf_name}'.")
     else:
+        logger.warning(f"FPF creation failed due to validation errors: {serializer.errors}")
         raise ValidationError(serializer.errors)
 
     return serializer
@@ -50,15 +59,18 @@ def update_fpf(fpf_id, data):
     :return:
     """
     fpf = FPF.objects.get(id=fpf_id)
+    logger.info(f"Attempting to update FPF: '{fpf.name}'.")
     serializer = FPFFunctionalSerializer(fpf, data=data)
     if serializer.is_valid(raise_exception=True):
         serializer.save()
+        logger.info(f"FPF '{fpf.name}' has been updated successfully.")
         return serializer
 
 
 def get_fpf_by_id(fpf_id: str):
     fpf = FPF.objects.filter(id=fpf_id).prefetch_related('sensors', 'cameras', 'growingCycles', 'actions', 'actions__hardware', 'actions__triggers').first()
     if fpf is None:
+        logger.warning(f"Could not find FPF with id: {fpf_id}")
         raise NotFoundException(f'FPF with id: {fpf_id} was not found.')
     return fpf
 
@@ -75,13 +87,15 @@ def update_fpf_api_key(fpf_id):
     :return:
     """
     from farminsight_dashboard_backend.services import post_fpf_api_key
+    fpf = FPF.objects.get(id=fpf_id)
+    logger.info(f"Attempting to update API key for FPF: '{fpf.name}'.")
     key = generate_random_api_key()
     post_fpf_api_key(fpf_id, key)
-    fpf = FPF.objects.get(id=fpf_id)
     fpf.apiKey = key
     if settings.API_KEY_VALIDATION_DURATION_DAYS > 0:
         fpf.apiKeyValidUntil = timezone.now() + datetime.timedelta(days=settings.API_KEY_VALIDATION_DURATION_DAYS)
     fpf.save()
+    logger.info(f"FPF '{fpf.name}' received a new API key successfully.")
 
 
 def get_visible_fpf_preview(user: Userprofile=None) -> FPFPreviewSerializer:
@@ -99,10 +113,12 @@ def get_visible_fpf_preview(user: Userprofile=None) -> FPFPreviewSerializer:
 
 
 def set_fpf_order(ids: list[str]) -> FPFSerializer:
+    logger.info(f"Attempting to update order for {len(ids)} FPFs.")
     items = FPF.objects.filter(id__in=ids)
     for item in items:
         item.orderIndex = ids.index(str(item.id))
 
     FPF.objects.bulk_update(items, ['orderIndex'])
+    logger.info(f"Successfully updated order for {len(ids)} FPFs.")
 
     return FPFSerializer(items, many=True)

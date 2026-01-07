@@ -108,8 +108,6 @@ class ModelScheduler:
             query_params = ResourceManagementModelService.  build_model_query_params(model)
             full_url = f"{base_url}/farm-insight{query_params}"
 
-            logger.debug(f"Fetching forecast for model {model.name} from {full_url}")
-
             response = requests.get(full_url, timeout=10)
             response.raise_for_status()
             data = response.json()

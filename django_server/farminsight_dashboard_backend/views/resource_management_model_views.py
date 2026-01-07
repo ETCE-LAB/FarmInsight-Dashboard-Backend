@@ -9,7 +9,7 @@ from farminsight_dashboard_backend.serializers.resource_management_model_seriali
 from farminsight_dashboard_backend.services import is_member, is_admin, get_organization_by_id, get_fpf_by_id, \
     get_organization_by_fpf_id, create_action_mappings, ModelScheduler, get_organization_by_model_id
 from farminsight_dashboard_backend.services.resource_management_model_services import get_model_by_id, \
-    update_model, delete_model, create_model, ResourceManagementModelService
+    update_model, delete_model, create_model, ResourceManagementModelService, set_model_order
 from farminsight_dashboard_backend.utils import get_logger
 
 
@@ -138,7 +138,7 @@ def get_forecasts(request, fpf_id: str):
     influx = InfluxDBManager.get_instance()
 
     for model in models:
-        forecast = influx.fetch_latest_model_forecast(fpf_id=fpf_id, model_id=model.id)
+        forecast = influx.fetch_latest_model_forecast(fpf_id=fpf_id, model_id=model.id, hours=168)
         combined_forecasts.append(forecast)
 
     if not combined_forecasts:
@@ -202,3 +202,13 @@ class ModelParamsView(views.APIView):
 
         result = ResourceManagementModelService.get_model_params(url)
         return Response(result.get("data") or {"error": result.get("error")}, status=result["status"])
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def post_model_order(request, fpf_id):
+    if not is_admin(request.user, get_organization_by_fpf_id(fpf_id)):
+        return Response(status=status.HTTP_403_FORBIDDEN)
+
+    serializer = set_model_order(request.data)
+
+    return Response(data=serializer.data, status=status.HTTP_200_OK)
