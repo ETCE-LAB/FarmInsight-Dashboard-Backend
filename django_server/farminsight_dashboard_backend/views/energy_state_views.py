@@ -204,14 +204,21 @@ def get_energy_dashboard(request, fpf_id: str):
 
     Query Parameters:
     - battery_level_wh: Current battery level in Wh (optional, defaults to 50% of FPF's battery max)
+    - include_graph_data: Whether to include forecast graph data (optional, default: true)
+    - hours_ahead: Hours of forecast to include (optional, default: 72)
 
-    Returns combined view of consumers, sources, and current state.
+    Returns combined view of consumers, sources, current state, and optional graph data.
     """
+    from farminsight_dashboard_backend.services.influx_services import InfluxDBManager
+    from farminsight_dashboard_backend.models import ResourceManagementModel
+    
     # Get FPF-specific energy configuration
     config = get_fpf_energy_config(fpf_id)
     default_battery = config['battery_max_wh'] * 0.5
     
     battery_level_str = request.query_params.get('battery_level_wh', str(default_battery))
+    include_graph_data = request.query_params.get('include_graph_data', 'true').lower() == 'true'
+    hours_ahead = int(request.query_params.get('hours_ahead', '72'))
 
     try:
         battery_level_wh = float(battery_level_str)
@@ -225,7 +232,7 @@ def get_energy_dashboard(request, fpf_id: str):
         energy_state = get_energy_state_summary(fpf_id, battery_level_wh)
         runtime_hours = estimate_runtime_hours(fpf_id, battery_level_wh)
 
-        return Response({
+        response_data = {
             "fpf_id": fpf_id,
             "consumers": {
                 "list": EnergyConsumerDetailSerializer(consumers, many=True).data,
@@ -247,11 +254,152 @@ def get_energy_dashboard(request, fpf_id: str):
                 "grid_disconnect_percent": config['grid_disconnect_threshold'],
                 "battery_max_wh": config['battery_max_wh']
             }
-        }, status=status.HTTP_200_OK)
+        }
+        
+        # Fetch graph data from energy models if requested
+        if include_graph_data:
+            graph_data = _fetch_energy_graph_data(fpf_id, hours_ahead)
+            if graph_data:
+                response_data["graph_data"] = graph_data
+
+        return Response(response_data, status=status.HTTP_200_OK)
 
     except Exception as e:
         logger.error(f"Error getting energy dashboard for FPF {fpf_id}: {e}")
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+def _fetch_energy_graph_data(fpf_id: str, hours_ahead: int = 336) -> dict:
+    """
+    Fetch and transform energy model forecast data for graphing.
+    If no AI models exist, generates basic forecast based on current data.
+    
+    Returns battery SoC forecast in Wh (value_wh) for display.
+    
+    :param fpf_id: FPF ID
+    :param hours_ahead: Hours of forecast to include (default 168 = 7 days)
+    :return: graph_data dict matching EnergyGraphData interface
+    """
+    from farminsight_dashboard_backend.services.influx_services import InfluxDBManager
+    from farminsight_dashboard_backend.models import ResourceManagementModel
+    from datetime import datetime, timedelta
+    
+    try:
+        influx = InfluxDBManager.get_instance()
+        
+        # Find active energy models for this FPF
+        energy_models = ResourceManagementModel.objects.filter(
+            FPF_id=fpf_id,
+            isActive=True,
+            model_type='energy'
+        )
+        
+        # Battery SoC forecast (in Wh)
+        all_battery_expected = []
+        all_battery_worst = []
+        all_battery_best = []
+        
+        # Try to get forecasts from AI models
+        for model in energy_models:
+            try:
+                forecast_data = influx.fetch_latest_model_forecast(
+                    fpf_id=fpf_id,
+                    model_id=str(model.id),
+                    hours=hours_ahead
+                )
+                
+                if not forecast_data or 'data' not in forecast_data:
+                    continue
+                    
+                data = forecast_data['data']
+                forecasts = data.get('forecasts', [])
+                
+                # Extract battery SoC forecast (in Wh)
+                for forecast in forecasts:
+                    if forecast.get('name') == 'battery_soc':
+                        for scenario in forecast.get('values', []):
+                            scenario_name = scenario.get('name', '')
+                            values = scenario.get('value', [])
+                            
+                            # Transform to BatterySoCDataPoint format (value_wh)
+                            points = [
+                                {"timestamp": v.get('timestamp'), "value_wh": v.get('value', 0)}
+                                for v in values if v.get('timestamp')
+                            ]
+                            
+                            if scenario_name == 'expected':
+                                all_battery_expected.extend(points)
+                            elif scenario_name == 'pessimistic':
+                                all_battery_worst.extend(points)
+                            elif scenario_name == 'optimistic':
+                                all_battery_best.extend(points)
+                    
+            except Exception as e:
+                logger.debug(f"Error fetching forecast for model {model.id}: {e}")
+                continue
+        
+        # Get battery and energy configuration for basic forecast
+        config = get_fpf_energy_config(fpf_id)
+        battery_max_wh = config['battery_max_wh']
+        total_consumption = get_total_consumption_by_fpf_id(fpf_id, active_only=True)
+        
+        # Get solar capacity for basic forecast if no AI data
+        solar_capacity = 0
+        try:
+            from farminsight_dashboard_backend.models import EnergySource
+            solar_sources = EnergySource.objects.filter(
+                FPF_id=fpf_id,
+                isActive=True,
+                sourceType='solar'
+            )
+            solar_capacity = sum(s.maxOutputWatts for s in solar_sources)
+        except Exception:
+            pass
+        
+        # Generate timestamps
+        now = datetime.utcnow().replace(minute=0, second=0, microsecond=0)
+        
+        # If no AI model data, generate basic battery SoC forecast
+        if not all_battery_expected and battery_max_wh > 0:
+            # Start at 50% SoC
+            current_soc = battery_max_wh * 0.5
+            
+            for i in range(hours_ahead):
+                forecast_time = now + timedelta(hours=i)
+                hour = forecast_time.hour
+                
+                # Simple day/night solar production estimate
+                if 6 <= hour <= 19:
+                    time_factor = 0.5 + 0.5 * (1 - abs(hour - 12.5) / 6.5)
+                    solar_output = solar_capacity * time_factor * 0.7
+                else:
+                    solar_output = 0
+                
+                # Net energy change per hour (Wh)
+                net_power = solar_output - total_consumption
+                current_soc = max(0, min(battery_max_wh, current_soc + net_power))
+                
+                timestamp = forecast_time.isoformat() + "Z"
+                all_battery_expected.append({"timestamp": timestamp, "value_wh": round(current_soc, 0)})
+                # Worst case: 30% less solar, 15% more consumption
+                worst_soc = max(0, min(battery_max_wh, current_soc * 0.85))
+                all_battery_worst.append({"timestamp": timestamp, "value_wh": round(worst_soc, 0)})
+                # Best case: 20% more solar, 15% less consumption
+                best_soc = min(battery_max_wh, current_soc * 1.15)
+                all_battery_best.append({"timestamp": timestamp, "value_wh": round(best_soc, 0)})
+        
+        return {
+            "battery_soc": {
+                "expected": all_battery_expected[:hours_ahead],
+                "worst_case": all_battery_worst[:hours_ahead],
+                "best_case": all_battery_best[:hours_ahead]
+            },
+            "battery_max_wh": battery_max_wh
+        }
+        
+    except Exception as e:
+        logger.error(f"Error fetching energy graph data for FPF {fpf_id}: {e}")
+        return None
 
 
 @api_view(['POST'])

@@ -1,12 +1,17 @@
 import logging
 import asyncio
 import threading
+import time
 from collections import deque
 from django.conf import settings
 from nio import AsyncClient, RoomSendError, LoginError
 from asgiref.sync import sync_to_async
 
 logger = logging.getLogger(__name__)
+
+# Rate limiting configuration
+MAX_MESSAGES_PER_SECOND = 2
+MIN_DELAY_BETWEEN_MESSAGES = 0.5  # seconds
 
 
 class MatrixClient:
@@ -17,6 +22,8 @@ class MatrixClient:
         self._thread = None
         self._ready_event = threading.Event()
         self._message_queue = deque()
+        self._last_message_time = 0
+        self._rate_limit_lock = asyncio.Lock() if asyncio.get_event_loop_policy() else None
 
     def start_in_thread(self):
         """Starts the Matrix client in a separate thread with its own event loop."""
@@ -31,6 +38,7 @@ class MatrixClient:
         """Creates and runs the event loop in a separate thread."""
         self.loop = asyncio.new_event_loop()
         asyncio.set_event_loop(self.loop)
+        self._rate_limit_lock = asyncio.Lock()
         self.loop.run_until_complete(self.start())
         self.loop.run_forever()
 
@@ -118,6 +126,14 @@ class MatrixClient:
         if not room_id:
             logger.warning("No room_id provided. Skipping notification.")
             return
+
+        # Rate limiting - ensure we don't send too many messages
+        async with self._rate_limit_lock:
+            current_time = time.time()
+            elapsed = current_time - self._last_message_time
+            if elapsed < MIN_DELAY_BETWEEN_MESSAGES:
+                await asyncio.sleep(MIN_DELAY_BETWEEN_MESSAGES - elapsed)
+            self._last_message_time = time.time()
 
         try:
             if room_id not in self.client.rooms:

@@ -67,7 +67,6 @@ def get_fpf_api_key(request, fpf_id):
     :return: 
     """
     update_fpf_api_key(fpf_id)
-    logger.info(f"FPF API key regenerated for FPF '{get_fpf_by_id(fpf_id).name}' by user '{request.user.name}'", extra={'resource_id': fpf_id})
     return Response(status=status.HTTP_200_OK)
 
 

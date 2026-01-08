@@ -2,6 +2,7 @@ import threading
 from datetime import timedelta
 
 from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.schedulers.base import STATE_RUNNING
 from apscheduler.triggers.interval import IntervalTrigger
 from django.utils import timezone
 
@@ -30,6 +31,9 @@ class AutoTriggerScheduler:
             self._initialized = True
 
     def start(self, interval_seconds: int = 60):
+        if self._scheduler.state == STATE_RUNNING:
+            self.log.debug("AutoTriggerScheduler already running, skipping start.")
+            return
         self._scheduler.add_job(
             create_auto_triggered_actions_in_queue,
             trigger=IntervalTrigger(seconds=interval_seconds),

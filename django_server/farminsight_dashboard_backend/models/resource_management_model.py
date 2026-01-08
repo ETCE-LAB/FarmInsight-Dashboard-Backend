@@ -15,6 +15,7 @@ class ResourceManagementModel(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=256)
     URL = models.CharField(max_length=256)
+    model_type = models.CharField(max_length=50, default='water', blank=True)
     required_parameters = models.JSONField(default=list, blank=True)
     isActive = models.BooleanField(default=False)
     intervalSeconds = models.IntegerField()

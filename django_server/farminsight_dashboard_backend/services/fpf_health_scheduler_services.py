@@ -1,5 +1,6 @@
 import threading
 from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.schedulers.base import STATE_RUNNING
 from farminsight_dashboard_backend.utils import get_logger
 from farminsight_dashboard_backend.services.fpf_health_services import check_all_fpf_health
 
@@ -25,6 +26,9 @@ class FPFHealthScheduler:
             self._initialized = True
 
     def start(self):
+        if self.scheduler.state == STATE_RUNNING:
+            self.logger.debug("FPFHealthScheduler already running, skipping start.")
+            return
         self.logger.info("Starting FPF Health Scheduler.")
         # Run every 5 minutes
         self.scheduler.add_job(self.run_check, 'interval', seconds=300)

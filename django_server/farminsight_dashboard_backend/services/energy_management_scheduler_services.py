@@ -1,6 +1,7 @@
 import threading
 from datetime import timedelta
 from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.schedulers.base import STATE_RUNNING
 from apscheduler.triggers.interval import IntervalTrigger
 from django.utils import timezone
 from django.db import models
@@ -47,6 +48,9 @@ class EnergyManagementScheduler:
         Start the energy management scheduler.
         Checks energy state every minute by default.
         """
+        if self._scheduler.state == STATE_RUNNING:
+            self.log.debug("EnergyManagementScheduler already running, skipping start.")
+            return
         self._scheduler.add_job(
             self._check_energy_states,
             trigger=IntervalTrigger(seconds=interval_seconds),

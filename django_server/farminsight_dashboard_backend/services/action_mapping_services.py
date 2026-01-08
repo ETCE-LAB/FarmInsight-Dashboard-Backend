@@ -18,10 +18,15 @@ def create_action_mappings(fpf_id: str, model_id: str, actions_data: list):
     created_mappings = []
 
     for action in actions_data:
+        # Skip actions with empty/missing names (prevents 'name blank' error)
+        if not action.get("name"):
+            continue
+            
         # Adjust key names based on your frontend payload
         controllable_action_id = action.get("controllable_action_id") or action.get("controllable_action", {}).get("id")
         if not controllable_action_id:
-            raise ValueError("Missing controllable_action_id in action data")
+            # Skip unmapped actions (user didn't assign a controllable action)
+            continue
 
         try:
             controllable_action = ControllableAction.objects.get(id=controllable_action_id)

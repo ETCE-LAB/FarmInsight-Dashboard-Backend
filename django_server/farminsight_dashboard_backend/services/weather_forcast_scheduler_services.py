@@ -6,6 +6,7 @@ import requests
 from requests import RequestException
 
 from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.schedulers.base import STATE_RUNNING
 from django.utils import timezone
 
 from django_server import settings
@@ -45,6 +46,9 @@ class WeatherForecastScheduler:
 
 
     def start(self):
+        if self._scheduler.state == STATE_RUNNING:
+            self.logger.debug("WeatherForecastScheduler already running, skipping start.")
+            return
         self._add_all_forecast_jobs()
         self._scheduler.start()
         self.logger.debug("WeatherForecastScheduler started")

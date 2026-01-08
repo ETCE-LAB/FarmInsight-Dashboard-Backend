@@ -37,7 +37,19 @@ def get_auth_token():
 
 
 def valid_api_key_for_fpf(api_key: str, fpf_id: str) -> bool:
-    fpf = FPF.objects.get(id=fpf_id)
+    """
+    Validate if the API key is valid for the given FPF.
+    Returns False if the FPF doesn't exist or the API key is invalid.
+    """
+    try:
+        fpf = FPF.objects.get(id=fpf_id)
+    except FPF.DoesNotExist:
+        logger.warning(f"FPF with ID '{fpf_id}' does not exist.")
+        return False
+    except Exception as e:
+        logger.error(f"Error validating FPF '{fpf_id}': {e}")
+        return False
+
     logger.debug(f"Validating API key for FPF: '{fpf.name}'.")
     if fpf.apiKeyValidUntil is None:
         is_valid = fpf.apiKey == api_key
@@ -52,7 +64,19 @@ def valid_api_key_for_fpf(api_key: str, fpf_id: str) -> bool:
 
 
 def valid_api_key_for_sensor(api_key: str, sensor_id: str) -> bool:
-    sensor = Sensor.objects.get(id=sensor_id)
+    """
+    Validate if the API key is valid for the given sensor.
+    Returns False if the sensor doesn't exist or the API key is invalid.
+    """
+    try:
+        sensor = Sensor.objects.get(id=sensor_id)
+    except Sensor.DoesNotExist:
+        logger.warning(f"Sensor with ID '{sensor_id}' does not exist.")
+        return False
+    except Exception as e:
+        logger.error(f"Error validating sensor '{sensor_id}': {e}")
+        return False
+
     logger.debug(f"Validating API key for sensor: '{sensor.name}'.")
     if sensor.FPF.apiKeyValidUntil is None:
         is_valid = sensor.FPF.apiKey == api_key

@@ -26,6 +26,15 @@ class EnergyConsumer(models.Model):
         default=0,
         help_text="Battery percentage at which this consumer should be shut down (0 = never auto-shutdown, use global thresholds)"
     )
+    # Proactive forecast-based shutdown settings
+    forecastShutdownThreshold = models.IntegerField(
+        default=0,
+        help_text="Predicted battery percentage at which to schedule shutdown (0 = disabled). When AI model predicts battery will reach this level, the consumer will be shut down."
+    )
+    forecastBufferDays = models.IntegerField(
+        default=0,
+        help_text="Number of days before predicted threshold to execute shutdown (0 = shutdown exactly when predicted level is reached)"
+    )
     dependencies = models.ManyToManyField(
         'self',
         symmetrical=False,

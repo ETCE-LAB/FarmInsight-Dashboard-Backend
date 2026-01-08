@@ -1,5 +1,7 @@
 from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.schedulers.base import STATE_RUNNING
 import json
+import threading
 from datetime import timedelta
 from django.utils.timezone import now
 
@@ -9,8 +11,31 @@ from farminsight_dashboard_backend.services.trigger.base_trigger_handlers import
 
 logger = get_logger()
 
-scheduler = BackgroundScheduler()
-scheduler.start()
+# Thread-safe singleton scheduler
+_scheduler = None
+_scheduler_lock = threading.Lock()
+
+def get_interval_scheduler():
+    """Get or create the interval trigger scheduler singleton."""
+    global _scheduler
+    with _scheduler_lock:
+        if _scheduler is None:
+            _scheduler = BackgroundScheduler()
+        if _scheduler.state != STATE_RUNNING:
+            try:
+                _scheduler.start()
+            except Exception as e:
+                logger.warning(f"Scheduler already running or failed to start: {e}")
+        return _scheduler
+
+# Initialize scheduler lazily
+scheduler = None
+
+def _get_scheduler():
+    global scheduler
+    if scheduler is None:
+        scheduler = get_interval_scheduler()
+    return scheduler
 
 class IntervalTriggerHandler(BaseTriggerHandler):
     def should_trigger(self, interval, **kwargs):
@@ -24,10 +49,12 @@ class IntervalTriggerHandler(BaseTriggerHandler):
 
         job_id = f"interval_trigger_{self.trigger.id}"
 
-        if scheduler.get_job(job_id):
+        sched = _get_scheduler()
+
+        if sched.get_job(job_id):
             return
 
-        scheduler.add_job(
+        sched.add_job(
             func=enqueue_interval_action,
             args=[self.trigger.id],
             id=job_id,

@@ -3,6 +3,7 @@ import threading
 from datetime import timedelta
 
 from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.schedulers.base import STATE_RUNNING
 from django.utils import timezone
 
 from django_server import settings
@@ -40,6 +41,9 @@ class DataRetentionScheduler:
 
 
     def start(self):
+        if self._scheduler.state == STATE_RUNNING:
+            self.logger.debug("DataRetentionScheduler already running, skipping start.")
+            return
         self._scheduler.add_job(cleanup_task, trigger='interval', hours=1, id="cleanup_task", args=[self.logger], next_run_time=timezone.now() + timedelta(seconds=1))
         self._scheduler.start()
         self.logger.debug("DataRetentionScheduler started")

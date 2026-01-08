@@ -1,7 +1,9 @@
 import json
 from datetime import datetime
 from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.schedulers.base import STATE_RUNNING
 from apscheduler.triggers.date import DateTrigger
+from django.utils.timezone import make_aware
 from django.utils.timezone import make_aware
 
 from farminsight_dashboard_backend.models import (
@@ -18,6 +20,7 @@ logger = get_logger()
 
 
 class ForecastActionScheduler:
+    """Scheduler for injecting model-predicted actions into the queue."""
     _instance = None
 
     @classmethod
@@ -29,8 +32,12 @@ class ForecastActionScheduler:
     def __init__(self):
         if not hasattr(self, "_scheduler"):
             self._scheduler = BackgroundScheduler()
-            self._scheduler.start()
-            logger.info("ForecastActionScheduler started.")
+        if self._scheduler.state != STATE_RUNNING:
+            try:
+                self._scheduler.start()
+                logger.info("ForecastActionScheduler started.")
+            except Exception as e:
+                logger.warning(f"ForecastActionScheduler already running: {e}")
 
     def schedule_action(self, run_at, fn, *args):
         self._scheduler.add_job(

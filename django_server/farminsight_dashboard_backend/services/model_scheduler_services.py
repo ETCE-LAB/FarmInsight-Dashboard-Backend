@@ -2,6 +2,7 @@ import threading
 import requests
 from datetime import timedelta
 from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.schedulers.base import STATE_RUNNING
 from apscheduler.triggers.interval import IntervalTrigger
 from django.utils import timezone
 
@@ -41,6 +42,9 @@ class ModelScheduler:
         """
         Start the scheduler
         """
+        if self._scheduler.state == STATE_RUNNING:
+            self.log.debug("ModelScheduler already running, skipping start.")
+            return
         self._add_all_model_jobs()
         self._scheduler.start()
         self.log.info("ResourceForecastScheduler started.")
@@ -122,7 +126,14 @@ class ModelScheduler:
             )
             logger.info(f"Forecasts updated for model {model.name}")
 
-            # --- Handle actions (forecast triggers) ---
+            # --- Handle energy models: schedule consumer shutdowns based on SoC forecast ---
+            if model.model_type == 'energy':
+                self._handle_energy_model_forecast(model, data)
+                # Energy models don't use the traditional ActionMapping system for consumer shutdown
+                # They use the consumer's individual forecastShutdownThreshold instead
+                # Only connect_grid action still uses ActionMapping
+            
+            # --- Handle actions (forecast triggers) via ActionMapping ---
             actions = data.get("actions", [])
             if not actions:
                 logger.debug(f"No actions found in forecast for model {model.name}.")
@@ -147,7 +158,7 @@ class ModelScheduler:
                 logger.warning(f"No action entries found for scenario '{active_scenario}' in model {model.name}.")
                 return
 
-            # 2️⃣ Schedule forecast-based actions
+            # 2️⃣ Schedule forecast-based actions via ActionMapping
             # Each entry looks like {"timestamp": "...", "value": 1.5, "action": "watering"}
             scheduler = ForecastActionScheduler.get_instance()
             for action_entry in scenario_actions:
@@ -160,8 +171,7 @@ class ModelScheduler:
                         action_name=action_name,
                         resource_management_model_id=model_id
                     )
-                    print(mapped_action)
-                    print("try to get:",mapped_action.controllable_action_id)
+                    logger.debug(f"Found action mapping: {mapped_action}")
                     controllable_action = ControllableAction.objects.get(
                         id=mapped_action.controllable_action_id,
                         isActive=True
@@ -183,3 +193,55 @@ class ModelScheduler:
             logger.error(f"Error fetching forecast for model {model_id}: {e}")
         except Exception as e:
             logger.error(f"Unexpected error updating forecast for model {model_id}: {e}")
+    
+    def _handle_energy_model_forecast(self, model: ResourceManagementModel, data: dict):
+        """
+        Handle energy model forecasts: extract SoC forecast and schedule consumer shutdowns.
+        
+        This uses the consumer's forecastShutdownThreshold instead of ActionMapping.
+        
+        :param model: ResourceManagementModel instance
+        :param data: Response data from AI model
+        """
+        from farminsight_dashboard_backend.services.energy_forecast_action_services import (
+            schedule_forecast_based_shutdowns
+        )
+        from farminsight_dashboard_backend.services.energy_decision_services import get_fpf_energy_config
+        
+        # Extract SoC forecast from response
+        soc_forecast = None
+        active_scenario = (model.activeScenario or "expected").lower().replace("-", "_")
+        
+        for forecast in data.get('forecasts', []):
+            if forecast.get('name') == 'battery_soc':
+                # Look for the active scenario, fall back to 'expected'
+                for scenario in forecast.get('values', []):
+                    scenario_name = (scenario.get('name', '') or '').lower().replace("-", "_")
+                    if scenario_name == active_scenario or scenario_name == 'expected':
+                        raw_values = scenario.get('value', [])
+                        # Transform to consistent format
+                        soc_forecast = [
+                            {
+                                'timestamp': p.get('timestamp'),
+                                'value_wh': p.get('value', p.get('value_wh', 0))
+                            }
+                            for p in raw_values if p.get('timestamp')
+                        ]
+                        logger.debug(f"Extracted {len(soc_forecast)} SoC forecast points for scenario '{scenario_name}'")
+                        break
+                break
+        
+        if not soc_forecast:
+            logger.warning(f"No battery_soc forecast found in energy model {model.name} response")
+            return
+        
+        # Get battery max from FPF config
+        config = get_fpf_energy_config(str(model.FPF_id))
+        battery_max_wh = config.get('battery_max_wh', 1600)
+        
+        # Schedule consumer shutdowns based on individual thresholds
+        schedule_forecast_based_shutdowns(
+            fpf_id=str(model.FPF_id),
+            soc_forecast=soc_forecast,
+            battery_max_wh=battery_max_wh
+        )

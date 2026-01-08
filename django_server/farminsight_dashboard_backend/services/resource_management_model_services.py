@@ -75,6 +75,7 @@ class ResourceManagementModelService:
         """
         Builds query params for a ResourceManagementModel's /farm-insight call.
         Replaces sensor-type params with their latest InfluxDB value.
+        For energy models, also injects current battery SoC and total consumption.
         Returns a query string like '?roof_size=10&current_water_amount=5.4'
         """
         from urllib.parse import urlencode
@@ -108,7 +109,57 @@ class ResourceManagementModelService:
                 except Exception as e:
                     print(f"⚠️ Failed to fetch sensor value for {name}: {e}")
 
+        # For energy models: auto-inject live data if not already set
+        if model.model_type == 'energy':
+            ResourceManagementModelService._inject_energy_model_params(model, params, influx)
+
         return f"?{urlencode(params)}" if params else ""
+    
+    @staticmethod
+    def _inject_energy_model_params(model, params: dict, influx):
+        """
+        Inject live data into energy model parameters:
+        - initial_soc_wh: Current battery level from battery source sensor
+        - avg_consumption_watts: Total consumption from active consumers
+        
+        These override any manually configured values to ensure accurate forecasts.
+        """
+        from farminsight_dashboard_backend.models import EnergySource, EnergyConsumer
+        from farminsight_dashboard_backend.services.energy_consumer_services import get_total_consumption_by_fpf_id
+        
+        fpf_id = str(model.FPF.id)
+        
+        # Inject current battery SoC from battery source sensor
+        if 'initial_soc_wh' not in params or params.get('initial_soc_wh') == '':
+            try:
+                battery_source = EnergySource.objects.filter(
+                    FPF_id=fpf_id,
+                    sourceType='battery',
+                    isActive=True,
+                    sensor__isnull=False
+                ).select_related('sensor').first()
+                
+                if battery_source and battery_source.sensor:
+                    measurements = influx.fetch_latest_sensor_measurements(
+                        fpf_id=fpf_id,
+                        sensor_ids=[str(battery_source.sensor.id)]
+                    )
+                    data = measurements.get(str(battery_source.sensor.id))
+                    if data:
+                        params['initial_soc_wh'] = float(data['value'])
+                        print(f"📊 Injected live battery SoC: {params['initial_soc_wh']} Wh")
+            except Exception as e:
+                print(f"⚠️ Failed to inject battery SoC: {e}")
+        
+        # Inject total consumption from active consumers
+        if 'avg_consumption_watts' not in params or params.get('avg_consumption_watts') == '':
+            try:
+                total_consumption = get_total_consumption_by_fpf_id(fpf_id, active_only=True)
+                if total_consumption > 0:
+                    params['avg_consumption_watts'] = total_consumption
+                    print(f"📊 Injected total consumption: {total_consumption} W")
+            except Exception as e:
+                print(f"⚠️ Failed to inject consumption: {e}")
 
 def set_model_order(ids: list[str]) -> ResourceManagementModelSerializer:
     models = ResourceManagementModel.objects.filter(id__in=ids)

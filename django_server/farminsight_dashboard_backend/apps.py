@@ -14,6 +14,8 @@ from farminsight_dashboard_backend.utils import get_logger
 class FarminsightDashboardBackendConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'farminsight_dashboard_backend'
+    _app_initialized = False
+    _init_lock = threading.Lock()
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -24,6 +26,12 @@ class FarminsightDashboardBackendConfig(AppConfig):
         :param max_retries: maximum amount of retries to connect to the database
         :param retry_interval: interval of the retry
         """
+        with FarminsightDashboardBackendConfig._init_lock:
+            if FarminsightDashboardBackendConfig._app_initialized:
+                self.log.debug("App already initialized, skipping.")
+                return
+            FarminsightDashboardBackendConfig._app_initialized = True
+
         retry_count = 0
         while retry_count < max_retries:
             try:
@@ -55,7 +63,9 @@ class FarminsightDashboardBackendConfig(AppConfig):
                 time.sleep(retry_interval)
                 retry_count += 1
             except Exception as e:
-                self.log.error(f"Error checking migrations: {e}")
+                import traceback
+                self.log.error(f"Error during app initialization: {e}")
+                self.log.error(f"Traceback: {traceback.format_exc()}")
                 break
         if retry_count == max_retries:
             self.log.error("Max retries reached. App did not start.")

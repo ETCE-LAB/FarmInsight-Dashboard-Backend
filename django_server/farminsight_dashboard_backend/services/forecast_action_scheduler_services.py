@@ -1,6 +1,7 @@
 import threading
 from datetime import timedelta, datetime
 from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.schedulers.base import STATE_RUNNING
 from apscheduler.triggers.date import DateTrigger
 from django.utils import timezone
 from farminsight_dashboard_backend.models import ActionTrigger, ActionQueue
@@ -28,6 +29,9 @@ class ForecastActionScheduler:
 
     def start(self):
         """Start the scheduler and periodic cleanup task."""
+        if self._scheduler.state == STATE_RUNNING:
+            logger.debug("ForecastActionScheduler already running, skipping start.")
+            return
         logger.info("Starting ForecastActionScheduler...")
         self._scheduler.add_job(
             self.cleanup_old_forecast_triggers,

@@ -2,6 +2,7 @@ import threading
 from datetime import timedelta
 
 from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.schedulers.base import STATE_RUNNING
 from apscheduler.triggers.interval import IntervalTrigger
 from django.utils import timezone
 
@@ -38,6 +39,9 @@ class CameraScheduler:
         Start the scheduler
         :return:
         """
+        if self._scheduler.state == STATE_RUNNING:
+            self.log.debug("CameraScheduler already running, skipping start.")
+            return
         self._add_all_camera_jobs()
         self._scheduler.start()
 

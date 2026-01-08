@@ -23,6 +23,7 @@ class ResourceManagementModelSerializer(serializers.ModelSerializer):
             "id",
             "name",
             "URL",
+            "model_type",
             "required_parameters",
             "isActive",
             "intervalSeconds",
