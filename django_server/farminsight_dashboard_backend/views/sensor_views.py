@@ -12,7 +12,6 @@ from farminsight_dashboard_backend.services import is_member, get_organization_b
 from farminsight_dashboard_backend.services.sensor_services import get_sensor, create_sensor, update_sensor
 from farminsight_dashboard_backend.utils import get_logger
 
-
 logger = get_logger()
 
 
@@ -83,7 +82,8 @@ class SensorView(APIView):
             raise Exception(f"Unable to create sensor at FPF. {e}")
 
         sensor_data = create_sensor(sensor)
-        logger.info(f"Sensor '{sensor.get('name')}' created by user '{request.user.name}'",extra={'resource_id': sensor.get('id')})
+        logger.info(f"Sensor '{sensor.get('name')}' created by user '{request.user.name}'",
+                    extra={'resource_id': sensor.get('id')})
         return Response(sensor_data, status=status.HTTP_200_OK)
 
     def put(self, request, sensor_id):

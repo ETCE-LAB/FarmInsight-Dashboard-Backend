@@ -36,3 +36,4 @@ from .notification_services import create_notification, remove_notification, get
 from .forecast_action_scheduler_services import ForecastActionScheduler
 from .matrix_scheduler import MatrixScheduler
 from .resource_management_model_services import get_model_by_id, update_model, delete_model, create_model
+from .water_management_dashboard_service import collect_water_management_dashboard_data

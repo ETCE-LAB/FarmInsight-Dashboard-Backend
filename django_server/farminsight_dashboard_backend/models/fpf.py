@@ -26,6 +26,7 @@ class FPF(models.Model):
     location = models.ForeignKey(Location, blank=True, null=True, on_delete=models.SET_NULL)
     orderIndex = models.IntegerField(default=get_order_index_default)
     isActive = models.BooleanField(default=True)
+    resourceManagementConfig = models.JSONField(default=dict, blank=True)
 
     class Meta:
         constraints = [

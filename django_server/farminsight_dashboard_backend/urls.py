@@ -49,8 +49,10 @@ from farminsight_dashboard_backend.views import (
     post_hardware_order, HardwareEditViews, post_hardware, ActionTriggerView, post_fpf_order,
     post_userprofile_active_status, forgot_password_view, reset_password_view, get_all_organizations,
     post_model, ResourceManagementModelView, ModelParamsView, get_forecasts, set_active_scenario,
-    get_notifications, post_notification, NotificationView, post_model_order
+    get_notifications, post_notification, NotificationView, post_model_order, get_weather_and_water_status,
+    put_rmm_sensor_config
 )
+
 urlpatterns = [
     path('userprofiles', get_userprofile, name='get_userprofile'),
     path('userprofiles/<str:identifier>', UserprofileView.as_view(), name='userprofile_operations'),
@@ -78,6 +80,10 @@ urlpatterns = [
     path('sensors/<str:sensor_id>', SensorView.as_view(), name='sensor_operations'),
     path('sensors/types/available/<str:fpf_id>', get_fpf_sensor_types, name='get_fpf_sensor_types'),
     path('sensors/sort-order/<str:fpf_id>', post_sensor_order, name='post_sensor_order'),
+    path('sensors/<str:location_id>/weather-and-tank-status/<str:fpf_id>', get_weather_and_water_status,
+         name='get_weather_and_tank_status'),
+    path('sensors/<str:fpf_id>/resource-management/rmm-sensor-config', put_rmm_sensor_config,
+         name='put_rmm_sensor_config'),
 
     path('measurements/<str:sensor_id>', MeasurementView.as_view(), name='sensor-measurements'),
 
@@ -105,22 +111,27 @@ urlpatterns = [
 
     path('log_messages', post_log_message, name='post_log_message'),
     path('log_messages/<str:resource_type>/<str:resource_id>', get_log_messages, name='get_log_messages'),
-    path('log-messages-insecure/<str:resource_id>/<str:message>', post_log_message_insecure, name='post_log_message_insecure'),
+    path('log-messages-insecure/<str:resource_id>/<str:message>', post_log_message_insecure,
+         name='post_log_message_insecure'),
 
     path('controllable-actions', post_controllable_action, name='post_controllable_action'),
-    path('controllable-actions/<str:controllable_action_id>', ControllableActionView.as_view(), name='controllable_action_operations'),
-    path('execute-actions/<str:controllable_action_id>/<str:trigger_id>', execute_controllable_action, name='execute_controllable_action'),
+    path('controllable-actions/<str:controllable_action_id>', ControllableActionView.as_view(),
+         name='controllable_action_operations'),
+    path('execute-actions/<str:controllable_action_id>/<str:trigger_id>', execute_controllable_action,
+         name='execute_controllable_action'),
     path('action-scripts/types', get_available_action_script_types, name='get_available_action_script_types'),
-    path('controllable-actions/sort-order/<str:fpf_id>', post_controllable_action_order, name='post_controllable_action_order'),
+    path('controllable-actions/sort-order/<str:fpf_id>', post_controllable_action_order,
+         name='post_controllable_action_order'),
 
-    path('action-trigger', post_action_trigger,name='post_action_trigger'),
+    path('action-trigger', post_action_trigger, name='post_action_trigger'),
     path('action-trigger/<str:actionTrigger_id>', ActionTriggerView.as_view(), name='actionTrigger_operations'),
 
     path('action-queue/<str:fpf_id>', get_action_queue, name='get_action_queue'),
 
     path('locations', post_location, name='post_location'),
     path('locations/<str:location_id>', LocationView.as_view(), name='location_operations'),
-    path('locations/organization/<str:organization_id>', LocationView.get_locations_by_organization, name='get_locations_by_organization_id'),
+    path('locations/organization/<str:organization_id>', LocationView.get_locations_by_organization,
+         name='get_locations_by_organization_id'),
     path('locations/<str:location_id>/details', get_location, name='get_location'),
 
     path('weather-forecasts/<str:location_id>', get_weather_forecasts, name='get_weather_forecasts'),
@@ -140,9 +151,11 @@ urlpatterns = [
 
     path('util/direct-ping/<str:resource_type>/<str:resource_id>', get_direct_ping, name='get_direct_ping'),
 
-    path('admin/password-reset/<str:userprofile_id>', get_reset_userprofile_password, name='get_reset_userprofile_password'),
+    path('admin/password-reset/<str:userprofile_id>', get_reset_userprofile_password,
+         name='get_reset_userprofile_password'),
     path('admin/userprofiles-all', get_all_userprofiles, name='get_all_userprofiles'),
-    path('admin/set-active/<str:userprofile_id>', post_userprofile_active_status, name='post_userprofile_active_status'),
+    path('admin/set-active/<str:userprofile_id>', post_userprofile_active_status,
+         name='post_userprofile_active_status'),
 
     path('notifications', get_notifications, name='get_notifications'),
     path('notifications/create', post_notification, name='post_notification'),

@@ -1,8 +1,8 @@
 from .userprofile_views import UserprofileView, get_userprofile
 from .organization_views import post_organization, get_own_organizations, OrganizationView, post_organization_order, get_all_organizations
-from .fpf_views import FpfView, get_fpf_api_key, get_visible_fpf, post_fpf_order
+from .fpf_views import FpfView, get_fpf_api_key, get_visible_fpf, post_fpf_order, put_rmm_sensor_config
 from .measurement_views import MeasurementView
-from .data_views import get_fpf_data, get_sensor_data, get_camera_images, get_weather_forecasts
+from .data_views import get_fpf_data, get_sensor_data, get_camera_images, get_weather_forecasts, get_weather_and_water_status
 from .membership_views import MembershipView
 from .growing_cycle_views import post_growing_cycle, GrowingCycleEditViews, get_growing_cycles, post_growing_cycle_order
 from .sensor_views import SensorView, get_fpf_sensor_types, post_sensor_order
