@@ -48,7 +48,7 @@ def enqueue_interval_action(trigger_id):
 
     trigger = get_action_trigger(trigger_id)
 
-    if trigger and trigger.action.isAutomated:
+    if trigger and trigger.action.isAutomated and trigger.isActive:
         # Only enqueue if the action is new (there must not be a created action by the same trigger in the queue, which has not ended yet.)
         if not is_already_enqueued(trigger_id):
             serializer = ActionQueueSerializer(data={
