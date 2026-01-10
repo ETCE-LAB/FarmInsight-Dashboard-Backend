@@ -187,7 +187,7 @@ def collect_water_management_dashboard_data(
 
     weather = get_current_weather_snapshot(location_id)
 
-    water_level = 10#get_latest_water_level(water_sensor_id)
+    water_level = get_latest_water_level(water_sensor_id)
     water_levels = get_weekly_water_levels(water_sensor_id)
     avg_usage = calculate_average_daily_water_usage(water_levels) if water_levels else None
 
