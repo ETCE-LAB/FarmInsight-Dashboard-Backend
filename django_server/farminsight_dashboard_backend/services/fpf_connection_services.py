@@ -121,6 +121,9 @@ def get_ping(fpf_id: str, resource_id: str):
 def get_value_ping(fpf_id: str, sensor_id: str):
     return send_request_to_fpf(fpf_id, 'get', f'/api/pings/value/{sensor_id}')
 
+def get_clear_action_queue(fpf_id: str):
+    return send_request_to_fpf(fpf_id, 'get', f'/api/action-queues/clear')
+
 def build_fpf_url(fpf_address, endpoint):
     """
     Build a correct URL based on the FPF config

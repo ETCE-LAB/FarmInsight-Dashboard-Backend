@@ -46,7 +46,7 @@ from farminsight_dashboard_backend.views import (
     post_growing_cycle_order, post_camera_order, post_controllable_action_order, post_organization_order,
     post_hardware_order, HardwareEditViews, post_hardware, ActionTriggerView, post_fpf_order,
     post_userprofile_active_status, forgot_password_view, reset_password_view, get_all_organizations, post_image,
-    get_all_hardware
+    get_all_hardware, clear_action_queue
 )
 
 urlpatterns = [
@@ -117,6 +117,7 @@ urlpatterns = [
     path('action-trigger/<str:action_trigger_id>', ActionTriggerView.as_view(), name='actionTrigger_operations'),
 
     path('action-queue/<str:fpf_id>', get_action_queue, name='get_action_queue'),
+    path('action-queue/clear/<str:fpf_id>', clear_action_queue, name='clear_action_queue'),
 
     path('locations', post_location, name='post_location'),
     path('locations/<str:location_id>', LocationView.as_view(), name='location_operations'),

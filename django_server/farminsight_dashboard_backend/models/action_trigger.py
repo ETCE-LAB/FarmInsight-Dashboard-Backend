@@ -8,8 +8,8 @@ from .controllable_action import ControllableAction
 class ActionTrigger(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     type = models.CharField(max_length=32)
-    actionValueType = models.CharField(max_length=64)
-    actionValue = models.CharField(max_length=128)
+    actionValueType = models.CharField(max_length=256)
+    actionValue = models.CharField(max_length=256)
     triggerLogic = models.TextField()
     description = models.TextField(null=True)
     isActive = models.BooleanField(default=False)

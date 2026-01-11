@@ -4,14 +4,12 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 
 from farminsight_dashboard_backend.utils import get_logger
-from farminsight_dashboard_backend.services.action_queue_services import get_active_state_of_action, process_action_queue
-from farminsight_dashboard_backend.services.trigger import create_manual_triggered_action_in_queue
+from farminsight_dashboard_backend.services.action_queue_services import get_active_state_of_action
 from farminsight_dashboard_backend.services import get_fpf_by_id, get_organization_by_fpf_id, is_admin, \
     create_controllable_action, \
     delete_controllable_action, get_controllable_action_by_id, get_organization_by_controllable_action_id, \
-    set_is_automated, create_auto_triggered_actions_in_queue, is_member, update_controllable_action, \
-    get_or_create_hardware, \
-    set_controllable_action_order, execute_action, get_actions
+    set_is_automated, is_member, update_controllable_action, get_or_create_hardware, \
+    set_controllable_action_order, execute_action, get_actions, get_clear_action_queue
 
 logger = get_logger()
 
@@ -145,5 +143,16 @@ def post_controllable_action_order(request, fpf_id):
         return Response(status=status.HTTP_403_FORBIDDEN)
 
     set_controllable_action_order(request.data)
+
+    return Response(data={'success': ''}, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def clear_action_queue(request, fpf_id: str):
+    if not is_admin(request.user, get_organization_by_fpf_id(fpf_id)):
+        return Response(status=status.HTTP_403_FORBIDDEN)
+
+    get_clear_action_queue(fpf_id)
 
     return Response(data={'success': ''}, status=status.HTTP_200_OK)
