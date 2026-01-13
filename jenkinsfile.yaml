@@ -39,7 +39,6 @@ pipeline {
         configFileProvider([configFile(fileId: 'kubectl-config',
         variable: 'KUBE_CONFIG')]) {
         sh '''
-           kubectl --token=${TOKEN} --server="${KUBERNETES_SERVER}" --insecure-skip-tls-verify -n farminsight-dev get pods
            kubectl --kubeconfig=${KUBE_CONFIG} -n farminsight-dev rollout restart deployment farminsight-dashboard-backend-dev
            '''
         }
