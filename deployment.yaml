@@ -48,7 +48,7 @@ spec:
           items:
             - key: oidc.key
               path: oidc.key
-      - name: farminsight-backend-sqlite-pv
+      - name: farminsight-backend-dev-sqlite-pv
         flexVolume:
           driver: "fstab/cifs"
           fsType: "cifs"
@@ -57,7 +57,7 @@ spec:
           options:
             networkPath: "//10.0.0.200/Cluster_Storage/Applications/Farminsight-Dev/Backend/Database"
             mountOptions: "dir_mode=0755,file_mode=0755,vers=2.0,nobrl"
-      - name: farminsight-backend-image-pv
+      - name: farminsight-backend-dev-image-pv
         flexVolume:
           driver: "fstab/cifs"
           fsType: "cifs"
