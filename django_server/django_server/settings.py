@@ -238,8 +238,8 @@ keep the old userprofile records intact on migration.
 """
 OAUTH2_PROVIDER = {
     "OIDC_ENABLED": True,
-    "OIDC_ISS_ENDPOINT": env("OIDC_ISS_ENDPOINT", default="http://127.0.0.1:8000"),
-    "OIDC_RSA_PRIVATE_KEY": open(os.path.join(BASE_DIR, "oidc.key")).read(),
+    "OIDC_ISS_ENDPOINT": env("OIDC_ISS_ENDPOINT", default="http://localhost:8000"),
+    "OIDC_RSA_PRIVATE_KEY": open(os.path.join(BASE_DIR, "rsa", "oidc.key")).read(),
     "SCOPES": {"openid": ""},
     #'RESOURCE_SERVER_INTROSPECTION_URL': 'https://development-isse-identityserver.azurewebsites.net/connect/introspect',
     #'RESOURCE_SERVER_INTROSPECTION_CREDENTIALS': ('interactive', ''),
