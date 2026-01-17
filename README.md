@@ -124,7 +124,7 @@ The backend sends notifications using a Matrix server. To enable this, add your 
 Example for `.env.dev`:
 ```
 MATRIX_HOMESERVER=https://matrix.org
-MATRIX_USER_ID=@username:homeserver.org
+MATRIX_USER=@username:homeserver.org
 MATRIX_PASSWORD=password
 ```
 
