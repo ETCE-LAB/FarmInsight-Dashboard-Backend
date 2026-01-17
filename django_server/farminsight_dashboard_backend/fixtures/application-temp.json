@@ -1,0 +1,22 @@
+[
+  {
+    "model": "farminsight_dashboard_backend.userprofile",
+    "pk": 1,
+    "fields": {
+      "password": "pbkdf2_sha256$870000$3Xxxp4mtzcIcpDGDEE7RH0$7cYTKti6DK9TJIMqDFb8zpXHLbohSBpaDTO7NSrKDbo=",
+      "last_login": null,
+      "is_superuser": true,
+      "username": "dev_admin",
+      "first_name": "",
+      "last_name": "",
+      "email": "dev_admin@does-not-exist.com",
+      "is_staff": true,
+      "is_active": true,
+      "date_joined": "2025-03-24T10:28:58.783Z",
+      "name": "",
+      "systemRole": "admin",
+      "groups": [],
+      "user_permissions": []
+    }
+  }
+]
