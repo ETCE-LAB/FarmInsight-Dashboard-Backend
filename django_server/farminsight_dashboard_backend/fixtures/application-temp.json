@@ -3,7 +3,7 @@
     "model": "farminsight_dashboard_backend.userprofile",
     "pk": 1,
     "fields": {
-      "password": "pbkdf2_sha256$870000$3Xxxp4mtzcIcpDGDEE7RH0$7cYTKti6DK9TJIMqDFb8zpXHLbohSBpaDTO7NSrKDbo=",
+      "password": "pbkdf2_sha256$870000$QK38wcwpugRSRL8pkEPx81$trR/qGqaF79VHkvBfeTW0w8NL5AJGr9+7xQ8LTvIq3A=",
       "last_login": null,
       "is_superuser": true,
       "username": "dev_admin",
