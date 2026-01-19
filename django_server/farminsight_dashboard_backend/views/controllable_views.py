@@ -9,7 +9,7 @@ from farminsight_dashboard_backend.services import get_fpf_by_id, get_organizati
     create_controllable_action, \
     delete_controllable_action, get_controllable_action_by_id, get_organization_by_controllable_action_id, \
     set_is_automated, is_member, update_controllable_action, get_or_create_hardware, \
-    set_controllable_action_order, execute_action, get_actions, get_clear_action_queue
+    set_controllable_action_order, execute_action, get_actions, get_clear_action_queue, get_action_queue_entry_for_fpf
 
 logger = get_logger()
 
@@ -21,8 +21,8 @@ class ControllableActionView(views.APIView):
         if not is_admin(request.user, get_organization_by_fpf_id(fpf_id)):
             return Response(status=status.HTTP_403_FORBIDDEN)
 
-        serializer = get_actions(fpf_id)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        data = get_actions(fpf_id)
+        return Response(data, status=status.HTTP_200_OK)
 
     def post(self, request):
         """
@@ -75,14 +75,13 @@ class ControllableActionView(views.APIView):
         if not is_admin(request.user, get_organization_by_controllable_action_id(controllable_action_id)):
             return Response(status=status.HTTP_403_FORBIDDEN)
 
-        # TODO remove the trigger from any schedules or queues
-
         controllable_action = get_controllable_action_by_id(controllable_action_id)
+        name = controllable_action.name
         fpf_id = controllable_action.FPF_id
 
         delete_controllable_action(controllable_action)
 
-        logger.info("Controllable action deleted successfully", extra={'resource_id': fpf_id})
+        logger.info(f"Controllable action '{name}' deleted successfully", extra={'resource_id': fpf_id})
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -102,15 +101,13 @@ def execute_controllable_action(request, controllable_action_id, trigger_id):
         return Response(status=status.HTTP_403_FORBIDDEN)
 
     action = get_controllable_action_by_id(controllable_action_id)
-    execute_action(str(action.FPF_id), controllable_action_id, trigger_id)
+    # THIS actually runs the action on the FPF!
+    data = execute_action(str(action.FPF_id), controllable_action_id, trigger_id)
 
-    # keeping the state changes here for now so the actions loaded for the frontend is up to date
+    # keeping the state changes mirrored on the backend here for now so the actions loaded for the frontend is up to date
+    # else we'd need to always load all action data from the FPF (could totally do that, but not rn)
     if trigger_id == "auto": # The user set the controllable action to automatic
         set_is_automated(controllable_action_id, True)
-        # Check if the trigger for the affected action can trigger and process the queue
-        # get trigger type and refresh the creation
-        #create_auto_triggered_actions_in_queue(controllable_action_id)
-
     else: # The user activated a manual trigger
         # Check if the action is already on manual mode and the current active action is the same one.
         # In this case, the action goes back to auto mode as the user deactivated the manual trigger.
@@ -121,19 +118,14 @@ def execute_controllable_action(request, controllable_action_id, trigger_id):
         # Completely new action
         if active_state is None:
             set_is_automated(controllable_action_id, False)
-            #create_manual_triggered_action_in_queue(controllable_action_id, trigger_id)
-
-        #if active_state is not None and get_controllable_action_by_id(controllable_action_id).isAutomated == False and (active_state.trigger.id is None or active_state.trigger.id == trigger_id):
         elif active_state is not None and (get_controllable_action_by_id(controllable_action_id).isAutomated == False and str(active_state.trigger.id) == trigger_id):
             set_is_automated(controllable_action_id, True)
-            #process_action_queue()
 
         # The user selected a new manual trigger, different from the current active state
         else:
             set_is_automated(controllable_action_id, False)
-            #create_manual_triggered_action_in_queue(controllable_action_id, trigger_id)
 
-    return Response(data={'success': ''}, status=status.HTTP_200_OK)
+    return Response(data=data, status=status.HTTP_200_OK)
 
 
 @api_view(['POST'])
@@ -156,3 +148,13 @@ def clear_action_queue(request, fpf_id: str):
     get_clear_action_queue(fpf_id)
 
     return Response(data={'success': ''}, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_action_queue_entry(request, fpf_id: str, entry_id: str):
+    if not is_admin(request.user, get_organization_by_fpf_id(fpf_id)):
+        return Response(status=status.HTTP_403_FORBIDDEN)
+
+    data = get_action_queue_entry_for_fpf(fpf_id, entry_id)
+    return Response(data=data, status=status.HTTP_200_OK)

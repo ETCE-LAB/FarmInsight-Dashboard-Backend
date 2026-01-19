@@ -48,6 +48,7 @@ from farminsight_dashboard_backend.views import (
     post_userprofile_active_status, forgot_password_view, reset_password_view, get_all_organizations, post_image,
     get_all_hardware, clear_action_queue
 )
+from farminsight_dashboard_backend.views.controllable_views import get_action_queue_entry
 
 urlpatterns = [
     path('userprofiles', get_userprofile, name='get_userprofile'),
@@ -118,6 +119,7 @@ urlpatterns = [
 
     path('action-queue/<str:fpf_id>', get_action_queue, name='get_action_queue'),
     path('action-queue/clear/<str:fpf_id>', clear_action_queue, name='clear_action_queue'),
+    path('action-queue/<str:fpf_id>/<str:entry_id>', get_action_queue_entry, name='get_action_queue_entry'),
 
     path('locations', post_location, name='post_location'),
     path('locations/<str:location_id>', LocationView.as_view(), name='location_operations'),

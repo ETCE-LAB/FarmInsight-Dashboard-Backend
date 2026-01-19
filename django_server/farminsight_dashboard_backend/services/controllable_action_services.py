@@ -8,27 +8,6 @@ from farminsight_dashboard_backend.serializers import ControllableActionSerializ
 from .fpf_connection_services import post_action, put_action, delete_action
 
 
-def get_actions(fpf_id: str) -> ControllableActionSerializer:
-    actions = ControllableAction.objects.filter(FPF_id=fpf_id)
-    return ControllableActionSerializer(actions, many=True)
-
-
-def get_active_controllable_action_by_id(controllable_action_id:str) -> ControllableAction:
-    """
-    Get active controllable_action by id
-    :param controllable_action_id:
-    :return: ControllableAction
-    :throws: NotFoundException
-    """
-    try:
-        controllable_action =  ControllableAction.objects.get(id=controllable_action_id)
-        if not controllable_action.isActive:
-            raise NotFoundException(f'Controllable Action is not active.')
-        return controllable_action
-    except ControllableAction.DoesNotExist:
-        raise NotFoundException(f'Controllable Action with id: {controllable_action_id} was not found.')
-
-
 def get_controllable_action_by_id(controllable_action_id:str) -> ControllableAction:
     """
     Get controllable_action by id

@@ -10,7 +10,7 @@ from farminsight_dashboard_backend.services.action_trigger_services import updat
 from farminsight_dashboard_backend.utils import get_logger
 from farminsight_dashboard_backend.services import get_fpf_by_id, \
     get_organization_by_fpf_id, is_admin, create_action_trigger, get_action_trigger, is_member, \
-    get_organization_by_controllable_action_id
+    get_organization_by_controllable_action_id, delete_action_trigger
 
 logger = get_logger()
 
@@ -59,4 +59,13 @@ class ActionTriggerView(APIView):
         if action_trigger is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        return Response(ActionTriggerSerializer(action_trigger).data)
+        return Response(ActionTriggerSerializer(action_trigger).data, status=status.HTTP_200_OK)
+
+    def delete(self, request, action_trigger_id):
+        action_trigger = get_action_trigger(action_trigger_id)
+
+        if action_trigger is None:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        data = delete_action_trigger(str(action_trigger.action.FPF_id), str(action_trigger.id))
+        return Response(data=data, status=status.HTTP_200_OK)
