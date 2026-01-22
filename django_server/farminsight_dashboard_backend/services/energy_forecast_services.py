@@ -91,20 +91,30 @@ def get_forecast_generation(fpf_id: str) -> Dict[str, List[Dict[str, Any]]]:
                 forecasts = data.get('forecasts', [])
 
                 # Process each forecast in the model's data
+                # Only process "Battery State of Charge" forecast, not solar
                 for forecast in forecasts:
+                    forecast_name = forecast.get('name', '').lower()
+                    
+                    # Only process battery SoC data for the graph
+                    if 'battery' not in forecast_name and 'soc' not in forecast_name:
+                        continue
+                    
                     values = forecast.get('values', [])
 
                     for value_set in values:
                         case_name = value_set.get('name', '').lower().replace('-', '_').replace(' ', '_')
                         value_list = value_set.get('value', [])
 
-                        # Map case names to our standard keys
-                        if 'best' in case_name:
+                        # Map AI Backend scenario names to our standard keys
+                        # AI Backend uses: expected, optimistic, pessimistic
+                        if 'optimistic' in case_name or 'best' in case_name:
                             target_key = 'best_case'
-                        elif 'worst' in case_name:
+                        elif 'pessimistic' in case_name or 'worst' in case_name:
                             target_key = 'worst_case'
-                        else:
+                        elif 'expected' in case_name:
                             target_key = 'expected'
+                        else:
+                            target_key = 'expected'  # Default fallback
 
                         for v in value_list:
                             result[target_key].append({
@@ -212,15 +222,40 @@ def get_forecast_consumption(fpf_id: str, hours_ahead: int = 24) -> List[Dict[st
 def get_energy_graph_data(fpf_id: str, hours_back: int = 12, hours_ahead: int = 24) -> Dict[str, Any]:
     """
     Get complete graph data for the energy dashboard.
+    Returns battery_soc forecast data in the format expected by the Frontend.
 
     :param fpf_id: UUID of the FPF
     :param hours_back: Hours of historical data to include
     :param hours_ahead: Hours of forecast data to include
-    :return: Complete graph data dict
+    :return: Complete graph data dict with battery_soc and battery_max_wh
     """
+    from farminsight_dashboard_backend.services.energy_decision_services import get_fpf_energy_config
+    
+    config = get_fpf_energy_config(fpf_id)
+    battery_max_wh = config['battery_max_wh']
+    
+    # Get forecast generation data (expected, worst_case, best_case)
+    forecast_data = get_forecast_generation(fpf_id)
+    
+    # Transform to battery_soc format expected by Frontend
+    # Frontend expects: { timestamp: string, value_wh: number }
+    battery_soc = {
+        "expected": [],
+        "worst_case": [],
+        "best_case": []
+    }
+    
+    for key in ["expected", "worst_case", "best_case"]:
+        for dp in forecast_data.get(key, []):
+            battery_soc[key].append({
+                "timestamp": dp.get("timestamp"),
+                "value_wh": dp.get("value_watts", 0)  # Treat as Wh for battery capacity
+            })
+    
     return {
+        "battery_soc": battery_soc,
+        "battery_max_wh": battery_max_wh,
+        # Also include original data for backwards compatibility
         "historical_consumption": get_historical_consumption(fpf_id, hours_back),
-        "forecast_generation": get_forecast_generation(fpf_id),
         "forecast_consumption": get_forecast_consumption(fpf_id, hours_ahead)
     }
-
