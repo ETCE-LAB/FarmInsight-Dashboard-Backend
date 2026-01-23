@@ -74,8 +74,10 @@ async def websocket_stream(livestream_url: str,
                 )
 
             last_time = now
-
+    except Exception as e:
+        logger.error(f"Error in websocket_stream: {e}")
     finally:
+        logger.info(f"Releasing VideoCapture for stream {livestream_url}")
         await loop.run_in_executor(None, cap.release)
 
 
