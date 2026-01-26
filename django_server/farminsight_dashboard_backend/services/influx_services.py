@@ -154,33 +154,41 @@ class InfluxDBManager:
             # Build the filter part of the query for multiple sensors
             sensor_filter = " or ".join([f'r["sensorId"] == "{sensor_id}"' for sensor_id in sensor_ids])
 
+            #Updated Query: Null Values are now "stored" via the "isMissing" Field
             query = (
                 f'from(bucket: "{fpf_id}") '
                 f'|> range(start: {from_date}, stop: {to_date}) '
-                f'|> filter(fn: (r) => r["_measurement"] == "SensorData" and ({sensor_filter}))'
+                f'|> filter(fn: (r) => r["_measurement"] == "SensorData" and ({sensor_filter})) '
+                f'|> filter(fn: (r) => r["_field"] == "value" or r["_field"] == "isMissing") '
+                f'|> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value") '
+                f'|> keep(columns: ["_time", "sensorId", "value", "isMissing"]) '
+                f'|> sort(columns: ["_time"])'
             )
 
-            result = query_api.query(org=self.influxdb_settings['org'], query=query)
+            result = query_api.query(org=self.influxdb_settings["org"], query=query)
 
-            # Process and organize results by sensor ID
-            measurements = {sensor_id: [] for sensor_id in sensor_ids}
+            measurements = {str(sensor_id): [] for sensor_id in sensor_ids}
+            #Magic to convert isMissing to value=NUll
             for table in result:
                 for record in table.records:
-                    sensor_id = record.values["sensorId"]
+                    sensor_id = str(record.values.get("sensorId"))
+
+                    is_missing = record.values.get("isMissing", False)
+                    value = None if is_missing else record.values.get("value")
+
                     measurements[sensor_id].append({
                         "measuredAt": record.get_time().isoformat(),
-                        "value": record.get_value()
+                        "value": value
                     })
 
-        except requests.exceptions.ConnectionError as e:
+            return measurements
+
+        except requests.exceptions.ConnectionError:
             raise InfluxDBNoConnectionException("Unable to connect to InfluxDB.")
-
-
         except Exception as e:
             self.client = None
             raise InfluxDBQueryException(str(e))
 
-        return measurements
 
     @_retry_connection
     def fetch_latest_sensor_measurements(self, fpf_id: str, sensor_ids: list) -> dict:
@@ -237,13 +245,27 @@ class InfluxDBManager:
 
             points = []
             for measurement in measurements:
-                point = (
-                    Point("SensorData")
-                    .tag("sensorId", str(sensor_id))
-                    .field("value", float(measurement['value']))
-                    .time(measurement['measuredAt'], WritePrecision.NS)
-                )
+                # This makes sure that None values are written as 0.0 in InfluxDB
+                # So we dont "loose" the timestamps of missing measurements
+                # InfluxDB does not support null fields
+                if measurement["value"] is None:
+                    point = (
+                        Point("SensorData")
+                        .tag("sensorId", str(sensor_id))
+                        .field("value", float(0.0))
+                        .field("isMissing", True)
+                        .time(measurement['measuredAt'], WritePrecision.NS)
+                    )
+                else:
+                    point = (
+                        Point("SensorData")
+                        .tag("sensorId", str(sensor_id))
+                        .field("value", float(measurement['value']))
+                        .field("isMissing", False)
+                        .time(measurement['measuredAt'], WritePrecision.NS)
+                    )
                 points.append(point)
+
             write_api.write(bucket=fpf_id, record=points)
 
         except Exception as e:
