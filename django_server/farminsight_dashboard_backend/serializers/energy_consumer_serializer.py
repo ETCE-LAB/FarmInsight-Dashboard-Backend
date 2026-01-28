@@ -30,6 +30,8 @@ class EnergyConsumerSerializer(serializers.ModelSerializer):
             'consumptionWatts',
             'priority',
             'shutdownThreshold',
+            'forecastShutdownThreshold',
+            'forecastBufferDays',
             'dependencyIds',
             'sensorId',
             'controllableActionId',
@@ -44,8 +46,11 @@ class EnergyConsumerDetailSerializer(serializers.ModelSerializer):
     """
     Detailed serializer including full dependency information and linked sensor/action
     """
+    dependencyIds = serializers.SerializerMethodField()
     dependencies = serializers.SerializerMethodField()
+    sensorId = serializers.SerializerMethodField()
     sensor = serializers.SerializerMethodField()
+    controllableActionId = serializers.SerializerMethodField()
     controllableAction = serializers.SerializerMethodField()
 
     class Meta:
@@ -56,14 +61,22 @@ class EnergyConsumerDetailSerializer(serializers.ModelSerializer):
             'consumptionWatts',
             'priority',
             'shutdownThreshold',
+            'forecastShutdownThreshold',
+            'forecastBufferDays',
+            'dependencyIds',
             'dependencies',
+            'sensorId',
             'sensor',
+            'controllableActionId',
             'controllableAction',
             'isActive',
             'createdAt',
             'updatedAt',
         ]
         read_only_fields = ['id', 'createdAt', 'updatedAt']
+
+    def get_dependencyIds(self, obj):
+        return [str(dep.id) for dep in obj.dependencies.all()]
 
     def get_dependencies(self, obj):
         return [{
@@ -72,8 +85,13 @@ class EnergyConsumerDetailSerializer(serializers.ModelSerializer):
             'consumptionWatts': dep.consumptionWatts,
             'priority': dep.priority,
             'shutdownThreshold': dep.shutdownThreshold,
+            'forecastShutdownThreshold': dep.forecastShutdownThreshold,
+            'forecastBufferDays': dep.forecastBufferDays,
             'isActive': dep.isActive
         } for dep in obj.dependencies.all()]
+
+    def get_sensorId(self, obj):
+        return str(obj.sensor.id) if obj.sensor else None
 
     def get_sensor(self, obj):
         if obj.sensor:
@@ -86,6 +104,9 @@ class EnergyConsumerDetailSerializer(serializers.ModelSerializer):
             }
         return None
 
+    def get_controllableActionId(self, obj):
+        return str(obj.controllableAction.id) if obj.controllableAction else None
+
     def get_controllableAction(self, obj):
         if obj.controllableAction:
             return {
@@ -95,4 +116,3 @@ class EnergyConsumerDetailSerializer(serializers.ModelSerializer):
                 'isAutomated': obj.controllableAction.isAutomated
             }
         return None
-

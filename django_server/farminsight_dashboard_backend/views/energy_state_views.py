@@ -24,7 +24,7 @@ from farminsight_dashboard_backend.services.energy_source_services import (
 from farminsight_dashboard_backend.services.action_queue_services import is_already_enqueued, process_action_queue
 from farminsight_dashboard_backend.action_scripts.grid_connection_action_script import GridConnectionActionScript
 from farminsight_dashboard_backend.serializers.energy_consumer_serializer import EnergyConsumerDetailSerializer
-from farminsight_dashboard_backend.serializers.energy_source_serializer import EnergySourceSerializer
+from farminsight_dashboard_backend.serializers.energy_source_serializer import EnergySourceSerializer, EnergySourceDetailSerializer
 from farminsight_dashboard_backend.utils import get_logger
 
 
@@ -241,7 +241,7 @@ def get_energy_dashboard(request, fpf_id: str):
                 "count": len(consumers)
             },
             "sources": {
-                "list": EnergySourceSerializer(sources, many=True).data,
+                "list": EnergySourceDetailSerializer(sources, many=True).data,
                 "total_available_watts": get_total_available_power_by_fpf_id(fpf_id),
                 "current_output_watts": get_current_power_output_by_fpf_id(fpf_id),
                 "count": len(sources)

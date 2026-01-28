@@ -38,7 +38,9 @@ class EnergySourceDetailSerializer(serializers.ModelSerializer):
     """
     Detailed serializer including linked sensor/action information
     """
+    sensorId = serializers.SerializerMethodField()
     sensor = serializers.SerializerMethodField()
+    controllableActionId = serializers.SerializerMethodField()
     controllableAction = serializers.SerializerMethodField()
 
     class Meta:
@@ -50,13 +52,18 @@ class EnergySourceDetailSerializer(serializers.ModelSerializer):
             'maxOutputWatts',
             'currentOutputWatts',
             'weatherDependent',
+            'sensorId',
             'sensor',
+            'controllableActionId',
             'controllableAction',
             'isActive',
             'createdAt',
             'updatedAt',
         ]
         read_only_fields = ['id', 'createdAt', 'updatedAt']
+
+    def get_sensorId(self, obj):
+        return str(obj.sensor.id) if obj.sensor else None
 
     def get_sensor(self, obj):
         if obj.sensor:
@@ -68,6 +75,9 @@ class EnergySourceDetailSerializer(serializers.ModelSerializer):
                 'isActive': obj.sensor.isActive
             }
         return None
+
+    def get_controllableActionId(self, obj):
+        return str(obj.controllableAction.id) if obj.controllableAction else None
 
     def get_controllableAction(self, obj):
         if obj.controllableAction:
