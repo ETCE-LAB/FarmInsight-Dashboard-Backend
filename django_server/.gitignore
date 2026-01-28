@@ -190,6 +190,6 @@ fabric.properties
 # idea folder, uncomment if you don't need it
 # .idea
 
-db.sqlite3
+../db.sqlite3
 
 oidc.key
