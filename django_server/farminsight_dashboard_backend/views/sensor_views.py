@@ -118,7 +118,7 @@ class SensorView(APIView):
         update_sensor_payload = {key: value for key, value in data.items() if key != "connection"}
         sensor = update_sensor(sensor_id, update_sensor_payload)
 
-        logger.info(f"Sensor '{sensor.name}' updated by user '{request.user.name}'", extra={'resource_id': sensor_id})
+        logger.info(f"Sensor '{sensor.get('name')}' updated by user '{request.user.name}'", extra={'resource_id': sensor_id})
 
         return Response(data, status=status.HTTP_200_OK)
 
