@@ -1,3 +1,4 @@
+import cv2
 import asyncio
 import base64
 from typing import Optional
@@ -17,7 +18,7 @@ async def websocket_stream(livestream_url: str,
     """
     loop = asyncio.get_event_loop()
     channel_layer = get_channel_layer()
-    frame_interval = 1.0 / 30
+    frame_interval = 1.0 / 2
 
     # open VideoCapture in the Executor
     cap = await loop.run_in_executor(None, cv2.VideoCapture, livestream_url)
@@ -72,7 +73,7 @@ async def websocket_stream(livestream_url: str,
                     groupname,
                     {"type": "camera_frame", "frame_data": b64}
                 )
-
+                #logger.info("Livestream frame sent")
             last_time = now
     except Exception as e:
         logger.error(f"Error in websocket_stream: {e}")

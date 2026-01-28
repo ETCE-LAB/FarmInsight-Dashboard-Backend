@@ -14,12 +14,12 @@ logger = get_logger()
 
 
 class FpfView(views.APIView):
-    def get_permissions(self):
-        if self.request.method == 'POST':
-            return [IsAuthenticated()]
-        elif self.request.method == 'GET':
-            return [AllowAny()]  # No authentication required for GET
-        return super().get_permissions()
+    #def get_permissions(self):
+    #    if self.request.method == 'POST':
+    #        return [IsAuthenticated()]
+    #    elif self.request.method == 'GET':
+    #        return [AllowAny()]  # No authentication required for GET
+    #    return super().get_permissions()
 
     def put(self, request, fpf_id):
         """

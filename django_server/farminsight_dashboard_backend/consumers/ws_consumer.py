@@ -72,7 +72,6 @@ class CameraLivestreamConsumer(AsyncWebsocketConsumer):
                     message=f"{e}",
                     logLevel='INFO',
                 )
-                return
 
             # Start of streaming task (if not already started)
             await WebsocketStreamingManager.add_client(self.room_name, livestream_url, self.room_group_name)
@@ -94,6 +93,7 @@ class CameraLivestreamConsumer(AsyncWebsocketConsumer):
 
     async def camera_frame(self, event):
         frame_data = event['frame_data']
+        #logger.info("Livestream frame forwarded to client")
         await self.send(text_data=json.dumps({'frame_data': frame_data}))
 
 
@@ -112,17 +112,11 @@ class WebsocketStreamingManager:
     @classmethod
     async def add_client(cls, camera_id: str, livestream_url: str, group_name: str, max_fps: int = 5):
         async with cls._lock:
+
             entry = cls._streams.get(camera_id)
             if entry:
                 entry['clients'] += 1
                 return
-            
-            # New stream starting - Turn ON Smart Plug
-            try:
-                await sync_to_async(trigger_camera_plug)(camera_id, "On")
-            except Exception as e:
-                logger.error(f"Failed to turn on camera plug: {e}")
-
             stop_event = asyncio.Event()
             task = asyncio.create_task(websocket_stream(livestream_url, group_name, max_fps=max_fps, stop_event=stop_event))
 
@@ -147,12 +141,6 @@ class WebsocketStreamingManager:
             if entry['clients'] <= 0:
                 # Stop the streaming task
                 entry['stop_event'].set()
-                
-                # Stream stopping - Turn OFF Smart Plug
-                try:
-                    await sync_to_async(trigger_camera_plug)(camera_id, "Off")
-                except Exception as e:
-                    logger.error(f"Failed to turn off camera plug: {e}")
 
     @classmethod
     async def _cleanup(cls, camera_id: str):

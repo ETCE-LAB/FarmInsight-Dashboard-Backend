@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: farminsight-rsa
+data:
+  oidc.key: |
+       stuff

@@ -10,7 +10,7 @@ from farminsight_dashboard_backend.utils import get_logger
 logger = get_logger()
 
 class MembershipView(APIView):
-    permission_classes = [IsAuthenticated]
+    #permission_classes = [IsAuthenticated]
 
     def post(self, request):
         """

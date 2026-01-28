@@ -45,7 +45,7 @@ class OrganizationView(APIView):
 
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+#@permission_classes([IsAuthenticated])
 def post_organization(request):
     org = create_organization(request.data, request.user)
     logger.info(f"Organization '{org.data.get('name')}' created by user '{request.user.name}'", extra={'resource_id': org.data.get('id')})
@@ -53,7 +53,7 @@ def post_organization(request):
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+#@permission_classes([IsAuthenticated])
 def get_own_organizations(request):
     memberships = get_memberships(request.user)
     data = []

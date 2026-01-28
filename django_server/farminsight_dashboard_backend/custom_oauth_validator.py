@@ -22,7 +22,8 @@ class CustomOAuth2Validator(OAuth2Validator):
     def _get_token_from_authentication_server(
             self, token, introspection_url, introspection_token, introspection_credentials
     ):
-        """Use external introspection endpoint to "crack open" the token.
+        """
+        Use external introspection endpoint to "crack open" the token.
         :param introspection_url: introspection endpoint URL
         :param introspection_token: Bearer token
         :param introspection_credentials: Basic Auth credentials (id,secret)
@@ -35,8 +36,8 @@ class CustomOAuth2Validator(OAuth2Validator):
         If the resulting access_token identifies a username (e.g. Authorization Code grant), add
         that user to the UserModel. Also cache the access_token up until its expiry time or a
         configured maximum time.
-
         """
+
         headers = None
         if introspection_token:
             headers = {"Authorization": "Bearer {}".format(introspection_token)}

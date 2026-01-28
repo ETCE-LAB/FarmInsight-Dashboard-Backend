@@ -16,7 +16,7 @@ from farminsight_dashboard_backend.utils import get_logger
 logger = get_logger()
 
 class CameraView(views.APIView):
-    permission_classes = [IsAuthenticated]
+    #permission_classes = [IsAuthenticated]
 
     def get(self, request, camera_id):
         """

@@ -28,7 +28,12 @@ SECRET_KEY = 'django-insecure-j_qnae2dq2!wltq1%ca7gku^ol8o7^t9-1xg5)gjw*1kcl)!d8
 env = environ.Env()
 
 # Development-specific environment variables
-environ.Env.read_env(os.path.join(BASE_DIR, '.env.dev'))
+dev_env_path = BASE_DIR / "environment" / ".env.dev"
+if os.path.exists(dev_env_path):
+    environ.Env.read_env(dev_env_path)
+
+# SECURITY WARNING: keep the secret key used in production secret!
+SECRET_KEY = env("SECRET_KEY")
 
 INFLUXDB_CLIENT_SETTINGS = {
     'url': env('INFLUXDB_URL'),
@@ -37,20 +42,19 @@ INFLUXDB_CLIENT_SETTINGS = {
 }
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = env("DEBUG") == "True"
 
-ALLOWED_HOSTS = [
-    '*',
-]
+ALLOWED_HOSTS = env("ALLOWED_HOSTS").split(",")
 
-CSRF_TRUSTED_ORIGINS = [
-    'http://localhost:3000',
-]
+CSRF_TRUSTED_ORIGINS = env("CSRF_TRUSTED_ORIGINS").split(",")
+
+CORS_ALLOWED_ORIGINS = env("CORS_ALLOWED_ORIGINS").split(",")
 
 # Camera snapshot storage config
 MEDIA_URL = '/'
 MEDIA_ROOT = BASE_DIR
-SITE_URL = env("SITE_URL", default="http://127.0.0.1:8000")
+SITE_URL = env("SITE_URL", default="http://farminsight-backend.etce.isse.tu-clausthal.de")
+
 
 # Application definition
 
@@ -80,9 +84,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-CORS_ORIGIN_ALLOW_ALL = True
-
-ROOT_URLCONF = 'django_server.urls'
+ROOT_URLCONF = "django_server.urls"
 
 TEMPLATES = [
     {
@@ -117,9 +119,9 @@ CHANNEL_LAYERS = {
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "database" / "db.sqlite3",
     }
 }
 
@@ -169,6 +171,10 @@ LOGGING = {
             'handlers': ['console', 'db_handler', 'matrix_handler'],
             'level': 'DEBUG',
             'propagate': False,
+        },
+        'django.channels.server': {
+            'handlers': ['console'],
+            'level': 'WARNING',
         }
     },
 }
@@ -234,8 +240,8 @@ keep the old userprofile records intact on migration.
 '''
 OAUTH2_PROVIDER = {
     'OIDC_ENABLED': True,
-    'OIDC_ISS_ENDPOINT': env('OIDC_ISS_ENDPOINT', default='http://127.0.0.1:8000'),
-    'OIDC_RSA_PRIVATE_KEY': open(os.path.join(BASE_DIR, 'oidc.key')).read(),
+    'OIDC_ISS_ENDPOINT': env('OIDC_ISS_ENDPOINT', default='http://localhost:8000'),
+    'OIDC_RSA_PRIVATE_KEY': open(os.path.join(BASE_DIR, 'rsa', 'oidc.key')).read(),
     'SCOPES': {"openid": ''},
     #'RESOURCE_SERVER_INTROSPECTION_URL': 'https://development-isse-identityserver.azurewebsites.net/connect/introspect',
     #'RESOURCE_SERVER_INTROSPECTION_CREDENTIALS': ('interactive', ''),
@@ -248,6 +254,8 @@ REST_FRAMEWORK = {
     ),
     'EXCEPTION_HANDLER': 'farminsight_dashboard_backend.exceptions.custom_exception_handler'
 }
+
+URL_PREFIX = env('URL_PREFIX', default='api/')
 
 # 0 or negative for indefinite duration
 API_KEY_VALIDATION_DURATION_DAYS = env('API_KEY_VALIDATION_DURATION_DAYS', default=30)

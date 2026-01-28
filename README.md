@@ -179,7 +179,7 @@ If you do not have Docker installed, please follow the installation instructions
 
 **Environment File Setup**:
 
-Configure your local environment settings by creating an `.env.dev` file inside the `/django-server/` directory. 
+Configure your local environment settings by creating an `.env.dev` file inside the `/django-server/environment/` directory. 
 This file should contain all necessary environment variables for InfluxDB.
 Example of `.env.dev`:
 ```
@@ -188,6 +188,16 @@ DOCKER_INFLUXDB_INIT_USERNAME=admin
 INFLUXDB_INIT_PASSWORD=your_password
 INFLUXDB_INIT_TOKEN=your_token
 DOCKER_INFLUXDB_INIT_ORG=ETCE-LAB
+
+DEBUG=True
+SECRET_KEY=django-insecure-j_qnae2dq2!wltq1%ca7gku^ol8o7^t9-1xg5)gjw*1kcl)!d8
+
+ALLOWED_HOSTS=localhost,127.0.0.1
+CSRF_TRUSTED_ORIGINS=http://localhost:3000
+CORS_ALLOWED_ORIGINS=http://localhost:3000
+
+RESOURCE_SERVER_INTROSPECTION_URL=https://development-isse-identityserver.azurewebsites.net/connect/introspect
+
 AUTH_SERVICE_URL=URL/connect/token
 REACT_APP_BACKEND_URL=URL
 DEBUG=bool
