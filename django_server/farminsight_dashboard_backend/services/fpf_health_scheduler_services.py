@@ -35,7 +35,6 @@ class FPFHealthScheduler:
             check_all_fpf_health()
         except Exception as e:
             self.logger.error(f"Error running FPF health check: {e}")
-    # ---
 
     def stop(self):
         self.logger.info("Stopping FPF Health Scheduler.")
