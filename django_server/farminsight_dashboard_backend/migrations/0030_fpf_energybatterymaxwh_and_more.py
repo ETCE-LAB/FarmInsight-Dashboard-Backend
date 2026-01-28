@@ -8,7 +8,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('farminsight_dashboard_backend', '0029_fpf_isactive'),
+        ('farminsight_dashboard_backend', '0029_alter_resourcemanagementmodel_options_fpf_isactive_and_more'),
     ]
 
     operations = [
