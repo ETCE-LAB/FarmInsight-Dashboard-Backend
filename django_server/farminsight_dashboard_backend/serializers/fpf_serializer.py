@@ -7,7 +7,8 @@ from .camera_serializer import CameraImageSerializer, CameraSerializer
 from .growing_cycle_serializer import GrowingCycleSerializer
 from .sensor_serializer import SensorDataSerializer, SensorLastValueSerializer
 from .location_serializer import LocationSerializer
-from .resource_management_model_serializer import ResourceManagementModelSerializer, ResourceManagementModelDataSerializer
+from .resource_management_model_serializer import ResourceManagementModelSerializer, \
+    ResourceManagementModelDataSerializer
 
 
 class FPFSerializer(CustomSerializer):
@@ -56,7 +57,7 @@ class FPFSerializer(CustomSerializer):
         raise serializers.ValidationError('Not a valid IP address or URL')
 
     def validate(self, data):
-        if 'organization' in data: # this depends on if there were other errors before
+        if 'organization' in data:  # this depends on if there were other errors before
             fpfs = FPF.objects.filter(name=data['name'], organization=data['organization'])
         else:
             fpfs = FPF.objects.filter(name=data['name'], organization_id=data['organizationId'])
@@ -71,6 +72,7 @@ class FPFFunctionalSerializer(serializers.ModelSerializer):
         source='location',  # Maps to the `location` field in the model
         queryset=Location.objects.all()  # Adjust the queryset as needed
     )
+
     class Meta:
         model = FPF
         read_only_fields = ('id',)
@@ -85,6 +87,25 @@ class FPFTechnicalKeySerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'isPublic']
 
 
+class FPFRmmSensorIdsSerializer(serializers.Serializer):
+    waterSensorId = serializers.CharField(required=False)
+    soilSensorId = serializers.CharField(required=False)
+    tankCapacity = serializers.IntegerField(required=False)
+
+
+class FPFRmmConfigSerializer(serializers.Serializer):
+    rmmActive = serializers.BooleanField(required=False, default=False)
+    rmmSensorConfig = FPFRmmSensorIdsSerializer(required=False)
+
+
+class FPFResourcemanagement(serializers.ModelSerializer):
+    resourceManagementConfig = FPFRmmConfigSerializer()
+
+    class Meta:
+        model = FPF
+        fields = ['resourceManagementConfig']
+
+
 class FPFFullSerializer(serializers.ModelSerializer):
     Sensors = SensorLastValueSerializer(many=True, source='sensors')
     Models = ResourceManagementModelSerializer(many=True, source='models')
@@ -93,6 +114,8 @@ class FPFFullSerializer(serializers.ModelSerializer):
     Location = LocationSerializer(many=False, source='location')
     ControllableAction = ControllableActionSerializer(many=True, source='actions')
     Hardware = HardwareSerializer(many=True, source='hardware')
+
+    resourceManagementConfig = FPFRmmConfigSerializer(required=False)
 
     class Meta:
         model = FPF
@@ -109,7 +132,8 @@ class FPFFullSerializer(serializers.ModelSerializer):
             'ControllableAction',
             'orderIndex',
             'Hardware',
-            'isActive'
+            'isActive',
+            'resourceManagementConfig'
         ]
 
 

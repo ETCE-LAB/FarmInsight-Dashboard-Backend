@@ -8,6 +8,7 @@ from rest_framework.exceptions import ValidationError
 from farminsight_dashboard_backend.exceptions import NotFoundException
 from farminsight_dashboard_backend.models import FPF, Userprofile
 from farminsight_dashboard_backend.serializers import FPFSerializer, FPFPreviewSerializer, FPFFunctionalSerializer
+from farminsight_dashboard_backend.serializers.fpf_serializer import FPFResourcemanagement
 from farminsight_dashboard_backend.utils import generate_random_api_key
 from farminsight_dashboard_backend.services.organization_services import get_organization_by_fpf_id
 from farminsight_dashboard_backend.services.membership_services import get_memberships, is_member
@@ -39,7 +40,8 @@ def create_fpf(data) -> FPFSerializer:
             instance = serializer.instance
             if instance:
                 instance.delete()
-            logger.error(f"Error during post-creation process for FPF '{fpf_name}'. Deleting instance. Error: {api_error}")
+            logger.error(
+                f"Error during post-creation process for FPF '{fpf_name}'. Deleting instance. Error: {api_error}")
             raise api_error
 
         InfluxDBManager.get_instance().sync_fpf_buckets()
@@ -75,7 +77,7 @@ def get_fpf_by_id(fpf_id: str):
     return fpf
 
 
-def is_user_part_of_fpf(fpf_id:str, user:Userprofile) -> bool:
+def is_user_part_of_fpf(fpf_id: str, user: Userprofile) -> bool:
     return is_member(user, get_organization_by_fpf_id(fpf_id))
 
 
@@ -98,7 +100,7 @@ def update_fpf_api_key(fpf_id):
     logger.info(f"FPF '{fpf.name}' received a new API key successfully.")
 
 
-def get_visible_fpf_preview(user: Userprofile=None) -> FPFPreviewSerializer:
+def get_visible_fpf_preview(user: Userprofile = None) -> FPFPreviewSerializer:
     fpfs = set()
     if user:
         memberships = get_memberships(user)
@@ -122,3 +124,15 @@ def set_fpf_order(ids: list[str]) -> FPFSerializer:
     logger.info(f"Successfully updated order for {len(ids)} FPFs.")
 
     return FPFSerializer(items, many=True)
+
+
+def update_fpf_rmm_config(fpf_id: str, data):
+    fpf = FPF.objects.get(id=fpf_id)
+    serializer = FPFResourcemanagement(
+        fpf,
+        data=data,
+        partial=True
+    )
+    serializer.is_valid(raise_exception=True)
+    serializer.save()
+    return serializer

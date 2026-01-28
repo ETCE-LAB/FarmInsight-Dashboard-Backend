@@ -1,8 +1,8 @@
 from .userprofile_views import UserprofileView, get_userprofile
 from .organization_views import post_organization, get_own_organizations, OrganizationView, post_organization_order, get_all_organizations
-from .fpf_views import FpfView, get_fpf_api_key, get_visible_fpf, post_fpf_order
+from .fpf_views import FpfView, get_fpf_api_key, get_visible_fpf, post_fpf_order, put_rmm_sensor_config
 from .measurement_views import MeasurementView
-from .data_views import get_fpf_data, get_sensor_data, get_camera_images, get_weather_forecasts
+from .data_views import get_fpf_data, get_sensor_data, get_camera_images, get_weather_forecasts, get_weather_and_water_status
 from .membership_views import MembershipView
 from .growing_cycle_views import post_growing_cycle, GrowingCycleEditViews, get_growing_cycles, post_growing_cycle_order
 from .sensor_views import SensorView, get_fpf_sensor_types, post_sensor_order
@@ -18,7 +18,7 @@ from .action_trigger_views import post_action_trigger, ActionTriggerView
 from .threshold_views import post_threshold, ThresholdEditViews
 from .utility_views import get_direct_ping
 from .admin_views import get_reset_userprofile_password, get_all_userprofiles, post_userprofile_active_status
-from .resource_management_model_views import ResourceManagementModelView, post_model, ModelParamsView, get_forecasts, set_active_scenario
+from .resource_management_model_views import ResourceManagementModelView, post_model, ModelParamsView, get_forecasts, set_active_scenario, post_model_order
 from .notification_views import get_notifications, post_notification, NotificationView
 from .energy_consumer_views import EnergyConsumerView, post_energy_consumer, get_energy_consumers_by_fpf
 from .energy_source_views import EnergySourceView, post_energy_source, get_energy_sources_by_fpf

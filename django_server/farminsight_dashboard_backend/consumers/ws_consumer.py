@@ -56,7 +56,6 @@ class CameraLivestreamConsumer(AsyncWebsocketConsumer):
 
     async def connect(self):
         try:
-            logger.info("Client connected to CameraLivestreamConsumer")
             self.room_name = self.scope['url_route']['kwargs']['camera_id']
             self.room_group_name = f'camera_livestream_{self.room_name}'
             logger.info(self.room_group_name)
@@ -68,8 +67,11 @@ class CameraLivestreamConsumer(AsyncWebsocketConsumer):
             try:
                 camera = await sync_to_async(get_active_camera_by_id)(self.room_name)
                 livestream_url = camera.livestreamUrl
-            except Exception:
-                logger.info("Client failed to connect to CameraLivestreamConsumer")
+            except Exception as e:
+                await LogMessage.objects.acreate(
+                    message=f"{e}",
+                    logLevel='INFO',
+                )
                 return
 
             # Start of streaming task (if not already started)
@@ -109,9 +111,7 @@ class WebsocketStreamingManager:
 
     @classmethod
     async def add_client(cls, camera_id: str, livestream_url: str, group_name: str, max_fps: int = 5):
-        logger.info(f'New Client for Camera Livestream: {camera_id} ' )
         async with cls._lock:
-
             entry = cls._streams.get(camera_id)
             if entry:
                 entry['clients'] += 1

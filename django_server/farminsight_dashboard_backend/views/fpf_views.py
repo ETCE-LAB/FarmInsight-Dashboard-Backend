@@ -2,6 +2,8 @@ from rest_framework import views, status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
+
+from farminsight_dashboard_backend.services.fpf_services import update_fpf_rmm_config
 from farminsight_dashboard_backend.utils import get_logger
 from farminsight_dashboard_backend.serializers import FPFFullSerializer
 from farminsight_dashboard_backend.services import create_fpf, get_fpf_by_id, update_fpf_api_key, \
@@ -31,7 +33,9 @@ class FpfView(views.APIView):
             return Response(status=status.HTTP_403_FORBIDDEN)
 
         fpf = update_fpf(fpf_id, request.data)
-        logger.info(f"FPF '{fpf.data.get('name')}' updated by user '{request.user.name}'. Changes: {list(request.data.keys())}",extra={'resource_id': fpf_id})
+        logger.info(
+            f"FPF '{fpf.data.get('name')}' updated by user '{request.user.name}'. Changes: {list(request.data.keys())}",
+            extra={'resource_id': fpf_id})
         return Response(fpf.data, status=status.HTTP_200_OK)
 
     def post(self, request):
@@ -40,7 +44,8 @@ class FpfView(views.APIView):
             return Response(status=status.HTTP_403_FORBIDDEN)
 
         serializer = create_fpf(request.data)
-        logger.info(f"FPF '{serializer.data.get('name')}' created by user '{request.user.name}'",extra={'resource_id': serializer.data.get('id')})
+        logger.info(f"FPF '{serializer.data.get('name')}' created by user '{request.user.name}'",
+                    extra={'resource_id': serializer.data.get('id')})
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def get(self, request, fpf_id):
@@ -52,10 +57,11 @@ class FpfView(views.APIView):
             logger.warning(f"Unauthorized attempt to access FPF by user '{request.user.name}'")
             return Response(status=status.HTTP_403_FORBIDDEN)
 
-        if not member: # only show inactive sensors to members
+        if not member:  # only show inactive sensors to members
             data['Sensors'] = [sensor for sensor in data['Sensors'] if sensor['isActive']]
 
         return Response(data, status=status.HTTP_200_OK)
+
 
 @api_view(['GET'])
 def get_fpf_api_key(request, fpf_id):
@@ -67,7 +73,8 @@ def get_fpf_api_key(request, fpf_id):
     :return: 
     """
     update_fpf_api_key(fpf_id)
-    logger.info(f"FPF API key regenerated for FPF '{get_fpf_by_id(fpf_id).name}' by user '{request.user.name}'", extra={'resource_id': fpf_id})
+    logger.info(f"FPF API key regenerated for FPF '{get_fpf_by_id(fpf_id).name}' by user '{request.user.name}'",
+                extra={'resource_id': fpf_id})
     return Response(status=status.HTTP_200_OK)
 
 
@@ -95,4 +102,16 @@ def post_fpf_order(request, org_id):
     serializer = set_fpf_order(request.data)
     logger.info(f"FPF order for organization {org_id} updated by user '{request.user.name}'")
 
+    return Response(data=serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def put_rmm_sensor_config(request, fpf_id):
+    if not is_admin(request.user, get_organization_by_fpf_id(fpf_id)):
+        logger.warning(f"Unauthorized attempt to update RMM sensor names by user '{request.user.name}'")
+        return Response(status=status.HTTP_403_FORBIDDEN)
+
+    serializer = update_fpf_rmm_config(fpf_id, request.data)
+    logger.info(f"RMM sensor names updated by user '{request.user.name}'")
     return Response(data=serializer.data, status=status.HTTP_200_OK)

@@ -1,17 +1,27 @@
 from rest_framework import serializers
-from farminsight_dashboard_backend.models import Threshold, Sensor
+from farminsight_dashboard_backend.models import Threshold, Sensor, ResourceManagementModel
 
 
 class ThresholdSerializer(serializers.ModelSerializer):
     sensorId = serializers.PrimaryKeyRelatedField(
         source='sensor',
-        queryset=Sensor.objects.all()
+        queryset=Sensor.objects.all(),
+        required=False,
+        allow_null=True,
+    )
+
+    # Similarly for resourceManagementModelId -> resourceManagementModel
+    resourceManagementModelId = serializers.PrimaryKeyRelatedField(
+        source='resourceManagementModel',
+        queryset=ResourceManagementModel.objects.all(),
+        required=False,
+        allow_null=True,
     )
 
     class Meta:
         model = Threshold
         read_only_fields = ('id',)
-        fields = ['id', 'lowerBound', 'upperBound', 'color', 'description', 'sensorId']
+        fields = ['id', 'lowerBound', 'upperBound', 'color', 'description', 'sensorId', 'resourceManagementModelId', "thresholdType", "rMMForecastName"]
 
     def validate(self, data):
         lower_bound = data.get('lowerBound')

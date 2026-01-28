@@ -53,8 +53,9 @@ from farminsight_dashboard_backend.views import (
     EnergyConsumerView, post_energy_consumer, get_energy_consumers_by_fpf,
     EnergySourceView, post_energy_source, get_energy_sources_by_fpf,
     get_energy_state, get_energy_dashboard, evaluate_energy_action, get_battery_state,
+    post_model_order, get_weather_and_water_status,
+    put_rmm_sensor_config
 )
-
 urlpatterns = [
     path('userprofiles', get_userprofile, name='get_userprofile'),
     path('userprofiles/<str:identifier>', UserprofileView.as_view(), name='userprofile_operations'),
@@ -82,8 +83,10 @@ urlpatterns = [
     path('sensors/<str:sensor_id>', SensorView.as_view(), name='sensor_operations'),
     path('sensors/types/available/<str:fpf_id>', get_fpf_sensor_types, name='get_fpf_sensor_types'),
     path('sensors/sort-order/<str:fpf_id>', post_sensor_order, name='post_sensor_order'),
-
-
+    path('sensors/<str:location_id>/weather-and-tank-status/<str:fpf_id>', get_weather_and_water_status,
+         name='get_weather_and_tank_status'),
+    path('sensors/<str:fpf_id>/resource-management/rmm-sensor-config', put_rmm_sensor_config,
+         name='put_rmm_sensor_config'),
 
     path('measurements/<str:sensor_id>', MeasurementView.as_view(), name='sensor-measurements'),
 
@@ -147,7 +150,7 @@ urlpatterns = [
     path("models/params", ModelParamsView.as_view(), name="get_resource-params"),
     path('models/<str:model_id>', ResourceManagementModelView.as_view(), name='model_operations'),
     path('models/<str:model_id>/active_scenario', set_active_scenario, name='set_active_scenario'),
-
+    path('models/sort-order/<str:fpf_id>', post_model_order, name='post_model_order'),
 
     path('util/direct-ping/<str:resource_type>/<str:resource_id>', get_direct_ping, name='get_direct_ping'),
 
