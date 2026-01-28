@@ -347,6 +347,55 @@ class InfluxDBManager:
 
         return forecasts
 
+    def fetch_latest_weather_forecast(self, organization_id: str, location_id: str) -> dict:
+        """
+        Fetch the latest weather forecast for today for a given location.
+        Returns a dictionary with weather data including sunshine_duration and wind_speed.
+        
+        :param organization_id: The organization ID (used as bucket name)
+        :param location_id: The location ID
+        :return: Dictionary with weather forecast data for today, or None if not available
+        """
+        try:
+            forecasts = self.fetch_last_weather_forcast(organization_id, location_id)
+            if not forecasts:
+                return None
+            
+            # Find today's forecast
+            today = datetime.now().date()
+            for forecast in forecasts:
+                forecast_date = forecast.get('forecastDate')
+                if forecast_date and forecast_date.date() == today:
+                    return {
+                        'sunshine_duration': float(forecast.get('sunshineDurationSeconds', 0)),
+                        'wind_speed_10m_max': float(forecast.get('windSpeedMax', 0)),
+                        'rain_sum': float(forecast.get('rainMM', 0)),
+                        'temperature_min': float(forecast.get('temperatureMinC', 0)),
+                        'temperature_max': float(forecast.get('temperatureMaxC', 0)),
+                        'precipitation_sum': float(forecast.get('precipitationMM', 0)),
+                        'precipitation_probability_max': float(forecast.get('precipitationProbability', 0)),
+                        'weather_code': forecast.get('weatherCode', ''),
+                    }
+            
+            # If no today forecast, return the first (most recent) forecast
+            if forecasts:
+                forecast = forecasts[0]
+                return {
+                    'sunshine_duration': float(forecast.get('sunshineDurationSeconds', 0)),
+                    'wind_speed_10m_max': float(forecast.get('windSpeedMax', 0)),
+                    'rain_sum': float(forecast.get('rainMM', 0)),
+                    'temperature_min': float(forecast.get('temperatureMinC', 0)),
+                    'temperature_max': float(forecast.get('temperatureMaxC', 0)),
+                    'precipitation_sum': float(forecast.get('precipitationMM', 0)),
+                    'precipitation_probability_max': float(forecast.get('precipitationProbability', 0)),
+                    'weather_code': forecast.get('weatherCode', ''),
+                }
+            
+            return None
+        except Exception as e:
+            self.log.debug(f"Error fetching latest weather forecast: {e}")
+            return None
+
     @_retry_connection
     def fetch_all_weather_forecasts(self, orga_id: str, location_id: str, from_date: str, to_date: str):
         try:
@@ -432,14 +481,14 @@ class InfluxDBManager:
                     "ForecastDate": str(forecast['time']),
                     "rain_sum": float(forecast['rain_sum'] or 0.0),
                     "sunshine_duration": float(forecast['sunshine_duration'] or 0.0),
-                    "weather_code": int(forecast['weather_code']),
+                    "weather_code": int(forecast['weather_code'] or 0),
                     "wind_speed_max": float(forecast['wind_speed_10m_max']),
                     "temperature_min": float(forecast['temperature_2m_min']),
                     "temperature_max": float(forecast['temperature_2m_max']),
                     "sunrise": str(forecast['sunrise']),
                     "sunset": str(forecast['sunset']),
                     "precipitation_sum": float(forecast['precipitation_sum'] or 0),
-                    "precipitation_probability_max": int(forecast['precipitation_probability_max'])
+                    "precipitation_probability_max": int(forecast['precipitation_probability_max'] or 0)
                 }
 
                 forecast_json = json.dumps(forecast_dict)
@@ -546,6 +595,195 @@ class InfluxDBManager:
         except Exception as e:
             self.client = None
             raise InfluxDBQueryException(f"Failed to fetch model forecast: {e}")
+
+
+    @_retry_connection
+    def write_energy_consumption(self, fpf_id: str, consumer_id: str, watts: float, timestamp: str = None):
+        """
+        Writes energy consumption data for a given consumer to InfluxDB.
+        :param fpf_id: The ID of the FPF (used as the bucket name in InfluxDB).
+        :param consumer_id: The ID of the energy consumer.
+        :param watts: Power consumption in watts.
+        :param timestamp: Optional timestamp (ISO format). Defaults to now.
+        """
+        try:
+            write_api = self.client.write_api(write_options=SYNCHRONOUS)
+
+            if timestamp is None:
+                timestamp = timezone.now().isoformat()
+
+            point = (
+                Point("EnergyConsumption")
+                .tag("consumerId", str(consumer_id))
+                .field("watts", float(watts))
+                .time(timestamp, WritePrecision.NS)
+            )
+            write_api.write(bucket=str(fpf_id), record=point)
+
+        except Exception as e:
+            self.client = None
+            raise InfluxDBWriteException(f"Failed to write energy consumption: {e}")
+
+    @_retry_connection
+    def write_energy_production(self, fpf_id: str, source_id: str, watts: float, timestamp: str = None):
+        """
+        Writes energy production data for a given source to InfluxDB.
+        :param fpf_id: The ID of the FPF (used as the bucket name in InfluxDB).
+        :param source_id: The ID of the energy source.
+        :param watts: Power production in watts.
+        :param timestamp: Optional timestamp (ISO format). Defaults to now.
+        """
+        try:
+            write_api = self.client.write_api(write_options=SYNCHRONOUS)
+
+            if timestamp is None:
+                timestamp = timezone.now().isoformat()
+
+            point = (
+                Point("EnergyProduction")
+                .tag("sourceId", str(source_id))
+                .field("watts", float(watts))
+                .time(timestamp, WritePrecision.NS)
+            )
+            write_api.write(bucket=str(fpf_id), record=point)
+
+        except Exception as e:
+            self.client = None
+            raise InfluxDBWriteException(f"Failed to write energy production: {e}")
+
+    @_retry_connection
+    def write_battery_level(self, fpf_id: str, level_wh: float, percentage: float, timestamp: str = None):
+        """
+        Writes battery level data to InfluxDB.
+        :param fpf_id: The ID of the FPF (used as the bucket name in InfluxDB).
+        :param level_wh: Battery level in Wh.
+        :param percentage: Battery percentage (0-100).
+        :param timestamp: Optional timestamp (ISO format). Defaults to now.
+        """
+        try:
+            write_api = self.client.write_api(write_options=SYNCHRONOUS)
+
+            if timestamp is None:
+                timestamp = timezone.now().isoformat()
+
+            point = (
+                Point("BatteryLevel")
+                .field("level_wh", float(level_wh))
+                .field("percentage", float(percentage))
+                .time(timestamp, WritePrecision.NS)
+            )
+            write_api.write(bucket=str(fpf_id), record=point)
+
+        except Exception as e:
+            self.client = None
+            raise InfluxDBWriteException(f"Failed to write battery level: {e}")
+
+    @_retry_connection
+    def fetch_energy_balance(self, fpf_id: str, from_date: str, to_date: str) -> dict:
+        """
+        Fetches energy balance (consumption vs production) for a given FPF and time range.
+        :param fpf_id: The ID of the FPF (bucket name).
+        :param from_date: Start date in ISO 8601 format.
+        :param to_date: End date in ISO 8601 format.
+        :return: Dictionary with consumption and production data.
+        """
+        try:
+            query_api = self.client.query_api()
+
+            # Fetch consumption
+            consumption_query = (
+                f'from(bucket: "{fpf_id}") '
+                f'|> range(start: {from_date}, stop: {to_date}) '
+                f'|> filter(fn: (r) => r["_measurement"] == "EnergyConsumption") '
+                f'|> group() '
+                f'|> aggregateWindow(every: 1h, fn: mean, createEmpty: false)'
+            )
+
+            # Fetch production
+            production_query = (
+                f'from(bucket: "{fpf_id}") '
+                f'|> range(start: {from_date}, stop: {to_date}) '
+                f'|> filter(fn: (r) => r["_measurement"] == "EnergyProduction") '
+                f'|> group() '
+                f'|> aggregateWindow(every: 1h, fn: mean, createEmpty: false)'
+            )
+
+            consumption_result = query_api.query(org=self.influxdb_settings['org'], query=consumption_query)
+            production_result = query_api.query(org=self.influxdb_settings['org'], query=production_query)
+
+            consumption_data = []
+            production_data = []
+
+            for table in consumption_result:
+                for record in table.records:
+                    consumption_data.append({
+                        "timestamp": record.get_time().isoformat(),
+                        "watts": record.get_value()
+                    })
+
+            for table in production_result:
+                for record in table.records:
+                    production_data.append({
+                        "timestamp": record.get_time().isoformat(),
+                        "watts": record.get_value()
+                    })
+
+            # Calculate totals
+            total_consumption_wh = sum(d['watts'] for d in consumption_data) if consumption_data else 0
+            total_production_wh = sum(d['watts'] for d in production_data) if production_data else 0
+
+            return {
+                "fpf_id": fpf_id,
+                "from_date": from_date,
+                "to_date": to_date,
+                "consumption": {
+                    "data": consumption_data,
+                    "total_wh": total_consumption_wh
+                },
+                "production": {
+                    "data": production_data,
+                    "total_wh": total_production_wh
+                },
+                "net_wh": total_production_wh - total_consumption_wh
+            }
+
+        except Exception as e:
+            self.client = None
+            raise InfluxDBQueryException(f"Failed to fetch energy balance: {e}")
+
+    @_retry_connection
+    def fetch_latest_battery_level(self, fpf_id: str) -> dict:
+        """
+        Fetches the most recent battery level for a given FPF.
+        :param fpf_id: The ID of the FPF (bucket name).
+        :return: Dictionary with battery level data or None.
+        """
+        try:
+            query_api = self.client.query_api()
+
+            query = (
+                f'from(bucket: "{fpf_id}") '
+                f'|> range(start: -24h) '
+                f'|> filter(fn: (r) => r["_measurement"] == "BatteryLevel") '
+                f'|> sort(columns: ["_time"], desc: true) '
+                f'|> limit(n: 1)'
+            )
+
+            result = query_api.query(org=self.influxdb_settings['org'], query=query)
+
+            for table in result:
+                for record in table.records:
+                    return {
+                        "timestamp": record.get_time().isoformat(),
+                        "level_wh": record.values.get("level_wh"),
+                        "percentage": record.values.get("percentage")
+                    }
+
+            return None
+
+        except Exception as e:
+            self.client = None
+            raise InfluxDBQueryException(f"Failed to fetch battery level: {e}")
 
 
     def close(self):

@@ -49,10 +49,13 @@ from farminsight_dashboard_backend.views import (
     post_hardware_order, HardwareEditViews, post_hardware, ActionTriggerView, post_fpf_order,
     post_userprofile_active_status, forgot_password_view, reset_password_view, get_all_organizations,
     post_model, ResourceManagementModelView, ModelParamsView, get_forecasts, set_active_scenario,
-    get_notifications, post_notification, NotificationView, post_model_order, get_weather_and_water_status,
+    get_notifications, post_notification, NotificationView,
+    EnergyConsumerView, post_energy_consumer, get_energy_consumers_by_fpf,
+    EnergySourceView, post_energy_source, get_energy_sources_by_fpf,
+    get_energy_state, get_energy_dashboard, evaluate_energy_action, get_battery_state,
+    post_model_order, get_weather_and_water_status,
     put_rmm_sensor_config
 )
-
 urlpatterns = [
     path('userprofiles', get_userprofile, name='get_userprofile'),
     path('userprofiles/<str:identifier>', UserprofileView.as_view(), name='userprofile_operations'),
@@ -160,5 +163,19 @@ urlpatterns = [
     path('notifications', get_notifications, name='get_notifications'),
     path('notifications/create', post_notification, name='post_notification'),
     path('notifications/<str:room_id>', NotificationView.as_view(), name='notification_operations'),
+
+    # Energy Management Routes
+    path('energy-consumers', post_energy_consumer, name='post_energy_consumer'),
+    path('energy-consumers/<str:consumer_id>', EnergyConsumerView.as_view(), name='energy_consumer_operations'),
+    path('energy-consumers/fpf/<str:fpf_id>', get_energy_consumers_by_fpf, name='get_energy_consumers_by_fpf'),
+
+    path('energy-sources', post_energy_source, name='post_energy_source'),
+    path('energy-sources/<str:source_id>', EnergySourceView.as_view(), name='energy_source_operations'),
+    path('energy-sources/fpf/<str:fpf_id>', get_energy_sources_by_fpf, name='get_energy_sources_by_fpf'),
+
+    path('energy-state/<str:fpf_id>', get_energy_state, name='get_energy_state'),
+    path('energy-dashboard/<str:fpf_id>', get_energy_dashboard, name='get_energy_dashboard'),
+    path('energy-action/<str:fpf_id>', evaluate_energy_action, name='evaluate_energy_action'),
+    path('battery-state/<str:fpf_id>', get_battery_state, name='get_battery_state'),
 
 ]
