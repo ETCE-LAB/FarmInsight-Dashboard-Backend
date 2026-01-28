@@ -19,7 +19,13 @@ class FPFSerializer(CustomSerializer):
     locationId = serializers.PrimaryKeyRelatedField(
         source='location',  # Maps this field to the 'location' foreign key in the model
         queryset=Location.objects.all(),
-        allow_null=True,
+        allow_null=False,
+        required=True,
+        error_messages={
+            'required': 'fpf.error.locationRequired',
+            'null': 'fpf.error.locationRequired',
+            'does_not_exist': 'fpf.error.locationNotFound'
+        }
     )
 
     class Meta:
@@ -68,13 +74,41 @@ class FPFSerializer(CustomSerializer):
 class FPFFunctionalSerializer(serializers.ModelSerializer):
     locationId = serializers.PrimaryKeyRelatedField(
         source='location',  # Maps to the `location` field in the model
-        queryset=Location.objects.all()  # Adjust the queryset as needed
+        queryset=Location.objects.all(),
+        allow_null=False,
+        required=True,
+        error_messages={
+            'required': 'fpf.error.locationRequired',
+            'null': 'fpf.error.locationRequired',
+            'does_not_exist': 'fpf.error.locationNotFound'
+        }
     )
 
     class Meta:
         model = FPF
         read_only_fields = ('id',)
         fields = ('id', 'name', 'isPublic', 'sensorServiceIp', 'locationId', 'orderIndex', 'isActive')
+
+    def validate(self, data):
+        """
+        Custom validation with improved error messages for FPF updates.
+        """
+        errors = {}
+        
+        # Check if name is being changed to a duplicate within the same organization
+        if 'name' in data and self.instance:
+            existing = FPF.objects.filter(
+                name=data['name'], 
+                organization=self.instance.organization
+            ).exclude(id=self.instance.id)
+            if existing.exists():
+                # Return i18n key for frontend translation
+                errors['name'] = 'fpf.error.nameTaken'
+        
+        if errors:
+            raise serializers.ValidationError(errors)
+        
+        return data
 
 
 class FPFTechnicalKeySerializer(serializers.ModelSerializer):
