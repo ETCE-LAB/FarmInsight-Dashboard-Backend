@@ -154,6 +154,7 @@ FarmInsight supports integrated resource management for water and energy resourc
 - Configure water tank sensors to monitor fill levels
 - Visual dashboard with tank status and field moisture mapping
 - AI-driven forecasts for water consumption and refill recommendations
+- Best/average/worst-case scenario predictions
 - Automated watering actions via FarmBot integration
 
 #### Energy Management
@@ -180,8 +181,7 @@ For creating custom models, see the documentation in `/docs/ENERGY_MODEL_DOCUMEN
 The backend monitors the health status of all configured FPFs:
 
 - Periodic connectivity checks to FPF backends
-- Status tracking (online/offline) with last-seen timestamps
-- Automatic deactivation of unreachable FPFs
+- Automatic detection of unreachable FPFs
 - Health status visible in the frontend FPF overview
 
 ## Development Setup
