@@ -18,3 +18,5 @@ from .threshold import Threshold
 from .resource_management_model import ResourceManagementModel
 from .action_mapping import ActionMapping
 from .notification import Notification
+from .energy_consumer import EnergyConsumer
+from .energy_source import EnergySource

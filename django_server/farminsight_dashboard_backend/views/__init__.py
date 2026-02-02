@@ -20,3 +20,6 @@ from .utility_views import get_direct_ping
 from .admin_views import get_reset_userprofile_password, get_all_userprofiles, post_userprofile_active_status
 from .resource_management_model_views import ResourceManagementModelView, post_model, ModelParamsView, get_forecasts, set_active_scenario, post_model_order
 from .notification_views import get_notifications, post_notification, NotificationView
+from .energy_consumer_views import EnergyConsumerView, post_energy_consumer, get_energy_consumers_by_fpf
+from .energy_source_views import EnergySourceView, post_energy_source, get_energy_sources_by_fpf
+from .energy_state_views import get_energy_state, get_energy_dashboard, evaluate_energy_action, get_battery_state
