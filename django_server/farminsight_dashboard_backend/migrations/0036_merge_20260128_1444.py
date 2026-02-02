@@ -6,7 +6,6 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('farminsight_dashboard_backend', '0029_alter_resourcemanagementmodel_options_fpf_isactive_and_more'),
         ('farminsight_dashboard_backend', '0035_fpf_resourcemanagementconfig_and_more'),
     ]
 

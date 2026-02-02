@@ -10,9 +10,4 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AddField(
-            model_name='fpf',
-            name='resourceManagementConfig',
-            field=models.JSONField(blank=True, default=dict),
-        ),
     ]
