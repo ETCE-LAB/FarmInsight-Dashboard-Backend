@@ -27,6 +27,27 @@ class FPF(models.Model):
     orderIndex = models.IntegerField(default=get_order_index_default)
     isActive = models.BooleanField(default=True)
     resourceManagementConfig = models.JSONField(default=dict, blank=True)
+    # Energy Management Configuration
+    energyGridConnectThreshold = models.FloatField(
+        default=11.0,
+        help_text="Battery percentage at which to connect to grid"
+    )
+    energyShutdownThreshold = models.FloatField(
+        default=10.0,
+        help_text="Battery percentage at which to shutdown non-critical consumers"
+    )
+    energyWarningThreshold = models.FloatField(
+        default=20.0,
+        help_text="Battery percentage for warning status"
+    )
+    energyBatteryMaxWh = models.FloatField(
+        default=1600.0,
+        help_text="Maximum battery capacity in Wh (default 1.6kWh = 1600Wh)"
+    )
+    energyGridDisconnectThreshold = models.FloatField(
+        default=50.0,
+        help_text="Battery percentage at which to disconnect from grid (when charging complete)"
+    )
 
     class Meta:
         constraints = [

@@ -6,6 +6,12 @@ from .sensor import Sensor
 
 
 class Threshold(models.Model):
+    THRESHOLD_TYPES = [
+        ("sensor", "Sensor"),
+        ("model", "Model"),
+        ("energy", "Energy"),
+    ]
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     lowerBound = models.FloatField(blank=True, null=True)
     upperBound = models.FloatField(blank=True, null=True)
@@ -17,4 +23,6 @@ class Threshold(models.Model):
     rMMForecastName = models.CharField(max_length=128, blank=True)
 
     def __str__(self):
-        return f"{self.sensor.name}: {self.lowerBound} {self.upperBound}  {self.color} {self.description[:10]}"
+        name = self.sensor.name if self.thresholdType == "sensor" else self.resourceManagementModel.name
+        return f"{name}: {self.lowerBound} {self.upperBound} {self.color} {self.description[:10]}"
+
