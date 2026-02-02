@@ -3,3 +3,4 @@ from .typed_action_script import TypedSensor
 from .tapo_p100_action_script import TapoP100SmartPlugActionScriptWithDelay
 from .shelly_plug_s_http_action_script import ShellyPlugHttpActionScript, ShellyPlugMqttActionScript
 from .farmbot_watering_action_script import FarmbotSequenceActionScript
+from .grid_connection_action_script import GridConnectionActionScript, GridConnectionMqttActionScript
