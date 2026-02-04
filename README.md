@@ -370,6 +370,9 @@ This project was developed as part of the Digitalisierungsprojekt at DigitalTech
 - Mattes Knigge
 - Julian Schöpe
 - Marius Peter
+- Paul Golke
+- Niklas Schaumann
+- M. Linke
 
 Project supervision:
 
