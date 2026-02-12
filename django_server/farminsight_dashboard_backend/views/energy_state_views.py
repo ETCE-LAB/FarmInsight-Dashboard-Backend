@@ -14,12 +14,14 @@ from farminsight_dashboard_backend.services.energy_decision_services import (
 )
 from farminsight_dashboard_backend.services.energy_consumer_services import (
     get_energy_consumers_by_fpf_id,
-    get_total_consumption_by_fpf_id
+    get_total_consumption_by_fpf_id,
+    get_live_consumption_watts
 )
 from farminsight_dashboard_backend.services.energy_source_services import (
     get_energy_sources_by_fpf_id,
     get_total_available_power_by_fpf_id,
-    get_current_power_output_by_fpf_id
+    get_current_power_output_by_fpf_id,
+    get_live_output_watts
 )
 from farminsight_dashboard_backend.services.action_queue_services import is_already_enqueued, process_action_queue
 from farminsight_dashboard_backend.action_scripts.grid_connection_action_script import GridConnectionActionScript
@@ -230,6 +232,15 @@ def get_energy_dashboard(request, fpf_id: str):
         # Get all data
         consumers = get_energy_consumers_by_fpf_id(fpf_id)
         sources = get_energy_sources_by_fpf_id(fpf_id)
+
+        # Inject live sensor data into model instances before serialization
+        # so the response contains actual readings instead of DB defaults (0)
+        for consumer in consumers:
+            consumer.consumptionWatts = round(get_live_consumption_watts(consumer))
+
+        for source in sources:
+            source.currentOutputWatts = round(get_live_output_watts(source))
+
         energy_state = get_energy_state_summary(fpf_id, battery_level_wh)
         runtime_hours = estimate_runtime_hours(fpf_id, battery_level_wh)
 
@@ -385,7 +396,13 @@ def get_battery_state(request, fpf_id: str):
 
                 sensor_data = measurements.get(str(battery_source.sensor.id))
                 if sensor_data and 'value' in sensor_data:
-                    battery_level_wh = float(sensor_data['value'])
+                    raw_value = float(sensor_data['value'])
+                    # Handle sensors that report in % instead of Wh
+                    sensor_unit = (battery_source.sensor.unit or '').strip().lower()
+                    if sensor_unit == '%':
+                        battery_level_wh = (raw_value / 100.0) * battery_max_wh
+                    else:
+                        battery_level_wh = raw_value
                     last_updated = sensor_data.get('measuredAt')
             except Exception as e:
                 logger.warning(f"Could not fetch live battery data: {e}")

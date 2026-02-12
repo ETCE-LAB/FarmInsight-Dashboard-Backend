@@ -213,7 +213,13 @@ class EnergyDataCollector:
                     )
                     sensor_data = measurements.get(str(battery.sensor.id))
                     if sensor_data and 'value' in sensor_data:
-                        battery_level_wh = float(sensor_data['value'])
+                        raw_value = float(sensor_data['value'])
+                        # Handle sensors that report in % instead of Wh
+                        sensor_unit = (battery.sensor.unit or '').strip().lower()
+                        if sensor_unit == '%':
+                            battery_level_wh = (raw_value / 100.0) * battery_max_wh
+                        else:
+                            battery_level_wh = raw_value
                 except Exception as e:
                     self.log.warning(f"Could not fetch sensor data for battery {battery.name}: {e}")
 
