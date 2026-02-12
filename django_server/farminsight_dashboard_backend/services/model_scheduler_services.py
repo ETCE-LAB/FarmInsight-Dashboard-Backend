@@ -107,8 +107,8 @@ class ModelScheduler:
             base_url = model.URL.rstrip('/')
             query_params = ResourceManagementModelService.build_model_query_params(model)
             full_url = f"{base_url}/farm-insight{query_params}"
-
-            response = requests.get(full_url, timeout=10)
+            logger.info(f"Requesting forecasts for model {model.name}")
+            response = requests.get(full_url, timeout=300)
             response.raise_for_status()
             data = response.json()
 
