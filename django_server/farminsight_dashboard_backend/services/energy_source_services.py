@@ -114,7 +114,13 @@ def get_live_output_watts(source: EnergySource) -> float:
 
             sensor_data = measurements.get(str(source.sensor.id))
             if sensor_data and 'value' in sensor_data:
-                return min(float(sensor_data['value']), source.maxOutputWatts)
+                raw_value = float(sensor_data['value'])
+                # Handle battery sources where sensor reports in % instead of Wh
+                if source.sourceType == 'battery':
+                    sensor_unit = (source.sensor.unit or '').strip().lower()
+                    if sensor_unit == '%':
+                        raw_value = (raw_value / 100.0) * source.maxOutputWatts
+                return min(raw_value, source.maxOutputWatts)
         except Exception as e:
             logger.warning(f"Could not fetch live output for source {source.name}: {e}")
 
