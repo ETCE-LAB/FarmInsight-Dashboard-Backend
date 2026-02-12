@@ -22,7 +22,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-j_qnae2dq2!wltq1%ca7gku^ol8o7^t9-1xg5)gjw*1kcl)!d8'
+SECRET_KEY = "django-insecure-j_qnae2dq2!wltq1%ca7gku^ol8o7^t9-1xg5)gjw*1kcl)!d8"
 
 # Initialize environment variables
 env = environ.Env()
@@ -36,9 +36,9 @@ if os.path.exists(dev_env_path):
 SECRET_KEY = env("SECRET_KEY")
 
 INFLUXDB_CLIENT_SETTINGS = {
-    'url': env('INFLUXDB_URL'),
-    'token': env('INFLUXDB_INIT_TOKEN'),
-    'org': env('DOCKER_INFLUXDB_INIT_ORG')
+    "url": env("INFLUXDB_URL"),
+    "token": env("INFLUXDB_INIT_TOKEN"),
+    "org": env("DOCKER_INFLUXDB_INIT_ORG"),
 }
 
 # SECURITY WARNING: don't run with debug turned on in production!
@@ -51,53 +51,55 @@ CSRF_TRUSTED_ORIGINS = env("CSRF_TRUSTED_ORIGINS").split(",")
 CORS_ALLOWED_ORIGINS = env("CORS_ALLOWED_ORIGINS").split(",")
 
 # Camera snapshot storage config
-MEDIA_URL = '/'
+MEDIA_URL = "/"
 MEDIA_ROOT = BASE_DIR
-SITE_URL = env("SITE_URL", default="http://farminsight-backend.etce.isse.tu-clausthal.de")
-
+SITE_URL = env(
+    "SITE_URL", default="http://farminsight-backend.etce.isse.tu-clausthal.de"
+)
 
 # Application definition
 
 INSTALLED_APPS = [
-    'daphne',
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'corsheaders',
-    'farminsight_dashboard_backend.apps.FarminsightDashboardBackendConfig',
-    'rest_framework',
-    'oauth2_provider',
+    "daphne",
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+    "corsheaders",
+    "farminsight_dashboard_backend.apps.FarminsightDashboardBackendConfig",
+    "rest_framework",
+    "oauth2_provider",
 ]
 
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'oauth2_provider.middleware.OAuth2TokenMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "django.middleware.security.SecurityMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "oauth2_provider.middleware.OAuth2TokenMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
+
+CORS_ORIGIN_ALLOW_ALL = True
 
 ROOT_URLCONF = "django_server.urls"
 
 TEMPLATES = [
     {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'farminsight_dashboard_backend' / 'templates']
-        ,
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.debug',
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [BASE_DIR / "farminsight_dashboard_backend" / "templates"],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.debug",
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
             ],
         },
     },
@@ -107,11 +109,11 @@ ASGI_APPLICATION = "django_server.asgi.application"
 
 CHANNEL_LAYERS = {
     "default": {
-        'BACKEND': 'channels.layers.InMemoryChannelLayer'
+        "BACKEND": "channels.layers.InMemoryChannelLayer"
         # "BACKEND": "channels_redis.core.RedisChannelLayer",
         # "CONFIG": {
         #    "hosts": [("127.0.0.1", 6379)],
-        #},
+        # },
     },
 }
 
@@ -126,51 +128,51 @@ DATABASES = {
 }
 
 # Matrix notification settings
-MATRIX_HOMESERVER = env('MATRIX_HOMESERVER', default='')
-MATRIX_USER = env('MATRIX_USER', default='')
-MATRIX_PASSWORD = env('MATRIX_PASSWORD', default='')
+MATRIX_HOMESERVER = env("MATRIX_HOMESERVER", default="")
+MATRIX_USER = env("MATRIX_USER", default="")
+MATRIX_PASSWORD = env("MATRIX_PASSWORD", default="")
 
 
 # For logging in the console
 LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'formatters': {
-        'verbose': {
-            'format': '{levelname} {asctime} {module} {message}',
-            'style': '{',
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "verbose": {
+            "format": "{levelname} {asctime} {module} {message}",
+            "style": "{",
         },
-        'simple': {
-            'format': '{levelname} {asctime} {message}',
-            'style': '{',
-        },
-    },
-    'handlers': {
-        'console': {
-            'level': 'DEBUG',
-            'class': 'logging.StreamHandler',
-            'formatter': 'simple',
-        },
-        'db_handler': {
-            'level': 'INFO',
-            'class': 'django_server.custom_logger.DatabaseLogHandler',
-        },
-        'matrix_handler': {
-            'level': 'WARNING',  # Only send WARNING and above to Matrix to avoid spam
-            'class': 'django_server.custom_logger.MatrixLogHandler',
-            'formatter': 'simple',
+        "simple": {
+            "format": "{levelname} {asctime} {message}",
+            "style": "{",
         },
     },
-    'loggers': {
-        'django': {
-            'handlers': ['console'],
-            'level': 'INFO',
-            'propagate': True,
+    "handlers": {
+        "console": {
+            "level": "DEBUG",
+            "class": "logging.StreamHandler",
+            "formatter": "simple",
         },
-        'farminsight_dashboard_backend': {
-            'handlers': ['console', 'db_handler', 'matrix_handler'],
-            'level': 'DEBUG',
-            'propagate': False,
+        "db_handler": {
+            "level": "INFO",
+            "class": "django_server.custom_logger.DatabaseLogHandler",
+        },
+        "matrix_handler": {
+            "level": "WARNING",  # Only send WARNING and above to Matrix to avoid spam
+            "class": "django_server.custom_logger.MatrixLogHandler",
+            "formatter": "simple",
+        },
+    },
+    "loggers": {
+        "django": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": True,
+        },
+        "farminsight_dashboard_backend": {
+            "handlers": ["console", "db_handler", "matrix_handler"],
+            "level": "DEBUG",
+            "propagate": False,
         },
         'django.channels.server': {
             'handlers': ['console'],
@@ -184,28 +186,28 @@ LOGGING = {
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
 
-AUTH_USER_MODEL = 'farminsight_dashboard_backend.Userprofile'
+AUTH_USER_MODEL = "farminsight_dashboard_backend.Userprofile"
 
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = "UTC"
 
 USE_I18N = True
 
@@ -215,20 +217,20 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = "static/"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-'''
+"""
 These are required while the django backend itself is handling login, they wont be used when using an external identity service
-'''
-FRONTEND_URL = env('FRONTEND_URL', default='http://localhost:3000/')
-LOGIN_URL = '/api/login/'
+"""
+FRONTEND_URL = env("FRONTEND_URL", default="http://localhost:3000/")
+LOGIN_URL = "/api/login/"
 
-'''
+"""
 OIDC_ENABLED, OIDC_ISS_ENDPOINT, OIDC_RSA_PRIVATE_KEY are required for using the django login.
 RESOURCE_SERVER_INTROSPECTION_URL, RESOURCE_SERVER_INTROSPECTION_CREDENTIALS, OAUTH2_VALIDATOR_CLASS
 are required to use an external identity service.
@@ -237,40 +239,38 @@ It may be possible to support both at the same time, but not sure what would be 
 
 See the notes in custom_oauth_validator.py for concerns about switching back and how to minimize impact and possibly
 keep the old userprofile records intact on migration. 
-'''
+"""
 OAUTH2_PROVIDER = {
-    'OIDC_ENABLED': True,
-    'OIDC_ISS_ENDPOINT': env('OIDC_ISS_ENDPOINT', default='http://localhost:8000'),
-    'OIDC_RSA_PRIVATE_KEY': open(os.path.join(BASE_DIR, 'rsa', 'oidc.key')).read(),
-    'SCOPES': {"openid": ''},
+    "OIDC_ENABLED": True,
+    "OIDC_ISS_ENDPOINT": env("OIDC_ISS_ENDPOINT", default="http://localhost:8000"),
+    "OIDC_RSA_PRIVATE_KEY": open(os.path.join(BASE_DIR, "rsa", "oidc.key")).read(),
+    "SCOPES": {"openid": ""},
     #'RESOURCE_SERVER_INTROSPECTION_URL': 'https://development-isse-identityserver.azurewebsites.net/connect/introspect',
     #'RESOURCE_SERVER_INTROSPECTION_CREDENTIALS': ('interactive', ''),
     #'OAUTH2_VALIDATOR_CLASS': 'farminsight_dashboard_backend.custom_oauth_validator.CustomOAuth2Validator',
 }
 
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'oauth2_provider.contrib.rest_framework.OAuth2Authentication',
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "oauth2_provider.contrib.rest_framework.OAuth2Authentication",
     ),
-    'EXCEPTION_HANDLER': 'farminsight_dashboard_backend.exceptions.custom_exception_handler'
+    "EXCEPTION_HANDLER": "farminsight_dashboard_backend.exceptions.custom_exception_handler",
 }
 
 URL_PREFIX = env('URL_PREFIX', default='api/')
 
 # 0 or negative for indefinite duration
-API_KEY_VALIDATION_DURATION_DAYS = env('API_KEY_VALIDATION_DURATION_DAYS', default=30)
+API_KEY_VALIDATION_DURATION_DAYS = env("API_KEY_VALIDATION_DURATION_DAYS", default=30)
 
 
 # How long until log messages and queue entries get deleted from the DB to avoid unnecessary bloat
-DB_LOG_RETENTION_DAYS = env('DB_LOG_RETENTION_DAYS', default=7)
-DB_QUEUE_RETENTION_DAYS = env('DB_QUEUE_RETENTION_DAYS', default=7)
+DB_LOG_RETENTION_DAYS = env("DB_LOG_RETENTION_DAYS", default=7)
+DB_QUEUE_RETENTION_DAYS = env("DB_QUEUE_RETENTION_DAYS", default=7)
 
 
 # To send emails from the backend to notify users there needs to be a configured mail account
 # on a smtp server that accepts pw authentication
 # for gmail this means creating an app password
-SMTP_SERVER_ADDRESS = env('SMTP_SERVER_ADDRESS', default='smtp.gmail.com')
-SMTP_SENDER_MAIL = env('SMTP_SENDER_MAIL', default='')
-SMTP_SENDER_PASSWORD = env('SMTP_SENDER_PASSWORD', default='')
-
-
+SMTP_SERVER_ADDRESS = env("SMTP_SERVER_ADDRESS", default="smtp.gmail.com")
+SMTP_SENDER_MAIL = env("SMTP_SENDER_MAIL", default="")
+SMTP_SENDER_PASSWORD = env("SMTP_SENDER_PASSWORD", default="")

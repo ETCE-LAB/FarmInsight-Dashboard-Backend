@@ -7,7 +7,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('farminsight_dashboard_backend', '0034_merge_20260121_2233'),
+        ('farminsight_dashboard_backend', '0033_remove_threshold_resourcemanagementmodel_and_more'),
     ]
 
     operations = [

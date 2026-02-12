@@ -3,13 +3,13 @@ kind: Service
 metadata:
   #The name of the Kubernetes Service to be created
   #in the Kubernetes cluster
-  name: farminsight-dashboard-backend-service
-  namespace: farminsight
+  name: farminsight-dashboard-backend-dev-service
+  namespace: farminsight-dev
 spec:
   selector:
-    app: farminsight-dashboard-backend
+    app: farminsight-dashboard-backend-dev
   type: LoadBalancer #Type of the Kubernetes Service
   ports:
   - protocol: TCP
-    port: 8000 #Service port
+    port: 8001 #Service port
     targetPort: 8000 #The port for the React.js application container

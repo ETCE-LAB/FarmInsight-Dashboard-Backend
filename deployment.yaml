@@ -1,29 +1,27 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: farminsight-dashboard-backend #The name of the Kubernetes
+  name: farminsight-dashboard-backend-dev #The name of the Kubernetes
         #Deployment to be created in the Kubernetes cluster
-  namespace: farminsight
+  namespace: farminsight-dev
   labels:
-    app: farminsight-dashboard-backend
-  annotations:
-    etce-server-volume-backup: /app/database
+    app: farminsight-dashboard-backend-dev
 spec:
   replicas: 1 #The number of pods to be created in the
    #Kubernetes cluster for the React.js application container
   selector:
     matchLabels:
-      app: farminsight-dashboard-backend
+      app: farminsight-dashboard-backend-dev
   template:
     metadata:
       labels:
-        app: farminsight-dashboard-backend
+        app: farminsight-dashboard-backend-dev
     spec:
       imagePullSecrets:
       - name: docker-registry-private
       containers:
       - name: farminsight-dashboard-backend
-        image: registry.etce.isse.tu-clausthal.de/etce-lab/farminsight-dashboard-backend:latest
+        image: registry.etce.isse.tu-clausthal.de/etce-lab/farminsight-dashboard-backend-dev:latest
         ports:
         - containerPort: 8000 #The port for the django container
         volumeMounts:
@@ -33,9 +31,9 @@ spec:
             - name: farminsight-rsa
               mountPath: /app/rsa
               readOnly: true
-            - name: farminsight-backend-sqlite-pv
+            - name: farminsight-backend-dev-sqlite-pv
               mountPath: /app/database
-            - name: farminsight-backend-image-pv
+            - name: farminsight-backend-dev-image-pv
               mountPath: /app/images
       volumes:
       - name: farminsight-env
@@ -50,21 +48,21 @@ spec:
           items:
             - key: oidc.key
               path: oidc.key
-      - name: farminsight-backend-sqlite-pv
+      - name: farminsight-backend-dev-sqlite-pv
         flexVolume:
           driver: "fstab/cifs"
           fsType: "cifs"
           secretRef:
             name: "cifs-secret"
           options:
-            networkPath: "//10.0.0.200/Cluster_Storage/Applications/Farminsight/Backend/Database"
+            networkPath: "//10.0.0.200/Cluster_Storage/Applications/Farminsight-Dev/Backend/Database"
             mountOptions: "dir_mode=0755,file_mode=0755,vers=2.0,nobrl"
-      - name: farminsight-backend-image-pv
+      - name: farminsight-backend-dev-image-pv
         flexVolume:
           driver: "fstab/cifs"
           fsType: "cifs"
           secretRef:
             name: "cifs-secret"
           options:
-            networkPath: "//10.0.0.200/Cluster_Storage/Applications/Farminsight/Backend/Pictures"
+            networkPath: "//10.0.0.200/Cluster_Storage/Applications/Farminsight-Dev/Backend/Pictures"
             mountOptions: "dir_mode=0755,file_mode=0755,vers=2.0"
