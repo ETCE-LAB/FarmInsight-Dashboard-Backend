@@ -396,7 +396,13 @@ def get_battery_state(request, fpf_id: str):
 
                 sensor_data = measurements.get(str(battery_source.sensor.id))
                 if sensor_data and 'value' in sensor_data:
-                    battery_level_wh = float(sensor_data['value'])
+                    raw_value = float(sensor_data['value'])
+                    # Handle sensors that report in % instead of Wh
+                    sensor_unit = (battery_source.sensor.unit or '').strip().lower()
+                    if sensor_unit == '%':
+                        battery_level_wh = (raw_value / 100.0) * battery_max_wh
+                    else:
+                        battery_level_wh = raw_value
                     last_updated = sensor_data.get('measuredAt')
             except Exception as e:
                 logger.warning(f"Could not fetch live battery data: {e}")
