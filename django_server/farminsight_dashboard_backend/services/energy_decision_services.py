@@ -119,6 +119,15 @@ def get_current_power_output_with_weather(fpf_id: str) -> float:
     
     for source in sources:
         if source.weatherDependent:
+            # Prefer live sensor data over weather-based estimates
+            if source.sensor and source.sensor.isActive:
+                from farminsight_dashboard_backend.services.energy_source_services import get_live_output_watts
+                live_value = get_live_output_watts(source)
+                # Only use live value if it's a real reading (not the DB default 0)
+                if live_value > 0 or source.currentOutputWatts == 0:
+                    total_output += live_value
+                    continue
+            # Fallback: weather-based estimate when no live sensor data
             if source.sourceType == 'solar' and sunshine_hours is not None:
                 # Solar output factor based on sunshine hours (0-14 hours typical max)
                 # Assume max output at ~10+ hours of sunshine
